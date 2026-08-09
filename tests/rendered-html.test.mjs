@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
+async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    new Request(`http://localhost${pathname}`, { headers: { accept: "text/html" } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
@@ -26,6 +26,15 @@ test("server-renders the SkillBridge product page", async () => {
   assert.match(html, /AI đề xuất/i);
   assert.match(html, /15\/15 contract evals pass/i);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|SkeletonPreview/i);
+});
+
+test("server-renders the three-role end-to-end workspace", async () => {
+  const response = await render("/workspace");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Build một lần/i);
+  assert.match(html, /E2E ROLE WORKSPACE/i);
+  assert.match(html, /role-workspace/i);
 });
 
 test("removes temporary starter metadata and dependencies", async () => {

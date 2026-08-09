@@ -18,10 +18,11 @@ export default function Home() {
         </a>
         <nav aria-label="Điều hướng chính">
           <a href="#demo">Demo</a>
+          <a href="/workspace">Role workspace</a>
           <a href="#trust">Cách hoạt động</a>
           <a href="#pilot">Pilot</a>
         </nav>
-        <a className="header-cta" href="#demo">Thử golden flow</a>
+        <a className="header-cta" href="/workspace">Mở role workspace</a>
       </header>
 
       <section className="hero page-shell" id="top">
@@ -34,7 +35,7 @@ export default function Home() {
             mở khóa cơ hội thật.
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="#demo">Chạy thử demo</a>
+            <a className="button button-primary" href="/workspace">Chạy end-to-end</a>
             <a className="text-link" href="#trust">Xem trust architecture <span>↗</span></a>
           </div>
           <div className="hero-proof" aria-label="Nguyên tắc sản phẩm">
