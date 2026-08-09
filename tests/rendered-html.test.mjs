@@ -24,6 +24,7 @@ test("server-renders the SkillBridge product page", async () => {
   assert.match(html, /Bài làm tốt/i);
   assert.match(html, /Interactive vertical slice/i);
   assert.match(html, /AI đề xuất/i);
+  assert.match(html, /15\/15 contract evals pass/i);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|SkeletonPreview/i);
 });
 
@@ -37,5 +38,6 @@ test("removes temporary starter metadata and dependencies", async () => {
   assert.doesNotMatch(page, /codex-preview|_sites-preview|SkeletonPreview/);
   assert.match(layout, /lang="vi"/);
   assert.match(layout, /SkillBridge Vietnam/);
+  assert.match(packageJson, /"name": "skillbridge-vietnam"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });

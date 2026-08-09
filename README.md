@@ -7,7 +7,7 @@ The current MVP demonstrates one complete golden path:
 
 1. A student accepts a business challenge.
 2. The student submits evidence.
-3. AI drafts an evidence-linked assessment.
+3. AI returns a strict, evidence-linked assessment contract.
 4. A human reviewer approves it.
 5. The platform issues a proof-of-skill credential.
 6. The credential unlocks an opportunity.
@@ -18,6 +18,12 @@ currently an explicit prototype preview while the project waits for devnet test
 SOL; the Solana Attestation Service lifecycle has already been validated against
 a local validator.
 
+The assessment endpoint uses OpenAI Responses API Structured Outputs when the
+server has `OPENAI_API_KEY`. Without a key, it uses a clearly labelled,
+deterministic fixture so the product flow and contract can still be evaluated
+without pretending that a live model ran. Set `OPENAI_ASSESSMENT_MODEL` to
+override the default `gpt-5.6-luna` model.
+
 ## Local development
 
 Requires Node.js 22.13 or newer.
@@ -27,11 +33,10 @@ npm install
 npm run dev
 ```
 
-Validation:
+Validation, including 15 assessment contract and evidence-firewall cases:
 
 ```bash
-npm run build
-node --test tests/rendered-html.test.mjs
+npm test
 ```
 
 Generate a migration after changing `db/schema.ts`:

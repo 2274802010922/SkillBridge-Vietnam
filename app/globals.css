@@ -127,16 +127,28 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .status-good { background: #dff2e3; color: #28763a; }
 .status-muted { background: #e7e9ed; color: #767e8d; }
 .assessment-box { max-height: 0; opacity: 0; overflow: hidden; margin-top: 0; padding-inline: 18px; border: 1px solid transparent; border-radius: 10px; transition: max-height .45s ease, opacity .35s ease, margin .35s ease, padding .35s ease, border-color .35s ease; }
-.assessment-box.visible { max-height: 410px; opacity: 1; margin-top: 18px; padding-block: 18px; border-color: var(--line); }
+.assessment-box.visible { max-height: 780px; opacity: 1; margin-top: 18px; padding-block: 18px; border-color: var(--line); }
 .assessment-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .assessment-head small, .assessment-head strong { display: block; }
 .assessment-head small { color: var(--blue); font: 650 8px/1 var(--font-geist-mono); letter-spacing: .08em; }
 .assessment-head strong { margin-top: 7px; font-size: 22px; letter-spacing: -.04em; }
-.assessment-head > span { padding: 5px 7px; background: #edf3ff; color: #3567be; border-radius: 4px; font: 600 8px/1 var(--font-geist-mono); }
-.rubric-row { display: grid; grid-template-columns: 128px 1fr 28px; align-items: center; gap: 11px; margin-top: 11px; font-size: 10px; }
+.assessment-badges { display: flex; align-items: flex-end; flex-direction: column; gap: 6px; }
+.assessment-badges > span { padding: 5px 7px; background: #edf3ff; color: #3567be; border-radius: 4px; font: 600 8px/1 var(--font-geist-mono); }
+.assessment-badges .engine-badge { background: #f0f1f3; color: #6c7482; }
+.assessment-badges .engine-badge.live { background: #dff2e3; color: #26763a; }
+.assessment-badges .engine-badge.fixture { background: #fff5d9; color: #725d20; }
+.rubric-row { display: grid; grid-template-columns: 128px 1fr 42px; align-items: center; gap: 11px; margin-top: 11px; font-size: 10px; }
 .rubric-row > div { height: 5px; overflow: hidden; background: #e6e9ee; border-radius: 99px; }
 .rubric-row i { display: block; height: 100%; background: var(--blue); border-radius: inherit; }
 .rubric-row strong { text-align: right; font: 650 9px/1 var(--font-geist-mono); }
+.assessment-summary { margin: 15px 0 10px; color: var(--ink-soft); font-size: 10px; line-height: 1.55; }
+.citation-list { display: grid; gap: 6px; }
+.citation-chip { padding: 8px 10px; background: #f6f7f9; border-left: 3px solid var(--blue); }
+.citation-chip span, .citation-chip q { display: block; }
+.citation-chip span { color: var(--blue); font: 650 7px/1 var(--font-geist-mono); letter-spacing: .06em; }
+.citation-chip q { margin-top: 5px; color: var(--ink-soft); font-size: 8px; line-height: 1.4; }
+.assessment-quality { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.assessment-quality span { padding: 5px 7px; background: #eaf6d1; color: #385f20; border-radius: 4px; font: 650 7px/1 var(--font-geist-mono); letter-spacing: .04em; }
 .assessment-box blockquote { margin: 15px 0 12px; padding: 11px 13px; background: #f6f7f9; border-left: 3px solid var(--blue); color: var(--ink-soft); font-size: 10px; line-height: 1.55; }
 .human-seal { display: inline-flex; padding: 6px 8px; background: #f0f1f3; color: #858c98; border-radius: 4px; font: 650 8px/1 var(--font-geist-mono); }
 .human-seal.approved { background: #dff2e3; color: #26763a; }
@@ -249,7 +261,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .challenge-meta { flex-wrap: wrap; gap: 10px 16px; }
   .evidence-box { align-items: flex-start; gap: 12px; }
   .evidence-box strong { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .rubric-row { grid-template-columns: 100px 1fr 25px; }
+  .assessment-head { gap: 14px; }
+  .assessment-badges { max-width: 48%; }
+  .rubric-row { grid-template-columns: 98px 1fr 38px; }
   .next-action { align-items: stretch; flex-direction: column; }
   .next-action .button { width: 100%; }
   .proof-panel { display: block; padding: 20px 18px; }

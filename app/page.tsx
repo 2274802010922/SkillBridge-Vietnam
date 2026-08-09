@@ -100,7 +100,7 @@ export default function Home() {
             <p>Dữ liệu nhạy cảm ở off-chain. Solana chỉ giữ claim tối thiểu cần để kiểm chứng tính toàn vẹn và trạng thái.</p>
           </div>
           <div className="architecture-grid">
-            <article><span>AI</span><h3>Assessment draft</h3><p>Chấm theo rubric, trích dẫn evidence và nêu confidence/risk flags.</p><small>Không tự cấp credential</small></article>
+            <article><span>AI</span><h3>Assessment contract</h3><p>Structured output theo rubric, citation được đối chiếu với evidence trước khi hiển thị.</p><small>15/15 contract evals pass</small></article>
             <article><span>H</span><h3>Human review</h3><p>Reviewer sửa, duyệt và chịu trách nhiệm cho kết quả cuối cùng.</p><small>Có audit trail & appeal</small></article>
             <article><span>S</span><h3>Solana proof</h3><p>Issuer, schema, score, evidence hash, expiry và trạng thái revoke.</p><small>Không ghi PII lên chain</small></article>
             <article className="architecture-outcome"><span>↗</span><h3>Reusable access</h3><p>Credential hợp lệ mở invitation; credential bị revoke mất utility ngay.</p><small>Verify → unlock → re-check</small></article>

@@ -1,10 +1,43 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Stage = "invited" | "submitted" | "ai_drafted" | "approved" | "issued" | "unlocked" | "revoked";
 type DemoEvent = { label: string; detail: string; at: string };
-type DemoState = { sessionId: string; stage: Stage; events: DemoEvent[] };
+type EvidenceSource = { id: string; locator: string; content: string };
+type AssessmentEnvelope = {
+  draft: {
+    totalScore: number;
+    confidence: number;
+    summary: string;
+    rubric: Array<{
+      id: string;
+      label: string;
+      score: number;
+      maxScore: number;
+      rationale: string;
+      citations: Array<{ sourceId: string; locator: string; quote: string }>;
+    }>;
+    reviewerFlags: string[];
+    grounding: { citationCoverage: number; unsupportedClaims: string[] };
+    risk: { promptInjectionDetected: boolean; insufficientEvidence: boolean };
+  };
+  provenance: {
+    mode: "openai" | "fixture" | "fixture_fallback";
+    provider: string;
+    model: string;
+    validationPassed: boolean;
+  };
+};
+type ReviewDecision = { decision: "approved"; reviewer: string; approvedAt: string; resolvedFlags: string[] };
+type DemoState = {
+  sessionId: string;
+  stage: Stage;
+  events: DemoEvent[];
+  evidence: EvidenceSource[];
+  assessment: AssessmentEnvelope | null;
+  review: ReviewDecision | null;
+};
 
 const stages: Array<{ id: Stage; short: string; title: string; owner: string }> = [
   { id: "invited", short: "01", title: "Challenge", owner: "Doanh nghiệp" },
@@ -17,8 +50,8 @@ const stages: Array<{ id: Stage; short: string; title: string; owner: string }> 
 
 const actionByStage: Record<Exclude<Stage, "revoked">, { action: string; label: string; helper: string }> = {
   invited: { action: "submit_evidence", label: "Nộp evidence", helper: "Sinh viên gửi strategy deck và reflection." },
-  submitted: { action: "generate_ai_draft", label: "Tạo AI assessment", helper: "AI đối chiếu rubric và dẫn chứng cụ thể." },
-  ai_drafted: { action: "approve_assessment", label: "Reviewer phê duyệt", helper: "Con người kiểm tra, sửa và chịu trách nhiệm." },
+  submitted: { action: "generate_ai_draft", label: "Chạy AI assessment", helper: "AI trả về schema cố định; citation giả sẽ bị contract từ chối." },
+  ai_drafted: { action: "approve_assessment", label: "Reviewer phê duyệt", helper: "Con người kiểm tra evidence, xử lý flags và chịu trách nhiệm." },
   approved: { action: "issue_credential", label: "Preview cấp credential", helper: "Tạo claim theo schema đã technical-spike." },
   issued: { action: "unlock_opportunity", label: "Kiểm tra & mở khóa", helper: "Gate kiểm tra score, evidence hash và trạng thái." },
   unlocked: { action: "revoke_credential", label: "Thử revoke credential", helper: "Chứng minh utility biến mất sau thu hồi." },
@@ -34,17 +67,21 @@ export function GoldenFlow() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const response = await fetch("/api/demo", { cache: "no-store" });
-    if (!response.ok) throw new Error("Không thể tải phiên demo.");
-    setState((await response.json()) as DemoState);
-  }, []);
-
   useEffect(() => {
-    load().catch((loadError: unknown) => {
-      setError(loadError instanceof Error ? loadError.message : "Đã có lỗi xảy ra.");
-    });
-  }, [load]);
+    let active = true;
+    fetch("/api/demo", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Không thể tải phiên demo.");
+        return response.json() as Promise<DemoState>;
+      })
+      .then((nextState) => {
+        if (active) setState(nextState);
+      })
+      .catch((loadError: unknown) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : "Đã có lỗi xảy ra.");
+      });
+    return () => { active = false; };
+  }, []);
 
   const activeIndex = useMemo(() => (state ? stageIndex(state.stage) : 0), [state]);
 
@@ -68,12 +105,16 @@ export function GoldenFlow() {
   }
 
   const action = state && state.stage !== "revoked" ? actionByStage[state.stage] : null;
+  const assessment = state?.assessment;
+  const assessmentDraft = assessment?.draft;
+  const assessmentMode = assessment?.provenance.mode;
+  const credentialScore = assessmentDraft?.totalScore ?? 0;
 
   return (
     <div className="demo-console">
       <div className="demo-notice">
-        <span>PROTOTYPE MODE</span>
-        Workflow lưu trạng thái thật; bước ghi chain đang là preview cho tới khi devnet faucet cấp test SOL.
+        <span>VERIFIABLE AI</span>
+        Assessment contract và reviewer history chạy thật; OpenAI dùng khi có server key, Solana devnet vẫn đang preview.
       </div>
 
       <div className="stage-rail" aria-label="Tiến độ golden flow">
@@ -101,13 +142,45 @@ export function GoldenFlow() {
             <span className={activeIndex >= 1 ? "status-good" : "status-muted"}>{activeIndex >= 1 ? "ĐÃ NỘP" : "CHỜ NỘP"}</span>
           </div>
 
-          <div className={`assessment-box ${activeIndex >= 2 ? "visible" : ""}`}>
-            <div className="assessment-head"><div><small>AI ASSESSMENT DRAFT</small><strong>87 / 100</strong></div><span>Confidence 0.84</span></div>
-            <div className="rubric-row"><span>Problem framing</span><div><i style={{ width: "90%" }} /></div><strong>9.0</strong></div>
-            <div className="rubric-row"><span>Strategy quality</span><div><i style={{ width: "86%" }} /></div><strong>8.6</strong></div>
-            <div className="rubric-row"><span>Feasibility</span><div><i style={{ width: "84%" }} /></div><strong>8.4</strong></div>
-            <blockquote>“Persona và channel mix được chứng minh tại slide 6–9; CAC assumption cần reviewer xác nhận.”</blockquote>
-            <div className={`human-seal ${activeIndex >= 3 ? "approved" : ""}`}>{activeIndex >= 3 ? "✓ HUMAN APPROVED" : "AWAITING HUMAN REVIEW"}</div>
+          <div className={`assessment-box ${assessmentDraft ? "visible" : ""}`}>
+            {assessmentDraft && (
+              <>
+                <div className="assessment-head">
+                  <div><small>AI ASSESSMENT · CONTRACT v1</small><strong>{assessmentDraft.totalScore} / 100</strong></div>
+                  <div className="assessment-badges">
+                    <span>Confidence {assessmentDraft.confidence.toFixed(2)}</span>
+                    <span className={`engine-badge ${assessmentMode === "openai" ? "live" : "fixture"}`}>
+                      {assessmentMode === "openai" ? assessment.provenance.model : "TRANSPARENT FIXTURE"}
+                    </span>
+                  </div>
+                </div>
+                {assessmentDraft.rubric.map((item) => (
+                  <div className="rubric-row" key={item.id}>
+                    <span>{item.label}</span>
+                    <div><i style={{ width: `${(item.score / item.maxScore) * 100}%` }} /></div>
+                    <strong>{item.score}/{item.maxScore}</strong>
+                  </div>
+                ))}
+                <p className="assessment-summary">{assessmentDraft.summary}</p>
+                <div className="citation-list">
+                  {assessmentDraft.rubric.flatMap((item) => item.citations).slice(0, 3).map((citation, index) => (
+                    <div className="citation-chip" key={`${citation.sourceId}-${index}`}>
+                      <span>{citation.sourceId} · {citation.locator}</span>
+                      <q>{citation.quote}</q>
+                    </div>
+                  ))}
+                </div>
+                <div className="assessment-quality">
+                  <span>GROUNDING {Math.round(assessmentDraft.grounding.citationCoverage * 100)}%</span>
+                  <span>{assessmentDraft.reviewerFlags.length} REVIEWER FLAG</span>
+                  <span>{assessment.provenance.validationPassed ? "CONTRACT PASS" : "CONTRACT FAIL"}</span>
+                </div>
+                {assessmentDraft.reviewerFlags[0] && <blockquote>{assessmentDraft.reviewerFlags[0]}</blockquote>}
+                <div className={`human-seal ${state?.review ? "approved" : ""}`}>
+                  {state?.review ? `✓ HUMAN APPROVED · ${state.review.reviewer}` : "AWAITING HUMAN REVIEW"}
+                </div>
+              </>
+            )}
           </div>
 
           {action ? (
@@ -128,7 +201,7 @@ export function GoldenFlow() {
           <div className="proof-panel-label">SKILL PASSPORT</div>
           <div className={`credential-card ${activeIndex >= 4 ? "issued" : ""} ${state?.stage === "revoked" ? "revoked" : ""}`}>
             <div className="credential-top"><span>VLU × SKILLBRIDGE</span><span>PS-001</span></div>
-            <div className="credential-score"><strong>{activeIndex >= 4 ? "87" : "—"}</strong><span>GROWTH<br />STRATEGY</span></div>
+            <div className="credential-score"><strong>{activeIndex >= 4 ? credentialScore : "—"}</strong><span>GROWTH<br />STRATEGY</span></div>
             <p>Evidence-linked Proof of Skill</p>
             <div className="credential-lines"><span /><span /><span /></div>
             <div className="credential-status">
