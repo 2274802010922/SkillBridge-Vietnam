@@ -13,17 +13,15 @@ The current MVP demonstrates one complete golden path:
 6. The credential unlocks an opportunity.
 7. Revocation removes access.
 
-The `/workspace` route expands that path into a shared end-to-end role
-simulator. Business, Student, and University each receive only the actions
-authorized for their role while reading and updating the same D1-backed
-challenge journey. The role switcher is intentionally labelled as test
-infrastructure; production identity-to-role binding remains a later hardening
-step.
+The `/workspace` route is an isolated role simulator for judges and product
+walkthroughs. The authenticated `/app` routes are the production pilot surface:
+wallet-based Sign In With Solana binds each user to server-enforced student,
+university, or business permissions.
 
-Workflow state is persisted in Cloudflare D1. The credential issuance screen is
-currently an explicit prototype preview while the project waits for devnet test
-SOL; the Solana Attestation Service lifecycle has already been validated against
-a local validator.
+Workflow state is persisted in Cloudflare D1 and evidence files in R2. Credential
+issuance and revocation use Solana Attestation Service on Devnet. Opportunity
+policies and immutable access receipts use the deployed SkillBridge Opportunity
+Gate program at `AuXFxfT41YMsG53euEB1tFjyUiMLKxfucQnYX4jhekCE`.
 
 The assessment endpoint uses OpenAI Responses API Structured Outputs when the
 server has `OPENAI_API_KEY`. Without a key, it uses a clearly labelled,
@@ -45,6 +43,13 @@ server rendering, and complete lifecycle cases:
 
 ```bash
 npm test
+```
+
+With the three Devnet signer secrets and a student public address in the
+environment, the live on-chain lifecycle can also be checked with:
+
+```bash
+npm run test:devnet
 ```
 
 Generate a migration after changing `db/schema.ts`:

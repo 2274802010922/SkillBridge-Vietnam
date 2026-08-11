@@ -26,7 +26,7 @@ const transitions: Record<string, { from: Stage[]; to: Stage; label: string; det
   submit_evidence: { from: ["invited"], to: "submitted", label: "Evidence submitted", detail: "4 evidence excerpts · immutable source IDs" },
   generate_ai_draft: { from: ["submitted"], to: "ai_drafted", label: "AI assessment validated", detail: "Schema + citation grounding passed" },
   approve_assessment: { from: ["ai_drafted"], to: "approved", label: "Human review approved", detail: "Reviewer confirmed rubric, evidence & flags" },
-  issue_credential: { from: ["approved"], to: "issued", label: "Credential preview issued", detail: "SAS schema · devnet promotion pending" },
+  issue_credential: { from: ["approved"], to: "issued", label: "Credential preview issued", detail: "Isolated judge walkthrough · no Devnet transaction" },
   unlock_opportunity: { from: ["issued"], to: "unlocked", label: "Opportunity unlocked", detail: "Score ≥ 80 · credential active" },
   revoke_credential: { from: ["issued", "unlocked"], to: "revoked", label: "Credential revoked", detail: "Invitation access removed" },
 };

@@ -114,7 +114,7 @@ export function GoldenFlow() {
     <div className="demo-console">
       <div className="demo-notice">
         <span>VERIFIABLE AI</span>
-        Assessment contract và reviewer history chạy thật; OpenAI dùng khi có server key, Solana devnet vẫn đang preview.
+        Console này dùng dữ liệu preview cô lập; luồng đăng nhập theo role dùng OpenAI và Solana Devnet thật.
       </div>
 
       <div className="stage-rail" aria-label="Tiến độ golden flow">
