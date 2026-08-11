@@ -11,6 +11,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "types": ["@cloudflare/workers-types", "node"],
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {

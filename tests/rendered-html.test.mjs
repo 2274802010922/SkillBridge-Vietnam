@@ -28,12 +28,12 @@ test("server-renders the SkillBridge product page", async () => {
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|SkeletonPreview/i);
 });
 
-test("server-renders the three-role end-to-end workspace", async () => {
-  const response = await render("/workspace");
+test("server-renders the three-role end-to-end sandbox", async () => {
+  const response = await render("/sandbox");
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Build một lần/i);
-  assert.match(html, /E2E ROLE WORKSPACE/i);
+  assert.match(html, /SANDBOX · ROLE SIMULATOR/i);
   assert.match(html, /role-workspace/i);
 });
 

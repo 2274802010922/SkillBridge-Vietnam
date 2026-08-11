@@ -18,11 +18,11 @@ export default function Home() {
         </a>
         <nav aria-label="Điều hướng chính">
           <a href="#demo">Demo</a>
-          <a href="/workspace">Role workspace</a>
+          <a href="/app">Sản phẩm</a>
           <a href="#trust">Cách hoạt động</a>
           <a href="#pilot">Pilot</a>
         </nav>
-        <a className="header-cta" href="/workspace">Mở role workspace</a>
+        <a className="header-cta" href="/auth">Đăng nhập bằng ví</a>
       </header>
 
       <section className="hero page-shell" id="top">
@@ -35,7 +35,7 @@ export default function Home() {
             mở khóa cơ hội thật.
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="/workspace">Chạy end-to-end</a>
+            <a className="button button-primary" href="/auth">Bắt đầu bằng ví Solana</a>
             <a className="text-link" href="#trust">Xem trust architecture <span>↗</span></a>
           </div>
           <div className="hero-proof" aria-label="Nguyên tắc sản phẩm">
@@ -118,8 +118,8 @@ export default function Home() {
 
       <footer className="site-footer page-shell">
         <div className="wordmark"><span className="wordmark-mark">S</span><span>SkillBridge</span></div>
-        <p>Proof-of-Skill Challenge Infrastructure for Vietnam.</p>
-        <span>Built for UniHackFest · 2026</span>
+        <p>Proof-of-Skill Challenge Infrastructure for Vietnam. <a href="/privacy">Dữ liệu</a> · <a href="/terms">Điều khoản</a> · <a href="/risk">Rủi ro</a></p>
+        <span>Built for UniHackFest · 2026 · <a href="/sandbox">Sandbox</a></span>
       </footer>
     </main>
   );

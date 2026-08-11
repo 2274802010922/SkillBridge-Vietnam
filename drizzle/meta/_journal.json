@@ -22,6 +22,48 @@
       "when": 1786295320190,
       "tag": "0002_calm_ozymandias",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786297588809,
+      "tag": "0003_fair_power_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786452316778,
+      "tag": "0004_strange_nighthawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786452975076,
+      "tag": "0005_aberrant_dazzler",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786453672682,
+      "tag": "0006_thankful_doctor_octopus",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1786454813880,
+      "tag": "0007_free_mauler",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1786455134827,
+      "tag": "0008_foamy_timeslip",
+      "breakpoints": true
     }
   ]
 }
