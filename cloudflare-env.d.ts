@@ -9,6 +9,7 @@ declare namespace Cloudflare {
     TOKENROUTER_MODEL?: string;
     TURSO_DATABASE_URL?: string;
     TURSO_AUTH_TOKEN?: string;
+    BLOB_STORE_ID?: string;
     BLOB_READ_WRITE_TOKEN?: string;
     SOLANA_RPC_URL?: string;
     SOLANA_FEE_PAYER_SECRET?: string;

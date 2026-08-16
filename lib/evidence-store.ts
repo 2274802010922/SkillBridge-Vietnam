@@ -16,14 +16,14 @@ function localPath(key: string) {
   return { root, target };
 }
 
-function hasVercelBlobToken() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+function hasRemoteBlobCredentials() {
+  return Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 function requireRemoteStoreOnVercel() {
-  if (process.env.VERCEL && !hasVercelBlobToken()) {
+  if (process.env.VERCEL && !hasRemoteBlobCredentials()) {
     throw new Error(
-      "BLOB_READ_WRITE_TOKEN chưa được cấu hình. Hãy tạo Private Blob store trong Vercel Storage.",
+      "Vercel Blob chưa được cấu hình. Hãy kết nối Private Blob store để nhận BLOB_STORE_ID (OIDC) hoặc BLOB_READ_WRITE_TOKEN.",
     );
   }
 }
@@ -34,7 +34,7 @@ export async function putEvidence(
   contentType: string,
 ) {
   requireRemoteStoreOnVercel();
-  if (hasVercelBlobToken()) {
+  if (hasRemoteBlobCredentials()) {
     await put(key, bytes, {
       access: "private",
       addRandomSuffix: false,
@@ -50,7 +50,7 @@ export async function putEvidence(
 
 export async function getEvidence(key: string): Promise<EvidenceObject | null> {
   requireRemoteStoreOnVercel();
-  if (hasVercelBlobToken()) {
+  if (hasRemoteBlobCredentials()) {
     const result = await get(key, { access: "private" });
     if (!result || result.statusCode !== 200 || !result.stream) return null;
     let cached: ArrayBuffer | null = null;
@@ -77,7 +77,7 @@ export async function getEvidence(key: string): Promise<EvidenceObject | null> {
 
 export async function deleteEvidence(key: string) {
   requireRemoteStoreOnVercel();
-  if (hasVercelBlobToken()) {
+  if (hasRemoteBlobCredentials()) {
     await del(key);
     return;
   }

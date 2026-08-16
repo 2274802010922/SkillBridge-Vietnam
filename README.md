@@ -69,7 +69,9 @@ to the Vercel project:
 
 1. Add the Turso Marketplace integration so Vercel injects
    `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
-2. Create a Private Blob store so Vercel injects `BLOB_READ_WRITE_TOKEN`.
+2. Create a Private Blob store so Vercel injects `BLOB_STORE_ID` and uses
+   short-lived OIDC authentication. `BLOB_READ_WRITE_TOKEN` remains supported
+   for legacy or local workflows.
 3. Add the three `TOKENROUTER_*` values and the four `SOLANA_*` values from
    `.env.example` to both Preview and Production environments.
 4. Deploy a Preview, test every wallet role, AI assessment, human approval,
