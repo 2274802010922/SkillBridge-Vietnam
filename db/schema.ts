@@ -125,6 +125,9 @@ export const challenges = sqliteTable(
     skillsJson: text("skills_json").notNull().default("[]"),
     rubricJson: text("rubric_json").notNull(),
     reward: text("reward").notNull(),
+    rewardAmountUsdc: text("reward_amount_usdc"),
+    rewardAmountAtomic: text("reward_amount_atomic"),
+    rewardMint: text("reward_mint"),
     accessType: text("access_type").notNull().default("invite_only"),
     status: text("status").notNull().default("draft"),
     version: text("version").notNull().default("1"),
@@ -324,6 +327,81 @@ export const accessGrants = sqliteTable(
   (table) => [
     index("idx_access_grants_opportunity_wallet").on(table.opportunityId, table.walletAddress),
     index("idx_access_grants_user_created").on(table.userId, table.createdAt),
+  ],
+);
+
+export const invoices = sqliteTable(
+  "invoices",
+  {
+    id: text("id").primaryKey(),
+    creatorUserId: text("creator_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    clientName: text("client_name").notNull(),
+    clientEmail: text("client_email"),
+    description: text("description").notNull(),
+    amountUsdc: text("amount_usdc").notNull(),
+    amountAtomic: text("amount_atomic").notNull(),
+    fiatCurrency: text("fiat_currency").notNull().default("USD"),
+    fiatAmount: text("fiat_amount").notNull(),
+    fxRateVnd: text("fx_rate_vnd"),
+    fxRateSource: text("fx_rate_source"),
+    fxCapturedAt: text("fx_captured_at"),
+    recipientWallet: text("recipient_wallet").notNull(),
+    paymentReference: text("payment_reference").notNull(),
+    status: text("status").notNull().default("sent"),
+    dueAt: text("due_at"),
+    paidAtomic: text("paid_atomic").notNull().default("0"),
+    paidAt: text("paid_at"),
+    paidTx: text("paid_tx"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_invoices_creator_status").on(table.creatorUserId, table.status),
+    uniqueIndex("idx_invoices_payment_reference").on(table.paymentReference),
+  ],
+);
+
+export const paymentEvents = sqliteTable(
+  "payment_events",
+  {
+    id: text("id").primaryKey(),
+    invoiceId: text("invoice_id").notNull().references(() => invoices.id, { onDelete: "cascade" }),
+    signature: text("signature").notNull(),
+    senderWallet: text("sender_wallet"),
+    recipientWallet: text("recipient_wallet").notNull(),
+    amountAtomic: text("amount_atomic").notNull(),
+    status: text("status").notNull().default("confirmed"),
+    observedAt: text("observed_at").notNull(),
+    rawJson: text("raw_json").notNull().default("{}"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("idx_payment_events_signature").on(table.signature),
+    index("idx_payment_events_invoice_created").on(table.invoiceId, table.createdAt),
+  ],
+);
+
+export const challengePayouts = sqliteTable(
+  "challenge_payouts",
+  {
+    id: text("id").primaryKey(),
+    challengeId: text("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+    submissionId: text("submission_id").notNull().references(() => submissions.id, { onDelete: "cascade" }),
+    recipientUserId: text("recipient_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    recipientWallet: text("recipient_wallet").notNull(),
+    amountUsdc: text("amount_usdc").notNull(),
+    amountAtomic: text("amount_atomic").notNull(),
+    status: text("status").notNull().default("pending"),
+    paymentTx: text("payment_tx"),
+    paidAt: text("paid_at"),
+    verifiedByUserId: text("verified_by_user_id").references(() => users.id),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("idx_challenge_payouts_submission").on(table.submissionId),
+    uniqueIndex("idx_challenge_payouts_tx").on(table.paymentTx),
+    index("idx_challenge_payouts_recipient_status").on(table.recipientUserId, table.status),
   ],
 );
 

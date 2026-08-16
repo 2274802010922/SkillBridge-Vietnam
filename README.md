@@ -13,6 +13,14 @@ The current MVP demonstrates one complete golden path:
 6. The credential unlocks an opportunity.
 7. Revocation removes access.
 
+The authenticated product also includes a non-custodial USDC Devnet payment
+surface: freelancers create invoice links, clients pay directly to the
+recipient wallet, and the freelancer verifies the transaction signature to
+create a receipt and CSV reconciliation report. Challenge managers can attach
+an optional USDC bounty and verify a direct payout to an approved student's
+wallet from the Payouts workspace. SkillBridge never holds the funds or signs
+the transfer.
+
 The `/workspace` route is an isolated role simulator for judges and product
 walkthroughs. The authenticated `/app` routes are the production pilot surface:
 wallet-based Sign In With Solana binds each user to server-enforced student,
@@ -72,7 +80,7 @@ to the Vercel project:
 2. Create a Private Blob store so Vercel injects `BLOB_STORE_ID` and uses
    short-lived OIDC authentication. `BLOB_READ_WRITE_TOKEN` remains supported
    for legacy or local workflows.
-3. Add the three `TOKENROUTER_*` values and the four `SOLANA_*` values from
+3. Add the three `TOKENROUTER_*` values and the `SOLANA_*` values from
    `.env.example` to both Preview and Production environments.
 4. Deploy a Preview, test every wallet role, AI assessment, human approval,
    Devnet issuance/revocation, and opportunity verification, then promote that

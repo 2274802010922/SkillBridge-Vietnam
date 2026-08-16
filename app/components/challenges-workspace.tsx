@@ -19,6 +19,9 @@ type Challenge = {
   brief: string;
   skills_json: string;
   reward: string;
+  reward_amount_usdc: string | null;
+  reward_amount_atomic: string | null;
+  reward_mint: string | null;
   access_type: "public" | "invite_only";
   status: string;
   can_manage: number;
@@ -37,6 +40,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
   const [brief, setBrief] = useState("");
   const [skills, setSkills] = useState("Research, Strategy");
   const [reward, setReward] = useState("Fast-track interview");
+  const [rewardAmountUsdc, setRewardAmountUsdc] = useState("");
   const [accessType, setAccessType] = useState<"public" | "invite_only">("invite_only");
   const [targetWallet, setTargetWallet] = useState("");
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
@@ -70,6 +74,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
         brief,
         skills: skills.split(","),
         reward,
+        rewardAmountUsdc: rewardAmountUsdc || undefined,
         accessType,
       }),
     });
@@ -78,6 +83,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
     if (response.ok) {
       setTitle("");
       setBrief("");
+      setRewardAmountUsdc("");
       await load();
     }
     setBusy(false);
@@ -174,6 +180,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
         <textarea value={brief} onChange={(event) => setBrief(event.target.value)} placeholder={t("challenge.briefPlaceholder")} />
         <input value={skills} onChange={(event) => setSkills(event.target.value)} placeholder={t("challenge.skillsPlaceholder")} />
         <input value={reward} onChange={(event) => setReward(event.target.value)} placeholder={t("challenge.rewardPlaceholder")} />
+        <input aria-label={t("challenge.rewardAmount")} inputMode="decimal" value={rewardAmountUsdc} onChange={(event) => setRewardAmountUsdc(event.target.value)} placeholder={t("challenge.rewardAmountPlaceholder")} />
         <button className="button button-primary" disabled={busy || !organizationId || !reviewerOrganizationId} onClick={create}>{t("challenge.create")}</button>
       </div>
     </section>}
@@ -187,8 +194,9 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
         <h2>{item.title}</h2>
         <p>{item.brief}</p>
         <div className="entity-tags">{JSON.parse(item.skills_json).map((skill: string) => <span key={skill}>{skill}</span>)}</div>
-        <dl>
+          <dl>
           <div><dt>{t("challenge.reward")}</dt><dd>{item.reward}</dd></div>
+          <div><dt>{t("challenge.rewardAmount")}</dt><dd>{item.reward_amount_usdc ? `${item.reward_amount_usdc} USDC` : t("challenge.noRewardAmount")}</dd></div>
           <div><dt>{t("challenge.studentState")}</dt><dd>{translateStatus(t, item.participation_state ?? "not_joined")}</dd></div>
         </dl>
 

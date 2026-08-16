@@ -78,6 +78,9 @@ const statements = [
     skills_json TEXT NOT NULL DEFAULT '[]',
     rubric_json TEXT NOT NULL,
     reward TEXT NOT NULL,
+    reward_amount_usdc TEXT,
+    reward_amount_atomic TEXT,
+    reward_mint TEXT,
     access_type TEXT NOT NULL DEFAULT 'invite_only',
     status TEXT NOT NULL DEFAULT 'draft',
     version TEXT NOT NULL DEFAULT '1',
@@ -209,6 +212,56 @@ const statements = [
     verification_digest TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS invoices (
+    id TEXT PRIMARY KEY,
+    creator_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    client_name TEXT NOT NULL,
+    client_email TEXT,
+    description TEXT NOT NULL,
+    amount_usdc TEXT NOT NULL,
+    amount_atomic TEXT NOT NULL,
+    fiat_currency TEXT NOT NULL DEFAULT 'USD',
+    fiat_amount TEXT NOT NULL,
+    fx_rate_vnd TEXT,
+    fx_rate_source TEXT,
+    fx_captured_at TEXT,
+    recipient_wallet TEXT NOT NULL,
+    payment_reference TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'sent',
+    due_at TEXT,
+    paid_atomic TEXT NOT NULL DEFAULT '0',
+    paid_at TEXT,
+    paid_tx TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS payment_events (
+    id TEXT PRIMARY KEY,
+    invoice_id TEXT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+    signature TEXT NOT NULL,
+    sender_wallet TEXT,
+    recipient_wallet TEXT NOT NULL,
+    amount_atomic TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'confirmed',
+    observed_at TEXT NOT NULL,
+    raw_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS challenge_payouts (
+    id TEXT PRIMARY KEY,
+    challenge_id TEXT NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+    submission_id TEXT NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    recipient_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_wallet TEXT NOT NULL,
+    amount_usdc TEXT NOT NULL,
+    amount_atomic TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    payment_tx TEXT,
+    paid_at TEXT,
+    verified_by_user_id TEXT REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS audit_events (
     id TEXT PRIMARY KEY,
     actor_user_id TEXT REFERENCES users(id),
@@ -255,6 +308,13 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS idx_opportunities_org_status ON opportunities(organization_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_access_grants_opportunity_wallet ON access_grants(opportunity_id, wallet_address)`,
   `CREATE INDEX IF NOT EXISTS idx_access_grants_user_created ON access_grants(user_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_invoices_creator_status ON invoices(creator_user_id, status)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_payment_reference ON invoices(payment_reference)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_events_signature ON payment_events(signature)`,
+  `CREATE INDEX IF NOT EXISTS idx_payment_events_invoice_created ON payment_events(invoice_id, created_at)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_payouts_submission ON challenge_payouts(submission_id)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_payouts_tx ON challenge_payouts(payment_tx)`,
+  `CREATE INDEX IF NOT EXISTS idx_challenge_payouts_recipient_status ON challenge_payouts(recipient_user_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_actor_created ON audit_events(actor_user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_target_created ON audit_events(target_type, target_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_rate_limits_expiry ON rate_limits(expires_at)`,
@@ -269,6 +329,14 @@ export async function ensureCoreSchema(db: D1Database) {
   if (!challengeColumns.results.some((column) => column.name === "access_type")) {
     try {
       await db.prepare("ALTER TABLE challenges ADD COLUMN access_type TEXT NOT NULL DEFAULT 'invite_only'").run();
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+    }
+  }
+  for (const column of ["reward_amount_usdc", "reward_amount_atomic", "reward_mint"]) {
+    if (challengeColumns.results.some((item) => item.name === column)) continue;
+    try {
+      await db.prepare(`ALTER TABLE challenges ADD COLUMN ${column} TEXT`).run();
     } catch (error) {
       if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
     }
