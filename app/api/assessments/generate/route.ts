@@ -1,10 +1,13 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import type { EvidenceSource } from "../../../../lib/assessment-contract";
 import { extractEvidenceSources, generateLiveAssessment } from "../../../../lib/assessment-engine";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../../../lib/auth";
 import { requireUniversityReviewer } from "../../../../lib/authorization";
 import { auditStatement } from "../../../../lib/audit";
+import { getEvidence } from "../../../../lib/evidence-store";
 import { consumeRateLimit } from "../../../../lib/rate-limit";
+
+export const maxDuration = 240;
 
 type Context = { submission_id:string; state:string; reflection:string; evidence_json:string; title:string; brief:string; rubric_json:string; reviewer_organization_id:string };
 type FileRow = { r2_key:string; original_name:string; content_type:string; size_bytes:string };
@@ -14,7 +17,7 @@ export async function POST(request: Request) {
     assertSameOrigin(request);
     const user = await requireSessionUser(request);
     await consumeRateLimit(env.DB, "ai_assessment", user.id, 10, 60 * 60);
-    if (!env.OPENAI_API_KEY) return Response.json({ error: "AI production key chưa được cấu hình; hệ thống không dùng fixture cho bài thật." }, { status: 503 });
+    if (!env.TOKENROUTER_API_KEY && !env.OPENAI_API_KEY) return Response.json({ error: "AI production key chưa được cấu hình; hệ thống không dùng fixture cho bài thật." }, { status: 503 });
     const body = (await request.json()) as { submissionId?: string };
     if (!body.submissionId) return Response.json({ error: "Thiếu submissionId." }, { status: 400 });
     const context = await env.DB.prepare(`
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
     const totalBytes = fileRows.results.reduce((sum,file)=>sum+Number(file.size_bytes),0);
     if (totalBytes > 20*1024*1024) return Response.json({ error: "Tổng file cho một lượt AI không được vượt quá 20 MB." }, { status: 413 });
     const files=[] as Array<{filename:string;contentType:string;bytes:ArrayBuffer}>;
-    for (const file of fileRows.results) { const object=await env.EVIDENCE.get(file.r2_key); if(object) files.push({filename:file.original_name,contentType:file.content_type,bytes:await object.arrayBuffer()}); }
+    for (const file of fileRows.results) { const object=await getEvidence(file.r2_key); if(object) files.push({filename:file.original_name,contentType:file.content_type,bytes:await object.arrayBuffer()}); }
     const submitted = JSON.parse(context.evidence_json) as EvidenceSource[];
     const extracted = files.length ? await extractEvidenceSources(env, context.submission_id, context.reflection, files) : { evidence: [] as EvidenceSource[], model: "none", warnings: [] as string[] };
     const evidence = [...submitted, ...extracted.evidence].slice(0,20).map((source,index)=>({...source,id:`E${index+1}`}));

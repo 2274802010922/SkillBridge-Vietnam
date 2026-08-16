@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getWallets } from "@wallet-standard/app";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, type StandardConnectFeature } from "@wallet-standard/features";
@@ -29,6 +30,7 @@ function supportsSolana(wallet: Wallet): wallet is CompatibleWallet {
 }
 
 export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
+  const router = useRouter();
   const [wallets, setWallets] = useState<readonly CompatibleWallet[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
@@ -105,7 +107,8 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
       });
       const verified = await verifyResponse.json() as { error?: string };
       if (!verifyResponse.ok) throw new Error(verified.error ?? "Không thể xác minh chữ ký.");
-      window.location.assign(returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/app");
+      router.push(returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/app");
+      router.refresh();
     } catch (signInError) {
       setError(signInError instanceof Error ? signInError.message : "Đăng nhập không thành công.");
     } finally {

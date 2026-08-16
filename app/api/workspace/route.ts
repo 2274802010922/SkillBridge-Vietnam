@@ -1,4 +1,5 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
+export const maxDuration = 240;
 import { DEMO_EVIDENCE, validateAssessment, type AssessmentEnvelope } from "../../../lib/assessment-contract";
 import { generateAssessment } from "../../../lib/assessment-engine";
 import {

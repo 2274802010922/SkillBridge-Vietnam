@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import bs58 from "bs58";
 import { ensureCoreSchema } from "./core-schema";
 

@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../../../lib/auth";
 
 type Row = { id: string; challenge_id: string; target_wallet: string | null; status: string; expires_at: string };

@@ -1,17 +1,43 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import test from "node:test";
+import path from "node:path";
+import { after, before, test } from "node:test";
+import { fileURLToPath } from "node:url";
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const port = 3217;
+const baseUrl = `http://127.0.0.1:${port}`;
+let server;
+let serverOutput = "";
+
+before(async () => {
+  server = spawn(
+    process.execPath,
+    [path.join(projectRoot, "node_modules", "next", "dist", "bin", "next"), "start", "-H", "127.0.0.1", "-p", String(port)],
+    { cwd: projectRoot, env: { ...process.env, NODE_ENV: "production" }, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  server.stdout.on("data", (chunk) => { serverOutput += chunk.toString(); });
+  server.stderr.on("data", (chunk) => { serverOutput += chunk.toString(); });
+  const deadline = Date.now() + 30_000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(baseUrl, { signal: AbortSignal.timeout(1_000) });
+      if (response.ok) return;
+    } catch {
+      // The server may still be starting; retry until the deadline.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  throw new Error(`Next.js test server did not start. ${serverOutput.slice(-1_000)}`);
+});
+
+after(() => {
+  server?.kill();
+});
 
 async function render(pathname = "/") {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request(`http://localhost${pathname}`, { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+  return fetch(`${baseUrl}${pathname}`, { headers: { accept: "text/html" } });
 }
 
 test("server-renders the SkillBridge product page", async () => {

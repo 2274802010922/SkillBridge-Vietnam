@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { validateAssessment, type AssessmentDraft, type EvidenceSource } from "../../../../../lib/assessment-contract";
 import { auditStatement } from "../../../../../lib/audit";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../../../../lib/auth";

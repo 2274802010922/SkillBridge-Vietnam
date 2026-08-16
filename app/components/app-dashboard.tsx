@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Membership = {
   id: string;
@@ -17,6 +18,7 @@ type DashboardUser = { id: string; walletAddress: string; displayName: string | 
 function shortWallet(address: string) { return `${address.slice(0, 5)}…${address.slice(-5)}`; }
 
 export function AppDashboard({ initialUser, initialMemberships }: { initialUser: DashboardUser; initialMemberships: Membership[] }) {
+  const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [memberships, setMemberships] = useState(initialMemberships);
   const [name, setName] = useState(initialUser.displayName ?? "");
@@ -61,7 +63,8 @@ export function AppDashboard({ initialUser, initialMemberships }: { initialUser:
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    window.location.assign("/");
+    router.push("/");
+    router.refresh();
   }
 
   return (

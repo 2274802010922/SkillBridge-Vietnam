@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function AppHeader({ walletAddress }: { walletAddress: string }) {
-  async function logout() { await fetch("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
+  const router = useRouter();
+  async function logout() { await fetch("/api/auth/logout", { method: "POST" }); router.push("/"); router.refresh(); }
   return <header className="app-topbar page-shell"><Link className="wordmark" href="/"><span className="wordmark-mark">S</span><span>SkillBridge</span><small>VIETNAM</small></Link><div className="wallet-pill"><span className="wallet-status-dot" />{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}<button onClick={logout}>Đăng xuất</button></div></header>;
 }
 

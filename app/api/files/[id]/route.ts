@@ -1,5 +1,6 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { jsonError, requireSessionUser } from "../../../../lib/auth";
+import { getEvidence } from "../../../../lib/evidence-store";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -19,7 +20,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const allowed = await env.DB.prepare(`SELECT 1 AS allowed FROM memberships WHERE user_id = ? AND organization_id = ? AND status = 'active' AND role IN ('university_admin','reviewer') LIMIT 1`).bind(user.id, row.reviewer_organization_id).first();
       if (!allowed) return Response.json({ error: "Bạn không có quyền xem file này." }, { status: 403 });
     }
-    const object = await env.EVIDENCE.get(row.r2_key);
+    const object = await getEvidence(row.r2_key);
     if (!object) return Response.json({ error: "File không còn trong kho lưu trữ." }, { status: 404 });
     return new Response(object.body, { headers: { "content-type": row.content_type, "content-disposition": `inline; filename*=UTF-8''${encodeURIComponent(row.original_name)}`, "cache-control": "private, no-store" } });
   } catch (error) { return jsonError(error); }

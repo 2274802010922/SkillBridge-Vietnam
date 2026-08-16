@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { AppHeader, AppSidebar } from "../../components/app-header";
 import { ChallengesWorkspace } from "../../components/challenges-workspace";
 import { requirePageSession } from "../../../lib/page-session";

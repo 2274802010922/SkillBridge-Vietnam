@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import bs58 from "bs58";
 import { verifySignIn } from "@solana/wallet-standard-util";
 import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";

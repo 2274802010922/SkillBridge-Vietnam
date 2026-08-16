@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { ensureCoreSchema } from "../../../../lib/core-schema";
 import { assertSameOrigin, jsonError, randomToken, validSolanaAddress } from "../../../../lib/auth";
 import { consumeRateLimit, requestClientIdentity } from "../../../../lib/rate-limit";

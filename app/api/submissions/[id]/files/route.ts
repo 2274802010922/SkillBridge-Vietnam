@@ -1,6 +1,7 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { auditStatement } from "../../../../../lib/audit";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../../../../lib/auth";
+import { deleteEvidence, putEvidence } from "../../../../../lib/evidence-store";
 import { consumeRateLimit } from "../../../../../lib/rate-limit";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -34,7 +35,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (owned.state !== "draft" && owned.state !== "changes_requested") {
       return Response.json({ error: "Bài nộp đã khóa." }, { status: 409 });
     }
-    if (!env.EVIDENCE) return Response.json({ error: "Kho lưu trữ file chưa được cấu hình." }, { status: 503 });
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return Response.json({ error: "Thiếu file." }, { status: 400 });
@@ -45,10 +45,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const idFile = crypto.randomUUID();
     const r2Key = `submissions/${id}/${idFile}-${safeName(file.name)}`;
     const sha256 = await hashBytes(bytes);
-    await env.EVIDENCE.put(r2Key, bytes, {
-      httpMetadata: { contentType: file.type },
-      customMetadata: { submissionId: id, uploader: user.id, sha256 },
-    });
+    await putEvidence(r2Key, bytes, file.type);
     try {
       await env.DB.batch([
         env.DB.prepare(`
@@ -65,7 +62,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         }),
       ]);
     } catch (error) {
-      await env.EVIDENCE.delete(r2Key);
+      await deleteEvidence(r2Key);
       throw error;
     }
     return Response.json({ file: { id: idFile, originalName: file.name, contentType: file.type, sizeBytes: file.size, sha256 } }, { status: 201 });
@@ -91,7 +88,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (row.state !== "draft" && row.state !== "changes_requested") {
       return Response.json({ error: "Bài nộp đã khóa." }, { status: 409 });
     }
-    await env.EVIDENCE.delete(row.r2_key);
+    await deleteEvidence(row.r2_key);
     await env.DB.batch([
       env.DB.prepare("DELETE FROM submission_files WHERE id = ?").bind(fileId),
       auditStatement(env.DB, { actorUserId:user.id,action:"evidence.deleted",targetType:"submission_file",targetId:fileId,metadata:{submissionId:id} }),

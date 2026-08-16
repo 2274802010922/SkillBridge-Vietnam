@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../../../../lib/auth";
 import { recordOpportunityAccess } from "../../../../../lib/opportunity-gate";
 import { verifyAttestation } from "../../../../../lib/solana-credentials";

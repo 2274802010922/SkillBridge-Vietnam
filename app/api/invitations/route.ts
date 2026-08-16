@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { assertSameOrigin, jsonError, randomToken, requireSessionUser, sha256, validSolanaAddress } from "../../../lib/auth";
 import { auditStatement } from "../../../lib/audit";
 

@@ -1,6 +1,8 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/runtime-env";
 import { DEMO_EVIDENCE, validateAssessment, type AssessmentEnvelope } from "../../../lib/assessment-contract";
 import { generateAssessment } from "../../../lib/assessment-engine";
+
+export const maxDuration = 240;
 
 type Stage = "invited" | "submitted" | "ai_drafted" | "approved" | "issued" | "unlocked" | "revoked";
 type DemoEvent = { label: string; detail: string; at: string };
@@ -104,7 +106,7 @@ async function readAssessment(runId: string) {
   ).bind(runId).first<AssessmentRow>();
 }
 
-function responseFor(row: DemoRow, assessmentRow: AssessmentRow | null, status = 200, error?: string) {
+function responseFor(row: DemoRow, assessmentRow: AssessmentRow | null, status = 200, error?: string, validationErrors?: string[]) {
   const assessment = safeJson<AssessmentEnvelope | null>(assessmentRow?.assessment_json ?? null, null);
   const review = safeJson<ReviewDecision | null>(assessmentRow?.review_json ?? null, null);
   return Response.json(
@@ -116,6 +118,7 @@ function responseFor(row: DemoRow, assessmentRow: AssessmentRow | null, status =
       assessment,
       review,
       ...(error ? { error } : {}),
+      ...(validationErrors?.length ? { validationErrors } : {}),
     },
     { status, headers: { "set-cookie": `${COOKIE}=${row.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE}` } },
   );
@@ -157,7 +160,7 @@ export async function POST(request: Request) {
         row.id,
       );
       if (!assessment.provenance.validationPassed) {
-        return responseFor(row, assessmentRow, 422, "AI output không vượt qua assessment contract.");
+        return responseFor(row, assessmentRow, 422, "AI output không vượt qua assessment contract.", assessment.provenance.validationErrors);
       }
       await env.DB.prepare(`
         INSERT INTO demo_assessments (run_id, assessment_json, provider, model, status)
@@ -205,6 +208,16 @@ export async function POST(request: Request) {
 
     if (payload.action === "issue_credential" && assessmentRow?.status !== "approved") {
       return responseFor(row, assessmentRow, 422, "Credential cần assessment đã được người thật phê duyệt.");
+    }
+
+    if (payload.action === "unlock_opportunity") {
+      const assessment = safeJson<AssessmentEnvelope | null>(assessmentRow?.assessment_json ?? null, null);
+      if (!assessment || assessmentRow?.status !== "approved") {
+        return responseFor(row, assessmentRow, 422, "Cần credential dựa trên assessment đã được người thật phê duyệt.");
+      }
+      if (assessment.draft.totalScore < 80) {
+        return responseFor(row, assessmentRow, 403, "Credential chưa đạt ngưỡng 80 điểm của cơ hội này.");
+      }
     }
 
     const events = [
