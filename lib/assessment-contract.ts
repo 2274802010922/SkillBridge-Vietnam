@@ -40,8 +40,8 @@ export type AssessmentDraft = {
 export type AssessmentEnvelope = {
   draft: AssessmentDraft;
   provenance: {
-    mode: "tokenrouter" | "openai" | "fixture" | "fixture_fallback";
-    provider: "tokenrouter" | "openai" | "skillbridge-fixture";
+    mode: "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback";
+    provider: "tokenrouter" | "gemini" | "openai" | "skillbridge-fixture";
     model: string;
     generatedAt: string;
     validationPassed: boolean;

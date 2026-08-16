@@ -80,8 +80,11 @@ to the Vercel project:
 2. Create a Private Blob store so Vercel injects `BLOB_STORE_ID` and uses
    short-lived OIDC authentication. `BLOB_READ_WRITE_TOKEN` remains supported
    for legacy or local workflows.
-3. Add the three `TOKENROUTER_*` values and the `SOLANA_*` values from
-   `.env.example` to both Preview and Production environments.
+3. Add `AI_PROVIDER`, the three `TOKENROUTER_*` values, optional Gemini
+   `GEMINI_API_KEY`/`GEMINI_MODEL`, and the `SOLANA_*` values from
+   `.env.example` to both Preview and Production environments. Set
+   `AI_PROVIDER=gemini` to force Gemini, `AI_PROVIDER=tokenrouter` to force
+   TokenRouter, or leave `auto` to prefer Gemini when it is configured.
 4. Deploy a Preview, test every wallet role, AI assessment, human approval,
    Devnet issuance/revocation, and opportunity verification, then promote that
    exact deployment to Production.

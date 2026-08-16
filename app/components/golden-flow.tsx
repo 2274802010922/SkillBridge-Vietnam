@@ -24,7 +24,7 @@ type AssessmentEnvelope = {
     risk: { promptInjectionDetected: boolean; insufficientEvidence: boolean };
   };
   provenance: {
-    mode: "tokenrouter" | "openai" | "fixture" | "fixture_fallback";
+    mode: "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback";
     provider: string;
     model: string;
     validationPassed: boolean;
@@ -151,8 +151,8 @@ export function GoldenFlow() {
                   <div><small>{t("demo.assessmentContract")}</small><strong>{assessmentDraft.totalScore} / 100</strong></div>
                   <div className="assessment-badges">
                     <span>{t("demo.confidence")} {assessmentDraft.confidence.toFixed(2)}</span>
-                    <span className={`engine-badge ${assessmentMode === "openai" ? "live" : "fixture"}`}>
-                      {assessmentMode === "openai" || assessmentMode === "tokenrouter" ? assessment.provenance.model : t("demo.fixture")}
+                    <span className={`engine-badge ${assessmentMode === "openai" || assessmentMode === "gemini" || assessmentMode === "tokenrouter" ? "live" : "fixture"}`}>
+                      {assessmentMode === "openai" || assessmentMode === "gemini" || assessmentMode === "tokenrouter" ? assessment.provenance.model : t("demo.fixture")}
                     </span>
                   </div>
                 </div>

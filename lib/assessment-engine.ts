@@ -8,13 +8,16 @@ import {
   type AssessmentDraft,
   type AssessmentEnvelope,
   type EvidenceSource,
-} from "./assessment-contract";
-import { extractDocumentSections } from "./document-text";
+} from "./assessment-contract.ts";
+import { extractDocumentSections } from "./document-text.ts";
 
 export type AiEnvironment = {
+  AI_PROVIDER?: string;
   TOKENROUTER_API_KEY?: string;
   TOKENROUTER_BASE_URL?: string;
   TOKENROUTER_MODEL?: string;
+  GEMINI_API_KEY?: string;
+  GEMINI_MODEL?: string;
   OPENAI_API_KEY?: string;
   OPENAI_ASSESSMENT_MODEL?: string;
 };
@@ -29,6 +32,13 @@ type ResponsesPayload = {
 type ChatPayload = {
   model?: string;
   choices?: Array<{ message?: { content?: string } }>;
+};
+
+type GeminiPayload = {
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string }> };
+  }>;
+  error?: { message?: string };
 };
 
 class AiProviderError extends Error {
@@ -168,8 +178,62 @@ async function requestJson<T>(
   input: unknown,
   schemaName: string,
   schema: unknown,
-): Promise<{ value: T; model: string; provider: "tokenrouter" | "openai" }> {
-  const tokenRouter = tokenRouterConfig(environment);
+): Promise<{ value: T; model: string; provider: "tokenrouter" | "gemini" | "openai" }> {
+  const preference = (environment.AI_PROVIDER || "auto").trim().toLowerCase();
+  const provider = preference === "tokenrouter"
+    ? "tokenrouter"
+    : preference === "gemini"
+      ? "gemini"
+      : preference === "openai"
+        ? "openai"
+        : environment.GEMINI_API_KEY
+          ? "gemini"
+          : environment.TOKENROUTER_API_KEY
+            ? "tokenrouter"
+            : "openai";
+  if (!["auto", "tokenrouter", "gemini", "openai"].includes(preference)) {
+    throw new Error("AI_PROVIDER phải là auto, tokenrouter, gemini hoặc openai.");
+  }
+  if (provider === "tokenrouter" && !environment.TOKENROUTER_API_KEY) {
+    throw new Error("TOKENROUTER_API_KEY chưa được cấu hình.");
+  }
+  if (provider === "gemini" && !environment.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY chưa được cấu hình.");
+  }
+  if (provider === "openai" && !environment.OPENAI_API_KEY) {
+    throw new Error("Chưa cấu hình API key cho provider AI đã chọn.");
+  }
+
+  if (provider === "gemini") {
+    const model = environment.GEMINI_MODEL || "gemini-2.5-flash-lite";
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": environment.GEMINI_API_KEY as string,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: "user", parts: [{ text: JSON.stringify({ task: "Return only valid JSON. Do not use Markdown fences.", schemaName, schema, input }) }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0.1, maxOutputTokens: 6_144 },
+      }),
+      signal: AbortSignal.timeout(TOKENROUTER_ATTEMPT_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      await response.body?.cancel();
+      const status = response.status;
+      if (status === 400 || status === 404) throw new AiProviderError("Cấu hình Gemini model không hợp lệ. Hãy kiểm tra GEMINI_MODEL trên Vercel.", status);
+      if (status === 401 || status === 403) throw new AiProviderError("Gemini API key không hợp lệ hoặc không có quyền sử dụng model đã chọn.", status);
+      if (RETRYABLE_AI_STATUSES.has(status)) throw new AiProviderError("Gemini đang quá tải hoặc đã hết quota miễn phí. Vui lòng thử lại sau.", 503, 60);
+      throw new AiProviderError("Gemini tạm thời không thể xử lý yêu cầu AI.", 502, 60);
+    }
+    const payload = await response.json() as GeminiPayload;
+    const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+    if (!text) throw new Error("Gemini response không chứa nội dung JSON.");
+    return { value: parseJsonObject<T>(text), model, provider: "gemini" };
+  }
+
+  const tokenRouter = provider === "tokenrouter" ? tokenRouterConfig(environment) : null;
   if (tokenRouter) {
     const requestBody = JSON.stringify({
       model: tokenRouter.model,
@@ -245,9 +309,7 @@ async function requestJson<T>(
     };
   }
 
-  if (!environment.OPENAI_API_KEY) {
-    throw new Error("TOKENROUTER_API_KEY chưa được cấu hình.");
-  }
+  if (!environment.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY chưa được cấu hình.");
   const model = environment.OPENAI_ASSESSMENT_MODEL ?? "gpt-5.6-luna";
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -306,8 +368,8 @@ export async function extractEvidenceSources(
   reflection: string,
   files: AssessmentFile[],
 ): Promise<{ evidence: EvidenceSource[]; model: string; warnings: string[] }> {
-  if (!environment.TOKENROUTER_API_KEY && !environment.OPENAI_API_KEY) {
-    throw new Error("TOKENROUTER_API_KEY chưa được cấu hình.");
+  if (!environment.TOKENROUTER_API_KEY && !environment.GEMINI_API_KEY && !environment.OPENAI_API_KEY) {
+    throw new Error("Chưa cấu hình TOKENROUTER_API_KEY, GEMINI_API_KEY hoặc OPENAI_API_KEY.");
   }
   if (!files.length) return { evidence: [], model: "none", warnings: [] };
   const extracted = await extractDocumentSections(files);
@@ -337,8 +399,8 @@ export async function generateLiveAssessment(
   challenge: { title: string; brief: string; rubric: unknown },
   evidence: EvidenceSource[],
 ): Promise<AssessmentEnvelope> {
-  if (!environment.TOKENROUTER_API_KEY && !environment.OPENAI_API_KEY) {
-    throw new Error("TOKENROUTER_API_KEY chưa được cấu hình.");
+  if (!environment.TOKENROUTER_API_KEY && !environment.GEMINI_API_KEY && !environment.OPENAI_API_KEY) {
+    throw new Error("Chưa cấu hình TOKENROUTER_API_KEY, GEMINI_API_KEY hoặc OPENAI_API_KEY.");
   }
   if (!evidence.length) throw new Error("Không có evidence source để đánh giá.");
   const generated = await requestAssessment(environment, challenge, evidence);
@@ -366,7 +428,7 @@ export async function generateAssessment(
   let provider: AssessmentEnvelope["provenance"]["provider"] = "skillbridge-fixture";
   let model = "assessment-fixture-v1";
 
-  if (environment.TOKENROUTER_API_KEY || environment.OPENAI_API_KEY) {
+  if (environment.TOKENROUTER_API_KEY || environment.GEMINI_API_KEY || environment.OPENAI_API_KEY) {
     const generated = await requestAssessment(environment, {
       title: "Growth Strategy 90D",
       brief: "Xây chiến lược tăng trưởng 90 ngày cho startup thời trang bền vững Việt Nam, ưu tiên Gen Z tại TP.HCM.",

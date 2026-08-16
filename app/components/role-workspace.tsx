@@ -21,7 +21,7 @@ type WorkspaceState = {
       grounding: { citationCoverage: number; unsupportedClaims: string[] };
       rubric: Array<{ id: string; label: string; score: number; maxScore: number; citations: Array<{ sourceId: string; locator: string; quote: string }> }>;
     };
-    provenance: { mode: "tokenrouter" | "openai" | "fixture" | "fixture_fallback"; model: string; validationPassed: boolean };
+    provenance: { mode: "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback"; model: string; validationPassed: boolean };
   } | null;
   review: { decision: "approved"; reviewer: string; approvedAt: string; resolvedFlags: string[] } | null;
   credential: {

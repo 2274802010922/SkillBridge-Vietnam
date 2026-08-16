@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     assertSameOrigin(request);
     const user = await requireSessionUser(request);
     await consumeRateLimit(env.DB, "ai_assessment", user.id, 10, 60 * 60);
-    if (!env.TOKENROUTER_API_KEY && !env.OPENAI_API_KEY) return Response.json({ error: "AI production key chưa được cấu hình; hệ thống không dùng fixture cho bài thật." }, { status: 503 });
+    if (!env.TOKENROUTER_API_KEY && !env.GEMINI_API_KEY && !env.OPENAI_API_KEY) return Response.json({ error: "AI production key chưa được cấu hình; hệ thống không dùng fixture cho bài thật." }, { status: 503 });
     const body = (await request.json()) as { submissionId?: string };
     if (!body.submissionId) return Response.json({ error: "Thiếu submissionId." }, { status: 400 });
     const context = await env.DB.prepare(`
