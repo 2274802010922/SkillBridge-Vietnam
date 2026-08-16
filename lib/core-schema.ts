@@ -140,6 +140,7 @@ const statements = [
     assessment_json TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'in_review',
     ai_result_hash TEXT NOT NULL,
+    assessment_mode TEXT NOT NULL DEFAULT 'ai_assisted',
     final_result_hash TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -337,6 +338,14 @@ export async function ensureCoreSchema(db: D1Database) {
     if (challengeColumns.results.some((item) => item.name === column)) continue;
     try {
       await db.prepare(`ALTER TABLE challenges ADD COLUMN ${column} TEXT`).run();
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+    }
+  }
+  const assessmentColumns = await db.prepare("PRAGMA table_info(assessments)").all<{ name: string }>();
+  if (!assessmentColumns.results.some((column) => column.name === "assessment_mode")) {
+    try {
+      await db.prepare("ALTER TABLE assessments ADD COLUMN assessment_mode TEXT NOT NULL DEFAULT 'ai_assisted'").run();
     } catch (error) {
       if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
     }

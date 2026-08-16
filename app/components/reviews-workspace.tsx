@@ -2,27 +2,39 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { AssessmentDraft } from "../../lib/assessment-contract";
+import { buildManualDraft, parseManualRubric } from "../../lib/manual-assessment";
 import { translateStatus, useLanguage } from "./i18n";
 
 type ReviewRow = {
   submission_id: string; submission_state: string; reflection: string;
   student_name: string | null; student_wallet: string; challenge_title: string;
-  challenge_brief: string; business_name: string; reviewer_organization_name: string;
+  challenge_brief: string; rubric_json: string; business_name: string; reviewer_organization_name: string;
   reviewer_organization_id: string; assessment_id: string | null;
-  assessment_status: string | null; assessment_json: string | null; review_json: string | null;
+  assessment_status: string | null; assessment_mode: string | null; assessment_json: string | null; review_json: string | null;
   file_count: number; credential_id: string | null; credential_status: string | null;
   attestation_address: string | null;
 };
 type FileRow = { id: string; original_name: string; size_bytes: string; sha256: string };
 type StoredReview = { decision?: string; note?: string | null; finalDraft?: AssessmentDraft; officialScore?: number | null };
+type StoredEnvelope = { draft?: AssessmentDraft; provenance?: { mode?: string } };
 
 function cloneDraft(draft: AssessmentDraft) {
   return JSON.parse(JSON.stringify(draft)) as AssessmentDraft;
 }
 
-function readDraft(value: string | null) {
+function readEnvelope(value: string | null) {
   if (!value) return null;
-  try { return (JSON.parse(value) as { draft?: AssessmentDraft }).draft ?? null; } catch { return null; }
+  try { return JSON.parse(value) as StoredEnvelope; } catch { return null; }
+}
+
+function readDraft(value: string | null) {
+  const envelope = readEnvelope(value);
+  if (!envelope || envelope.provenance?.mode === "manual") return null;
+  return envelope.draft ?? null;
+}
+
+function readStoredDraft(value: string | null) {
+  return readEnvelope(value)?.draft ?? null;
 }
 
 function readReview(value: string | null) {
@@ -37,17 +49,21 @@ export function ReviewsWorkspace() {
   const [files, setFiles] = useState<FileRow[]>([]);
   const [aiDraft, setAiDraft] = useState<AssessmentDraft | null>(null);
   const [humanDraft, setHumanDraft] = useState<AssessmentDraft | null>(null);
+  const [manualMode, setManualMode] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   async function choose(row: ReviewRow) {
     setSelected(row.submission_id);
+    const envelope = readEnvelope(row.assessment_json);
     const nextAiDraft = readDraft(row.assessment_json);
     const review = readReview(row.review_json);
-    setAiDraft(nextAiDraft);
+    const isManual = row.assessment_mode === "manual" || envelope?.provenance?.mode === "manual";
     const officialReview = row.assessment_status !== "in_review" && review?.finalDraft ? review.finalDraft : null;
-    setHumanDraft(officialReview ? cloneDraft(officialReview) : nextAiDraft ? cloneDraft(nextAiDraft) : null);
+    setManualMode(isManual);
+    setAiDraft(nextAiDraft);
+    setHumanDraft(officialReview ? cloneDraft(officialReview) : isManual ? (readStoredDraft(row.assessment_json) ? cloneDraft(readStoredDraft(row.assessment_json) as AssessmentDraft) : null) : nextAiDraft ? cloneDraft(nextAiDraft) : null);
     setNote(review?.note ?? "");
     const response = await fetch(`/api/reviews/${row.submission_id}/files`, { cache: "no-store" });
     setFiles(response.ok ? ((await response.json()) as { files: FileRow[] }).files : []);
@@ -92,6 +108,27 @@ export function ReviewsWorkspace() {
     }
   }
 
+  async function startManual() {
+    if (!active) return;
+    const definitions = parseManualRubric(JSON.parse(active.rubric_json));
+    if (!definitions) { setNotice(t("review.decisionError")); return; }
+    setBusy(true); setNotice(null);
+    try {
+      const response = await fetch("/api/assessments/manual", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "start", submissionId: active.submission_id }) });
+      const data = await response.json().catch(() => ({ error: undefined })) as { error?: string };
+      if (!response.ok) { setNotice(data.error ?? t("review.decisionError")); return; }
+      setManualMode(true);
+      setAiDraft(null);
+      setHumanDraft(buildManualDraft(definitions));
+      setNotice(t("review.manualStarted"));
+      await load();
+    } catch {
+      setNotice(t("review.networkError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function updateHumanDraft(index: number, patch: Partial<AssessmentDraft["rubric"][number]>) {
     setHumanDraft((current) => {
       if (!current) return current;
@@ -105,16 +142,22 @@ export function ReviewsWorkspace() {
   }
 
   async function decide(decision: "approved" | "rejected" | "changes_requested") {
-    if (!active?.assessment_id) return;
+    if (!active || !humanDraft) return;
     setBusy(true); setNotice(null);
-    const response = await fetch(`/api/assessments/${active.assessment_id}/review`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ decision, note, finalDraft: humanDraft }),
-    });
-    const data = await response.json() as { error?: string };
-    setNotice(response.ok ? t("review.decisionSaved") : data.error ?? t("review.decisionError"));
-    await load(); setBusy(false);
+    const endpoint = manualMode ? "/api/assessments/manual" : `/api/assessments/${active.assessment_id}/review`;
+    const body = manualMode
+      ? { action: "decide", assessmentId: active.assessment_id, decision, note, finalDraft: humanDraft }
+      : { decision, note, finalDraft: humanDraft };
+    try {
+      const response = await fetch(endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const data = await response.json().catch(() => ({ error: undefined })) as { error?: string };
+      setNotice(response.ok ? t("review.decisionSaved") : data.error ?? t("review.decisionError"));
+      if (response.ok) await load();
+    } catch {
+      setNotice(t("review.decisionError"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function bootstrap() {
@@ -122,7 +165,7 @@ export function ReviewsWorkspace() {
     setBusy(true); setNotice(null);
     const response = await fetch("/api/solana/bootstrap", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ organizationId: active.reviewer_organization_id }) });
     const data = await response.json() as { error?: string };
-    setNotice(response.ok ? "Issuer and schema are ready on Solana Devnet." : data.error ?? "Could not bootstrap issuer."); setBusy(false);
+    setNotice(response.ok ? t("review.issuerReady") : data.error ?? t("review.issuerError")); setBusy(false);
   }
 
   async function issue() {
@@ -130,17 +173,16 @@ export function ReviewsWorkspace() {
     setBusy(true); setNotice(null);
     const response = await fetch("/api/credentials", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ assessmentId: active.assessment_id }) });
     const data = await response.json() as { error?: string };
-    setNotice(response.ok ? "Credential issued on Solana Devnet." : data.error ?? "Could not issue credential."); await load(); setBusy(false);
+    setNotice(response.ok ? t("review.credentialIssued") : data.error ?? t("review.credentialError")); await load(); setBusy(false);
   }
+
+  const humanPanel = humanDraft ? <article className="assessment-column human-assessment-column"><div className="assessment-column-heading"><div><span>{manualMode ? t("review.manualPathLabel") : t("review.humanFinalLabel")}</span><h3>{t("review.humanScore")}</h3></div><b>{t("review.officialBadge")}</b></div><p className="manual-path-description">{manualMode ? t("review.manualPathDescription") : t("review.officialScoreHint")}</p><div className="assessment-summary human-summary"><div><strong>{humanDraft.totalScore}</strong><span>/100</span></div>{canEdit ? <textarea value={humanDraft.summary} onChange={(event) => updateHumanSummary(event.target.value)} placeholder={t("review.humanSummaryPlaceholder")} /> : <p>{humanDraft.summary}</p>}</div><div className="review-rubric">{humanDraft.rubric.map((item, index) => <article key={item.id}><div><strong>{item.label}</strong><label><input aria-label={`${t("review.humanScore")} ${item.label}`} type="number" min="0" max={item.maxScore} value={item.score} disabled={!canEdit} onChange={(event) => updateHumanDraft(index, { score: Math.max(0, Math.min(item.maxScore, Number(event.target.value))) })} /><span>/{item.maxScore}</span></label></div>{canEdit ? <textarea className="rubric-note" value={item.rationale} onChange={(event) => updateHumanDraft(index, { rationale: event.target.value })} placeholder={t("review.humanRationalePlaceholder")} /> : <p>{item.rationale}</p>}<small className="official-mark">{t("review.officialScoreHint")}</small></article>)}</div>{canEdit && <><textarea className="review-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("review.reviewerNote")} /><div className="review-decisions"><button disabled={busy} onClick={() => decide("changes_requested")}>{t("review.requestChanges")}</button><button disabled={busy} onClick={() => decide("rejected")}>{t("review.reject")}</button><button className="button button-primary" disabled={busy} onClick={() => decide("approved")}>{t("review.approve")}</button></div></>}{!canEdit && active?.submission_state === "submitted" && <button className="button button-dark review-reopen" disabled={busy} onClick={startManual}>{t("review.startManual")}</button>}</article> : null;
 
   return <div className="workspace-product-content">
     <div className="app-welcome"><div><span>{t("review.kicker")}</span><h1>{t("review.title")}</h1><p>{t("review.description")}</p></div><div className="identity-card"><small>{t("review.queue")}</small><strong className="metric-number">{rows.filter((row) => ["submitted", "in_review"].includes(row.submission_state)).length}</strong><b>{rows.length} {t("review.authorized")}</b></div></div>
     {rows.length === 0 ? <section className="app-panel empty-product"><h2>{t("review.noSubmissions")}</h2><p>{t("review.noSubmissionsDescription")}</p></section> : <div className="review-layout"><aside className="submission-list">{rows.map((row) => <button className={selected === row.submission_id ? "active" : ""} key={row.submission_id} onClick={() => choose(row)}><small>{row.business_name}</small><strong>{row.student_name || row.student_wallet.slice(0, 9)}</strong><span>{translateStatus(t, row.submission_state)} · {row.file_count} {t("review.file")}</span></button>)}</aside>
       {active && <section className="app-panel review-editor"><div className="entity-top"><span>{active.challenge_title}</span><b>{translateStatus(t, active.credential_status ?? active.assessment_status) || t("review.aiNotRun")}</b></div><h2>{active.student_name || active.student_wallet}</h2><p className="review-brief">{active.challenge_brief}</p>{active.reflection && <blockquote>{active.reflection}</blockquote>}<div className="file-list">{files.map((file) => <article key={file.id}><div><strong>{file.original_name}</strong><small>{Math.ceil(Number(file.size_bytes) / 1024)} KB · {file.sha256.slice(0, 12)}…</small></div><div className="file-actions"><a href={`/api/files/${file.id}`} target="_blank" rel="noreferrer">{t("review.viewFile")}</a><a href={`/api/files/${file.id}?download=1`}>{t("review.downloadFile")}</a></div></article>)}</div>
-        {!aiDraft ? <button className="button button-primary ai-run" disabled={busy || active.submission_state !== "submitted"} onClick={generate}>{busy ? t("review.reading") : t("review.runAi")}</button> : <div className="review-assessment-columns">
-          <article className="assessment-column ai-assessment-column"><div className="assessment-column-heading"><div><span>{t("review.aiDraftLabel")}</span><h3>{t("review.aiComments")}</h3></div><b>READ-ONLY</b></div><div className="assessment-summary"><div><strong>{aiDraft.totalScore}</strong><span>/100</span></div><p>{aiDraft.summary}</p></div><div className="review-rubric">{aiDraft.rubric.map((item) => <article key={item.id}><div><strong>{item.label}</strong><span className="ai-score-badge">{item.score}/{item.maxScore}</span></div><p>{item.rationale}</p>{item.citations.map((citation, citationIndex) => <blockquote key={citationIndex}><small>{citation.sourceId} · {citation.locator}</small>“{citation.quote}”</blockquote>)}</article>)}</div><p className="assessment-footnote">{t("review.aiReadOnly")}</p></article>
-          {humanDraft && <article className="assessment-column human-assessment-column"><div className="assessment-column-heading"><div><span>{t("review.humanFinalLabel")}</span><h3>{t("review.humanScore")}</h3></div><b>OFFICIAL</b></div><div className="assessment-summary human-summary"><div><strong>{humanDraft.totalScore}</strong><span>/100</span></div>{canEdit ? <textarea value={humanDraft.summary} onChange={(event) => updateHumanSummary(event.target.value)} placeholder={t("review.humanSummaryPlaceholder")} /> : <p>{humanDraft.summary}</p>}</div><div className="review-rubric">{humanDraft.rubric.map((item, index) => <article key={item.id}><div><strong>{item.label}</strong><label><input aria-label={`${t("review.humanScore")} ${item.label}`} type="number" min="0" max={item.maxScore} value={item.score} disabled={!canEdit} onChange={(event) => updateHumanDraft(index, { score: Math.max(0, Math.min(item.maxScore, Number(event.target.value))) })} /><span>/{item.maxScore}</span></label></div>{canEdit ? <textarea className="rubric-note" value={item.rationale} onChange={(event) => updateHumanDraft(index, { rationale: event.target.value })} placeholder={t("review.humanRationalePlaceholder")} /> : <p>{item.rationale}</p>}<small className="official-mark">{t("review.officialScoreHint")}</small></article>)}</div>{canEdit && <><textarea className="review-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("review.reviewerNote")} /><div className="review-decisions"><button disabled={busy} onClick={() => decide("changes_requested")}>{t("review.requestChanges")}</button><button disabled={busy} onClick={() => decide("rejected")}>{t("review.reject")}</button><button className="button button-primary" disabled={busy} onClick={() => decide("approved")}>{t("review.approve")}</button></div></>}</article>}
-        </div>}
+        {!aiDraft && !humanDraft ? <div className="review-path-choice"><article className="review-path-card ai-path-card"><span>{t("review.aiOptionalBadge")}</span><h3>{t("review.aiOptionTitle")}</h3><p>{t("review.aiOptionDescription")}</p><button className="button button-primary" disabled={busy || !["submitted", "in_review"].includes(active.submission_state)} onClick={generate}>{busy ? t("review.reading") : t("review.runAiOptional")}</button></article><article className="review-path-card manual-path-card"><span>{t("review.officialPathBadge")}</span><h3>{t("review.manualOptionTitle")}</h3><p>{t("review.manualOptionDescription")}</p><button className="button button-dark" disabled={busy || !["submitted", "in_review", "changes_requested"].includes(active.submission_state)} onClick={startManual}>{busy ? t("review.reading") : t("review.startManual")}</button></article></div> : aiDraft ? <div className="review-assessment-columns"><article className="assessment-column ai-assessment-column"><div className="assessment-column-heading"><div><span>{t("review.aiDraftLabel")}</span><h3>{t("review.aiComments")}</h3></div><b>{t("review.readOnlyBadge")}</b></div><div className="assessment-summary"><div><strong>{aiDraft.totalScore}</strong><span>/100</span></div><p>{aiDraft.summary}</p></div><div className="review-rubric">{aiDraft.rubric.map((item) => <article key={item.id}><div><strong>{item.label}</strong><span className="ai-score-badge">{item.score}/{item.maxScore}</span></div><p>{item.rationale}</p>{item.citations.map((citation, citationIndex) => <blockquote key={citationIndex}><small>{citation.sourceId} · {citation.locator}</small>“{citation.quote}”</blockquote>)}</article>)}</div><p className="assessment-footnote">{t("review.aiReadOnly")}</p></article>{humanPanel}</div> : <div className="review-assessment-columns manual-only">{humanPanel}</div>}
         {active.assessment_status === "approved" && !active.credential_id && <div className="chain-actions"><button className="button button-dark" disabled={busy} onClick={bootstrap}>{t("review.initializeIssuer")}</button><button className="button button-primary" disabled={busy} onClick={issue}>{t("review.issueCredential")}</button></div>}
         {active.credential_id && <a className="chain-proof-link" href={`/verify/${active.credential_id}`}>{t("review.openVerification")}</a>}
       </section>}

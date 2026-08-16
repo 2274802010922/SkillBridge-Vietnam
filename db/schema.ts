@@ -224,6 +224,7 @@ export const assessments = sqliteTable(
     assessmentJson: text("assessment_json").notNull(),
     status: text("status").notNull().default("in_review"),
     aiResultHash: text("ai_result_hash").notNull(),
+    assessmentMode: text("assessment_mode").notNull().default("ai_assisted"),
     finalResultHash: text("final_result_hash"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
