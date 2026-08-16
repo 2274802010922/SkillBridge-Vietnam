@@ -51,7 +51,7 @@ test("server-renders the SkillBridge product page", async () => {
   assert.match(html, /LUỒNG PROOF-TO-PAYOUT/i);
   assert.match(html, /AI tùy chọn/i);
   assert.match(html, /AI chỉ là trợ lý tùy chọn theo rubric/i);
-  assert.match(html, /product-features-section/i);
+  assert.match(html, /landing-capabilities/i);
   assert.doesNotMatch(html, /Luồng tương tác mẫu|Interactive vertical slice|demo-section/i);
   assert.match(html, /language-switcher/i);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|SkeletonPreview/i);
