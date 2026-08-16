@@ -22,6 +22,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
     const object = await getEvidence(row.r2_key);
     if (!object) return Response.json({ error: "File không còn trong kho lưu trữ." }, { status: 404 });
-    return new Response(object.body, { headers: { "content-type": row.content_type, "content-disposition": `inline; filename*=UTF-8''${encodeURIComponent(row.original_name)}`, "cache-control": "private, no-store" } });
+    const download = new URL(request.url).searchParams.get("download") === "1";
+    return new Response(object.body, { headers: { "content-type": row.content_type, "content-disposition": `${download ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(row.original_name)}`, "cache-control": "private, no-store" } });
   } catch (error) { return jsonError(error); }
 }

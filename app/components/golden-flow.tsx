@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "./i18n";
 
 type Stage = "invited" | "submitted" | "ai_drafted" | "approved" | "issued" | "unlocked" | "revoked";
 type DemoEvent = { label: string; detail: string; at: string };
@@ -40,21 +41,21 @@ type DemoState = {
 };
 
 const stages: Array<{ id: Stage; short: string; title: string; owner: string }> = [
-  { id: "invited", short: "01", title: "Challenge", owner: "Doanh nghiệp" },
-  { id: "submitted", short: "02", title: "Evidence", owner: "Sinh viên" },
-  { id: "ai_drafted", short: "03", title: "AI draft", owner: "AI copilot" },
-  { id: "approved", short: "04", title: "Review", owner: "Giảng viên" },
-  { id: "issued", short: "05", title: "Credential", owner: "Solana" },
-  { id: "unlocked", short: "06", title: "Invitation", owner: "Cơ hội" },
+  { id: "invited", short: "01", title: "demo.stage.challenge", owner: "demo.role.business" },
+  { id: "submitted", short: "02", title: "demo.stage.evidence", owner: "demo.role.student" },
+  { id: "ai_drafted", short: "03", title: "demo.stage.aiDraft", owner: "demo.role.ai" },
+  { id: "approved", short: "04", title: "demo.stage.review", owner: "demo.role.lecturer" },
+  { id: "issued", short: "05", title: "demo.stage.credential", owner: "demo.role.solana" },
+  { id: "unlocked", short: "06", title: "demo.stage.invitation", owner: "demo.role.opportunity" },
 ];
 
 const actionByStage: Record<Exclude<Stage, "revoked">, { action: string; label: string; helper: string }> = {
-  invited: { action: "submit_evidence", label: "Nộp evidence", helper: "Sinh viên gửi strategy deck và reflection." },
-  submitted: { action: "generate_ai_draft", label: "Chạy AI assessment", helper: "AI trả về schema cố định; citation giả sẽ bị contract từ chối." },
-  ai_drafted: { action: "approve_assessment", label: "Reviewer phê duyệt", helper: "Con người kiểm tra evidence, xử lý flags và chịu trách nhiệm." },
-  approved: { action: "issue_credential", label: "Preview cấp credential", helper: "Tạo claim theo schema đã technical-spike." },
-  issued: { action: "unlock_opportunity", label: "Kiểm tra & mở khóa", helper: "Gate kiểm tra score, evidence hash và trạng thái." },
-  unlocked: { action: "revoke_credential", label: "Thử revoke credential", helper: "Chứng minh utility biến mất sau thu hồi." },
+  invited: { action: "submit_evidence", label: "demo.action.submit", helper: "demo.action.submitHelper" },
+  submitted: { action: "generate_ai_draft", label: "demo.action.assess", helper: "demo.action.assessHelper" },
+  ai_drafted: { action: "approve_assessment", label: "demo.action.review", helper: "demo.action.reviewHelper" },
+  approved: { action: "issue_credential", label: "demo.action.issue", helper: "demo.action.issueHelper" },
+  issued: { action: "unlock_opportunity", label: "demo.action.unlock", helper: "demo.action.unlockHelper" },
+  unlocked: { action: "revoke_credential", label: "demo.action.revoke", helper: "demo.action.revokeHelper" },
 };
 
 function stageIndex(stage: Stage) {
@@ -63,6 +64,7 @@ function stageIndex(stage: Stage) {
 }
 
 export function GoldenFlow() {
+  const { t } = useLanguage();
   const [state, setState] = useState<DemoState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,17 +73,17 @@ export function GoldenFlow() {
     let active = true;
     fetch("/api/demo", { cache: "no-store" })
       .then(async (response) => {
-        if (!response.ok) throw new Error("Không thể tải phiên demo.");
+        if (!response.ok) throw new Error(t("demo.loadError"));
         return response.json() as Promise<DemoState>;
       })
       .then((nextState) => {
         if (active) setState(nextState);
       })
       .catch((loadError: unknown) => {
-        if (active) setError(loadError instanceof Error ? loadError.message : "Đã có lỗi xảy ra.");
+        if (active) setError(loadError instanceof Error ? loadError.message : t("demo.error"));
       });
     return () => { active = false; };
-  }, []);
+  }, [t]);
 
   const activeIndex = useMemo(() => (state ? stageIndex(state.stage) : 0), [state]);
 
@@ -95,10 +97,10 @@ export function GoldenFlow() {
         body: JSON.stringify({ action }),
       });
       const payload = (await response.json()) as DemoState & { error?: string };
-      if (!response.ok) throw new Error(payload.error ?? "Không thể cập nhật demo.");
+      if (!response.ok) throw new Error(payload.error ?? t("demo.updateError"));
       setState(payload);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Đã có lỗi xảy ra.");
+      setError(actionError instanceof Error ? actionError.message : t("demo.error"));
     } finally {
       setBusy(false);
     }
@@ -113,18 +115,18 @@ export function GoldenFlow() {
   return (
     <div className="demo-console">
       <div className="demo-notice">
-        <span>VERIFIABLE AI</span>
-        Console này dùng dữ liệu preview cô lập; luồng đăng nhập theo role dùng OpenAI và Solana Devnet thật.
+        <span>{t("demo.verifiable")}</span>
+        {t("demo.notice")}
       </div>
 
-      <div className="stage-rail" aria-label="Tiến độ golden flow">
+      <div className="stage-rail" aria-label={t("demo.progress")}>
         {stages.map((item, index) => {
           const complete = index < activeIndex || (state?.stage === "unlocked" && index === activeIndex);
           const active = index === activeIndex && state?.stage !== "revoked";
           return (
             <div className={`stage-item ${complete ? "complete" : ""} ${active ? "active" : ""}`} key={item.id}>
               <span>{complete ? "✓" : item.short}</span>
-              <strong>{item.title}</strong><small>{item.owner}</small>
+              <strong>{t(item.title as Parameters<typeof t>[0])}</strong><small>{t(item.owner as Parameters<typeof t>[0])}</small>
             </div>
           );
         })}
@@ -132,25 +134,25 @@ export function GoldenFlow() {
 
       <div className="demo-grid">
         <section className="workspace-panel">
-          <div className="panel-topline"><span>BUSINESS CHALLENGE</span><span className="live-dot">ACTIVE</span></div>
-          <h3>Growth plan cho thương hiệu thời trang bền vững</h3>
-          <p className="challenge-brief">Xây chiến lược tăng trưởng 90 ngày cho một startup Việt Nam, ưu tiên Gen Z tại TP.HCM và ngân sách thực tế.</p>
-          <div className="challenge-meta"><span>⏱ 8 giờ</span><span>◎ Marketing</span><span>◇ Team 1–3</span></div>
+          <div className="panel-topline"><span>{t("demo.businessChallenge")}</span><span className="live-dot">{t("demo.active")}</span></div>
+          <h3>{t("demo.challengeTitle")}</h3>
+          <p className="challenge-brief">{t("demo.challengeBrief")}</p>
+          <div className="challenge-meta"><span>{t("demo.hours")}</span><span>{t("demo.marketing")}</span><span>{t("demo.team")}</span></div>
 
           <div className="evidence-box">
-            <div><span className="file-type">PDF</span><div><strong>growth-strategy-v3.pdf</strong><small>18 trang · evidence hash sẵn sàng</small></div></div>
-            <span className={activeIndex >= 1 ? "status-good" : "status-muted"}>{activeIndex >= 1 ? "ĐÃ NỘP" : "CHỜ NỘP"}</span>
+            <div><span className="file-type">PDF</span><div><strong>growth-strategy-v3.pdf</strong><small>{t("demo.pagesHash")}</small></div></div>
+            <span className={activeIndex >= 1 ? "status-good" : "status-muted"}>{activeIndex >= 1 ? t("demo.submitted") : t("demo.submit")}</span>
           </div>
 
           <div className={`assessment-box ${assessmentDraft ? "visible" : ""}`}>
             {assessmentDraft && (
               <>
                 <div className="assessment-head">
-                  <div><small>AI ASSESSMENT · CONTRACT v1</small><strong>{assessmentDraft.totalScore} / 100</strong></div>
+                  <div><small>{t("demo.assessmentContract")}</small><strong>{assessmentDraft.totalScore} / 100</strong></div>
                   <div className="assessment-badges">
-                    <span>Confidence {assessmentDraft.confidence.toFixed(2)}</span>
+                    <span>{t("demo.confidence")} {assessmentDraft.confidence.toFixed(2)}</span>
                     <span className={`engine-badge ${assessmentMode === "openai" ? "live" : "fixture"}`}>
-                      {assessmentMode === "openai" || assessmentMode === "tokenrouter" ? assessment.provenance.model : "TRANSPARENT FIXTURE"}
+                      {assessmentMode === "openai" || assessmentMode === "tokenrouter" ? assessment.provenance.model : t("demo.fixture")}
                     </span>
                   </div>
                 </div>
@@ -171,13 +173,13 @@ export function GoldenFlow() {
                   ))}
                 </div>
                 <div className="assessment-quality">
-                  <span>GROUNDING {Math.round(assessmentDraft.grounding.citationCoverage * 100)}%</span>
-                  <span>{assessmentDraft.reviewerFlags.length} REVIEWER FLAG</span>
-                  <span>{assessment.provenance.validationPassed ? "CONTRACT PASS" : "CONTRACT FAIL"}</span>
+                  <span>{t("demo.grounding")} {Math.round(assessmentDraft.grounding.citationCoverage * 100)}%</span>
+                  <span>{assessmentDraft.reviewerFlags.length} {t("demo.reviewerFlag")}</span>
+                  <span>{assessment.provenance.validationPassed ? t("demo.contractPass") : t("demo.contractFail")}</span>
                 </div>
                 {assessmentDraft.reviewerFlags[0] && <blockquote>{assessmentDraft.reviewerFlags[0]}</blockquote>}
                 <div className={`human-seal ${state?.review ? "approved" : ""}`}>
-                  {state?.review ? `✓ HUMAN APPROVED · ${state.review.reviewer}` : "AWAITING HUMAN REVIEW"}
+                  {state?.review ? `✓ ${t("demo.activeApproved")} · ${state.review.reviewer}` : t("demo.humanAwaiting")}
                 </div>
               </>
             )}
@@ -185,38 +187,38 @@ export function GoldenFlow() {
 
           {action ? (
             <div className="next-action">
-              <div><small>BƯỚC TIẾP THEO</small><strong>{action.helper}</strong></div>
-              <button className="button button-primary" disabled={busy} onClick={() => act(action.action)}>{busy ? "Đang xử lý…" : action.label}</button>
+              <div><small>{t("demo.nextStep")}</small><strong>{t(action.helper as Parameters<typeof t>[0])}</strong></div>
+              <button className="button button-primary" disabled={busy} onClick={() => act(action.action)}>{busy ? t("demo.processing") : t(action.label as Parameters<typeof t>[0])}</button>
             </div>
           ) : (
             <div className="next-action revoked-action">
-              <div><small>UTILITY CHECK</small><strong>Credential đã revoke; invitation không còn truy cập được.</strong></div>
-              <button className="button button-dark" disabled={busy} onClick={() => act("reset")}>Chạy lại demo</button>
+              <div><small>{t("demo.utilityCheck")}</small><strong>{t("demo.revokedDescription")}</strong></div>
+              <button className="button button-dark" disabled={busy} onClick={() => act("reset")}>{t("demo.runAgain")}</button>
             </div>
           )}
           {error && <p className="demo-error" role="alert">{error}</p>}
         </section>
 
         <aside className="proof-panel">
-          <div className="proof-panel-label">SKILL PASSPORT</div>
+          <div className="proof-panel-label">{t("demo.skillPassport")}</div>
           <div className={`credential-card ${activeIndex >= 4 ? "issued" : ""} ${state?.stage === "revoked" ? "revoked" : ""}`}>
             <div className="credential-top"><span>VLU × SKILLBRIDGE</span><span>PS-001</span></div>
-            <div className="credential-score"><strong>{activeIndex >= 4 ? credentialScore : "—"}</strong><span>GROWTH<br />STRATEGY</span></div>
-            <p>Evidence-linked Proof of Skill</p>
+            <div className="credential-score"><strong>{activeIndex >= 4 ? credentialScore : "—"}</strong><span>{t("demo.credentialStrategy")}</span></div>
+            <p>{t("demo.credentialProof")}</p>
             <div className="credential-lines"><span /><span /><span /></div>
             <div className="credential-status">
-              {state?.stage === "revoked" ? "REVOKED · ACCESS DENIED" : activeIndex >= 4 ? "ACTIVE · HUMAN APPROVED" : "NOT ISSUED"}
+              {state?.stage === "revoked" ? t("demo.revokedDenied") : activeIndex >= 4 ? t("demo.activeApproved") : t("demo.notIssued")}
             </div>
           </div>
 
           <div className={`opportunity-card ${state?.stage === "unlocked" ? "unlocked" : ""}`}>
-            <div><span>LEVEL 2 OPPORTUNITY</span><strong>Growth Sprint Interview</strong></div>
-            <span className="lock-mark">{state?.stage === "unlocked" ? "OPEN" : "LOCKED"}</span>
+            <div><span>{t("demo.levelOpportunity")}</span><strong>{t("demo.opportunityTitle")}</strong></div>
+            <span className="lock-mark">{state?.stage === "unlocked" ? t("demo.open") : t("demo.locked")}</span>
           </div>
 
           <div className="activity-log">
-            <div className="activity-title"><span>ACTIVITY</span><button onClick={() => act("reset")} disabled={busy}>Reset</button></div>
-            {!state && <p>Đang tạo phiên demo…</p>}
+            <div className="activity-title"><span>{t("demo.activity")}</span><button onClick={() => act("reset")} disabled={busy}>{t("demo.reset")}</button></div>
+            {!state && <p>{t("demo.starting")}</p>}
             {state?.events.slice().reverse().slice(0, 4).map((event, index) => (
               <div className="activity-item" key={`${event.at}-${index}`}><span /><div><strong>{event.label}</strong><small>{event.detail}</small></div></div>
             ))}

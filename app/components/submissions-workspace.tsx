@@ -1,21 +1,111 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { translateStatus, useLanguage } from "./i18n";
 
-type SubmissionListItem = { id:string; state:string; reflection:string; evidence_json:string; challenge_title:string; organization_name:string; reward:string; file_count:number; assessment_status:string|null };
-type Evidence = { id:string; locator:string; content:string };
-type FileItem = { id:string; original_name:string; content_type:string; size_bytes:string; sha256:string };
+type SubmissionListItem = { id: string; state: string; reflection: string; evidence_json: string; challenge_title: string; organization_name: string; reward: string; file_count: number; assessment_status: string | null };
+type FileItem = { id: string; original_name: string; content_type: string; size_bytes: string; sha256: string };
 
 export function SubmissionsWorkspace() {
-  const [items,setItems]=useState<SubmissionListItem[]>([]); const [selected,setSelected]=useState<string|null>(null); const [reflection,setReflection]=useState(""); const [evidence,setEvidence]=useState<Evidence[]>([{id:"E1",locator:"",content:""}]); const [files,setFiles]=useState<FileItem[]>([]); const [busy,setBusy]=useState(false); const [notice,setNotice]=useState<string|null>(null);
-  async function loadList(){const response=await fetch("/api/submissions",{cache:"no-store"});if(response.ok){const data=await response.json() as {submissions:SubmissionListItem[]};setItems(data.submissions);if(!selected&&data.submissions[0]) await open(data.submissions[0].id);}}
-  async function open(id:string){setSelected(id);const response=await fetch(`/api/submissions/${id}`,{cache:"no-store"});if(!response.ok)return;const data=await response.json() as {submission:{reflection:string;evidence:Evidence[]};files:FileItem[]};setReflection(data.submission.reflection);setEvidence(data.submission.evidence.length?data.submission.evidence:[{id:"E1",locator:"",content:""}]);setFiles(data.files);}
-  useEffect(()=>{let active=true;fetch("/api/submissions",{cache:"no-store"}).then((response)=>response.ok?response.json() as Promise<{submissions:SubmissionListItem[]}>:{submissions:[]}).then(async(data)=>{if(!active)return;setItems(data.submissions);const first=data.submissions[0];if(!first)return;const detail=await fetch(`/api/submissions/${first.id}`,{cache:"no-store"});if(!active||!detail.ok)return;const payload=await detail.json() as {submission:{reflection:string;evidence:Evidence[]};files:FileItem[]};setSelected(first.id);setReflection(payload.submission.reflection);setEvidence(payload.submission.evidence.length?payload.submission.evidence:[{id:"E1",locator:"",content:""}]);setFiles(payload.files);});return()=>{active=false;};},[]);
-  function updateEvidence(index:number,key:"locator"|"content",value:string){setEvidence((current)=>current.map((item,i)=>i===index?{...item,[key]:value}:item));}
-  function normalizedEvidence(){return evidence.filter((item)=>item.locator.trim()||item.content.trim()).map((item,index)=>({...item,id:`E${index+1}`}));}
-  async function save(action:"save"|"submit"){if(!selected)return;setBusy(true);setNotice(null);const response=await fetch(`/api/submissions/${selected}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({reflection,evidence:normalizedEvidence(),action})});const data=await response.json() as {error?:string};setNotice(response.ok?(action==="submit"?"Đã khóa và gửi bài cho nhà trường review.":"Đã lưu bản nháp."):data.error??"Không thể lưu bài.");await loadList();setBusy(false);}
-  async function upload(file:File){if(!selected)return;setBusy(true);setNotice(null);const form=new FormData();form.set("file",file);const response=await fetch(`/api/submissions/${selected}/files`,{method:"POST",body:form});const data=await response.json() as {error?:string};setNotice(response.ok?"File đã được hash và lưu vào kho evidence.":data.error??"Không thể upload file.");await open(selected);setBusy(false);}
-  async function removeFile(fileId:string){if(!selected)return;setBusy(true);await fetch(`/api/submissions/${selected}/files?fileId=${encodeURIComponent(fileId)}`,{method:"DELETE"});await open(selected);setBusy(false);}
-  const active=items.find((item)=>item.id===selected);const editable=active?.state==="draft"||active?.state==="changes_requested";
-  return <div className="workspace-product-content"><div className="app-welcome"><div><span>EVIDENCE WORKSPACE</span><h1>Bài nộp của sinh viên.</h1><p>File nằm trong R2; metadata, hash và trạng thái workflow nằm trong D1.</p></div><div className="identity-card"><small>SUBMISSIONS</small><strong className="metric-number">{items.length}</strong><b>{items.filter((item)=>item.state==="submitted").length} đang chờ review</b></div></div>{items.length===0?<section className="app-panel empty-product"><h2>Chưa có challenge đã nhận</h2><p>Mở link invitation từ doanh nghiệp để tạo participation và bài nộp.</p><a className="button button-dark" href="/app/challenges">Xem challenges</a></section>:<div className="submission-layout"><aside className="submission-list">{items.map((item)=><button className={selected===item.id?"active":""} onClick={()=>open(item.id)} key={item.id}><small>{item.organization_name}</small><strong>{item.challenge_title}</strong><span>{item.state} · {item.file_count} file</span></button>)}</aside><section className="app-panel submission-editor"><div className="entity-top"><span>{active?.challenge_title}</span><b>{active?.state}</b></div><label>Reflection<textarea disabled={!editable} value={reflection} onChange={(e)=>setReflection(e.target.value)} placeholder="Mô tả cách tiếp cận, quyết định quan trọng và trade-off…" /></label><div className="evidence-editor"><div className="editor-heading"><div><strong>Evidence sources</strong><small>AI chỉ được trích dẫn nội dung có trong các source này.</small></div>{editable&&<button onClick={()=>setEvidence((current)=>[...current,{id:`E${current.length+1}`,locator:"",content:""}])}>+ Thêm source</button>}</div>{evidence.map((item,index)=><div className="evidence-input" key={index}><input disabled={!editable} value={item.locator} onChange={(e)=>updateEvidence(index,"locator",e.target.value)} placeholder="Locator: Slide 3, trang 5…"/><textarea disabled={!editable} value={item.content} onChange={(e)=>updateEvidence(index,"content",e.target.value)} placeholder="Trích đoạn bằng chứng chính xác…"/></div>)}</div><div className="file-uploader"><div><strong>Evidence files</strong><small>PDF, DOCX, PPTX, TXT, JSON, PNG/JPG · tối đa 10 MB/file</small></div>{editable&&<label className="button button-dark">Chọn file<input type="file" hidden onChange={(e)=>e.target.files?.[0]&&upload(e.target.files[0])}/></label>}</div><div className="file-list">{files.map((file)=><article key={file.id}><div><a href={`/api/files/${file.id}`} target="_blank" rel="noreferrer">{file.original_name}</a><small>{Math.ceil(Number(file.size_bytes)/1024)} KB · SHA {file.sha256.slice(0,10)}…</small></div>{editable&&<button onClick={()=>removeFile(file.id)}>Xóa</button>}</article>)}</div>{editable&&<div className="submission-actions"><button className="button button-dark" disabled={busy} onClick={()=>save("save")}>Lưu nháp</button><button className="button button-primary" disabled={busy} onClick={()=>save("submit")}>Nộp để review</button></div>}</section></div>}{notice&&<p className="app-notice" role="status">{notice}</p>}</div>;
+  const { t } = useLanguage();
+  const [items, setItems] = useState<SubmissionListItem[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [files, setFiles] = useState<FileItem[]>([]);
+  const [preview, setPreview] = useState<FileItem | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function open(id: string) {
+    setSelected(id);
+    const response = await fetch(`/api/submissions/${id}`, { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json() as { submission: { reflection: string }; files: FileItem[] };
+    setNote(data.submission.reflection);
+    setFiles(data.files);
+    setPreview(null);
+  }
+
+  async function loadList() {
+    const response = await fetch("/api/submissions", { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json() as { submissions: SubmissionListItem[] };
+    setItems(data.submissions);
+    if (!selected && data.submissions[0]) await open(data.submissions[0].id);
+  }
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/submissions", { cache: "no-store" }).then((response) => response.ok ? response.json() as Promise<{ submissions: SubmissionListItem[] }> : { submissions: [] }).then(async (data) => {
+      if (!active) return;
+      setItems(data.submissions);
+      const first = data.submissions[0];
+      if (!first) return;
+      const detail = await fetch(`/api/submissions/${first.id}`, { cache: "no-store" });
+      if (!active || !detail.ok) return;
+      const payload = await detail.json() as { submission: { reflection: string }; files: FileItem[] };
+      setSelected(first.id);
+      setNote(payload.submission.reflection);
+      setFiles(payload.files);
+    });
+    return () => { active = false; };
+  }, []);
+
+  async function save(action: "save" | "submit") {
+    if (!selected) return;
+    if (action === "submit" && files.length === 0) {
+      setNotice(t("submission.needFile"));
+      return;
+    }
+    setBusy(true); setNotice(null);
+    const response = await fetch(`/api/submissions/${selected}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ note, action }) });
+    const data = await response.json() as { error?: string };
+    setNotice(response.ok ? (action === "submit" ? t("submission.submitted") : t("submission.saved")) : data.error ?? t("submission.uploadError"));
+    if (response.ok) await loadList();
+    setBusy(false);
+  }
+
+  async function upload(file: File) {
+    if (!selected) return;
+    setBusy(true); setNotice(null);
+    const form = new FormData(); form.set("file", file);
+    const response = await fetch(`/api/submissions/${selected}/files`, { method: "POST", body: form });
+    const data = await response.json() as { error?: string };
+    setNotice(response.ok ? t("submission.uploaded") : data.error ?? t("submission.uploadError"));
+    await open(selected);
+    setBusy(false);
+  }
+
+  async function uploadMany(fileList: FileList | null) {
+    if (!fileList) return;
+    for (const file of Array.from(fileList)) await upload(file);
+  }
+
+  async function removeFile(fileId: string) {
+    if (!selected) return;
+    setBusy(true);
+    await fetch(`/api/submissions/${selected}/files?fileId=${encodeURIComponent(fileId)}`, { method: "DELETE" });
+    await open(selected);
+    setBusy(false);
+  }
+
+  const active = items.find((item) => item.id === selected);
+  const editable = active?.state === "draft" || active?.state === "changes_requested";
+  const fileUrl = (file: FileItem, download = false) => `/api/files/${file.id}${download ? "?download=1" : ""}`;
+
+  return <div className="workspace-product-content">
+    <div className="app-welcome"><div><span>{t("submission.kicker")}</span><h1>{t("submission.title")}</h1><p>{t("submission.description")}</p></div><div className="identity-card"><small>{t("submission.count")}</small><strong className="metric-number">{items.length}</strong><b>{items.filter((item) => item.state === "submitted").length} {t("submission.waitingReview")}</b></div></div>
+    {items.length === 0 ? <section className="app-panel empty-product"><h2>{t("submission.noChallenge")}</h2><p>{t("submission.noChallengeDescription")}</p><a className="button button-dark" href="/app/challenges">{t("submission.viewChallenges")}</a></section> : <div className="submission-layout">
+      <aside className="submission-list">{items.map((item) => <button className={selected === item.id ? "active" : ""} onClick={() => open(item.id)} key={item.id}><small>{item.organization_name}</small><strong>{item.challenge_title}</strong><span>{translateStatus(t, item.state)} · {item.file_count} {t("submission.fileCount")}</span></button>)}</aside>
+      <section className="app-panel submission-editor">
+        <div className="entity-top"><span>{active?.challenge_title}</span><b>{translateStatus(t, active?.state)}</b></div>
+        <label>{t("submission.note")}<textarea disabled={!editable} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("submission.notePlaceholder")} /><small>{t("submission.noteHelp")}</small></label>
+        <div className="file-uploader"><div><strong>{t("submission.files")}</strong><small>{t("submission.fileHelp")}</small></div>{editable && <label className="button button-dark">{t("submission.chooseFiles")}<input type="file" multiple hidden onChange={(event) => { void uploadMany(event.target.files); event.currentTarget.value = ""; }} /></label>}</div>
+        <div className="file-list">{files.map((file) => <article key={file.id}><div><strong>{file.original_name}</strong><small>{Math.ceil(Number(file.size_bytes) / 1024)} KB · SHA {file.sha256.slice(0, 10)}…</small></div><div className="file-actions"><button onClick={() => setPreview(file)}>{t("submission.view")}</button><a href={fileUrl(file, true)}>{t("submission.download")}</a>{editable && <button onClick={() => removeFile(file.id)}>{t("submission.remove")}</button>}</div></article>)}</div>
+        {preview && <div className="file-preview"><div className="editor-heading"><strong>{t("submission.preview")}: {preview.original_name}</strong><button onClick={() => setPreview(null)}>{t("submission.closePreview")}</button></div><iframe title={preview.original_name} src={fileUrl(preview)} /></div>}
+        {editable && <div className="submission-actions"><button className="button button-dark" disabled={busy} onClick={() => save("save")}>{t("submission.saveDraft")}</button><button className="button button-primary" disabled={busy || files.length === 0} onClick={() => save("submit")}>{t("submission.submit")}</button></div>}
+      </section>
+    </div>}
+    {notice && <p className="app-notice" role="status">{notice}</p>}
+  </div>;
 }

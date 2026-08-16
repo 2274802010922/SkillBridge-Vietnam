@@ -40,13 +40,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const submission = await ownedSubmission(user.id, id);
     if (!submission) return Response.json({ error: "Bài nộp không tồn tại." }, { status: 404 });
     if (submission.state !== "draft" && submission.state !== "changes_requested") return Response.json({ error: "Bài nộp đã khóa." }, { status: 409 });
-    const body = (await request.json()) as { reflection?: string; evidence?: unknown; action?: "save" | "submit" };
-    const reflection = body.reflection?.trim() ?? "";
-    const evidence = validateEvidence(body.evidence);
-    if (reflection.length > 8000 || evidence === null) return Response.json({ error: "Reflection hoặc evidence không hợp lệ." }, { status: 400 });
+    const body = (await request.json()) as { note?: string; reflection?: string; evidence?: unknown; action?: "save" | "submit" };
+    const reflection = (body.note ?? body.reflection ?? "").trim();
+    const evidence = body.evidence === undefined ? [] : validateEvidence(body.evidence);
+    if (reflection.length > 2000 || evidence === null) return Response.json({ error: "Ghi chú hoặc evidence không hợp lệ." }, { status: 400 });
     if (body.action === "submit") {
       const files = await env.DB.prepare("SELECT COUNT(*) AS count FROM submission_files WHERE submission_id = ?").bind(id).first<{ count: number }>();
-      if (reflection.length < 30 || (evidence.length === 0 && Number(files?.count ?? 0) === 0)) return Response.json({ error: "Cần reflection tối thiểu 30 ký tự và ít nhất một file hoặc evidence source." }, { status: 400 });
+      if (Number(files?.count ?? 0) === 0) return Response.json({ error: "Cần ít nhất một file trước khi nộp bài." }, { status: 400 });
       await env.DB.batch([
         env.DB.prepare(`UPDATE submissions SET state = 'submitted', reflection = ?, evidence_json = ?, submitted_at = CURRENT_TIMESTAMP, locked_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(reflection, JSON.stringify(evidence), id),
         env.DB.prepare(`UPDATE participations SET state = 'submitted', updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT participation_id FROM submissions WHERE id = ?)`).bind(id),

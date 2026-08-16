@@ -1,1 +1,6 @@
-import Link from"next/link";import{PublicVerification}from"../../components/public-verification";export default async function VerifyPage({params}:{params:Promise<{id:string}>}){const{id}=await params;return <main className="verify-page"><header className="auth-header page-shell"><Link className="wordmark" href="/"><span className="wordmark-mark">S</span><span>SkillBridge</span><small>VERIFY</small></Link><span className="workspace-tag">SOLANA DEVNET</span></header><section className="verify-shell page-shell"><div><div className="eyebrow"><span/> Public credential verification</div><h1>Trust, independently checked.</h1><p>Trang này đọc trực tiếp trạng thái Solana Attestation Service. Credential bị revoke hoặc hết hạn sẽ không còn hợp lệ.</p></div><PublicVerification id={id}/></section></main>;}
+import { VerificationPageCopy } from "../../components/verification-page-copy";
+
+export default async function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <VerificationPageCopy id={id} />;
+}

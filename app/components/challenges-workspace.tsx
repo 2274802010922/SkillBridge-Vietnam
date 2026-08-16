@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { translateStatus, useLanguage } from "./i18n";
 
 type Membership = {
   id: string;
@@ -26,6 +27,7 @@ type Challenge = {
 };
 
 export function ChallengesWorkspace({ memberships, universities }: { memberships: Membership[]; universities: University[] }) {
+  const { t } = useLanguage();
   const businessMemberships = memberships.filter((item) =>
     item.organization_kind === "business" && ["business_admin", "challenge_manager"].includes(item.role));
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -72,7 +74,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
       }),
     });
     const data = await response.json() as { error?: string };
-    setNotice(response.ok ? `Đã tạo challenge ${accessType === "public" ? "public" : "invite-only"} ở trạng thái draft.` : data.error ?? "Không thể tạo challenge.");
+    setNotice(response.ok ? t("challenge.created") : data.error ?? t("challenge.actionError"));
     if (response.ok) {
       setTitle("");
       setBrief("");
@@ -89,7 +91,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
       body: JSON.stringify({ action: "publish" }),
     });
     const data = await response.json() as { error?: string };
-    setNotice(response.ok ? "Challenge đã được publish." : data.error ?? "Không thể publish.");
+    setNotice(response.ok ? t("challenge.published") : data.error ?? t("challenge.actionError"));
     await load();
     setBusy(false);
   }
@@ -105,9 +107,9 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
     const data = await response.json() as { invitation?: { joinUrl: string }; error?: string };
     if (response.ok && data.invitation) {
       setJoinUrl(data.invitation.joinUrl);
-      setNotice("Đã tạo link mời sinh viên.");
+      setNotice(t("challenge.invited"));
     } else {
-      setNotice(data.error ?? "Không thể tạo lời mời.");
+      setNotice(data.error ?? t("challenge.actionError"));
     }
     setBusy(false);
   }
@@ -121,7 +123,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
       body: JSON.stringify({ action: "set_access", accessType: nextAccessType }),
     });
     const data = await response.json() as { error?: string };
-    setNotice(response.ok ? `Đã chuyển challenge sang ${nextAccessType === "public" ? "Public" : "Invite only"}.` : data.error ?? "Không thể đổi chế độ tham gia.");
+    setNotice(response.ok ? t("challenge.accessUpdated") : data.error ?? t("challenge.actionError"));
     if (response.ok) await load();
     setBusy(false);
   }
@@ -131,7 +133,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
     setNotice(null);
     const response = await fetch(`/api/challenges/${id}/join`, { method: "POST" });
     const data = await response.json() as { error?: string };
-    setNotice(response.ok ? "Bạn đã tham gia challenge. Bài nộp đã được tạo." : data.error ?? "Không thể tham gia challenge.");
+    setNotice(response.ok ? t("challenge.joined") : data.error ?? t("challenge.actionError"));
     if (response.ok) await load();
     setBusy(false);
   }
@@ -139,40 +141,40 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
   return <div className="workspace-product-content">
     <div className="app-welcome">
       <div>
-        <span>CHALLENGE PIPELINE</span>
-        <h1>Public để khám phá. Invite-only để tuyển chọn.</h1>
-        <p>Doanh nghiệp quyết định ai có thể tham gia; backend thực thi đúng chế độ đã chọn.</p>
+        <span>{t("challenge.kicker")}</span>
+        <h1>{t("challenge.title")}</h1>
+        <p>{t("challenge.description")}</p>
       </div>
       <div className="identity-card">
-        <small>LIVE RECORDS</small>
+          <small>{t("challenge.liveRecords")}</small>
         <strong className="metric-number">{challenges.length}</strong>
-        <b>{managed.length} challenge có thể quản lý</b>
+          <b>{managed.length} {t("challenge.managed")}</b>
       </div>
     </div>
 
     {businessMemberships.length > 0 && <section className="app-panel challenge-builder">
       <div>
-        <span className="panel-kicker">NEW CHALLENGE</span>
-        <h2>Tạo business brief</h2>
-        <p>Public cho phép mọi ví đăng nhập tham gia; invite-only yêu cầu link có thời hạn.</p>
+        <span className="panel-kicker">{t("challenge.new")}</span>
+        <h2>{t("challenge.createBrief")}</h2>
+        <p>{t("challenge.createDescription")}</p>
       </div>
       <div className="stack-form">
         <select value={organizationId} onChange={(event) => setOrganizationId(event.target.value)}>
           {businessMemberships.map((item) => <option value={item.organization_id} key={item.id}>{item.organization_name}</option>)}
         </select>
         <select value={reviewerOrganizationId} onChange={(event) => setReviewerOrganizationId(event.target.value)}>
-          <option value="">Chọn nhà trường review</option>
-          {universities.map((item) => <option value={item.id} key={item.id}>{item.name} · {item.verification_status}</option>)}
+          <option value="">{t("challenge.selectReviewer")}</option>
+          {universities.map((item) => <option value={item.id} key={item.id}>{item.name} · {translateStatus(t, item.verification_status)}</option>)}
         </select>
         <select aria-label="Chế độ tham gia" value={accessType} onChange={(event) => setAccessType(event.target.value as "public" | "invite_only")}>
-          <option value="public">Public — mọi ví đăng nhập có thể tham gia</option>
-          <option value="invite_only">Invite only — bắt buộc có link mời</option>
+          <option value="public">{t("challenge.publicOption")}</option>
+          <option value="invite_only">{t("challenge.inviteOption")}</option>
         </select>
-        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Tên challenge" />
-        <textarea value={brief} onChange={(event) => setBrief(event.target.value)} placeholder="Mô tả bài toán, đối tượng và kết quả mong đợi…" />
-        <input value={skills} onChange={(event) => setSkills(event.target.value)} placeholder="Skills, cách nhau bằng dấu phẩy" />
-        <input value={reward} onChange={(event) => setReward(event.target.value)} placeholder="Cơ hội sau challenge" />
-        <button className="button button-primary" disabled={busy || !organizationId || !reviewerOrganizationId} onClick={create}>Tạo challenge</button>
+        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t("challenge.titlePlaceholder")} />
+        <textarea value={brief} onChange={(event) => setBrief(event.target.value)} placeholder={t("challenge.briefPlaceholder")} />
+        <input value={skills} onChange={(event) => setSkills(event.target.value)} placeholder={t("challenge.skillsPlaceholder")} />
+        <input value={reward} onChange={(event) => setReward(event.target.value)} placeholder={t("challenge.rewardPlaceholder")} />
+        <button className="button button-primary" disabled={busy || !organizationId || !reviewerOrganizationId} onClick={create}>{t("challenge.create")}</button>
       </div>
     </section>}
 
@@ -180,35 +182,35 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
       {challenges.map((item) => <article className="challenge-card" key={item.id}>
         <div className="entity-top">
           <span>{item.organization_name}</span>
-          <b>{item.status} · {item.access_type === "public" ? "public" : "invite only"}</b>
+          <b>{translateStatus(t, item.status)} · {item.access_type === "public" ? t("challenge.public") : t("challenge.inviteOnly")}</b>
         </div>
         <h2>{item.title}</h2>
         <p>{item.brief}</p>
         <div className="entity-tags">{JSON.parse(item.skills_json).map((skill: string) => <span key={skill}>{skill}</span>)}</div>
         <dl>
-          <div><dt>REWARD</dt><dd>{item.reward}</dd></div>
-          <div><dt>STUDENT STATE</dt><dd>{item.participation_state ?? "not joined"}</dd></div>
+          <div><dt>{t("challenge.reward")}</dt><dd>{item.reward}</dd></div>
+          <div><dt>{t("challenge.studentState")}</dt><dd>{translateStatus(t, item.participation_state ?? "not_joined")}</dd></div>
         </dl>
 
         {item.can_manage ? <div className="challenge-actions">
           {item.status !== "closed" && <select aria-label={`Chế độ tham gia ${item.title}`} value={item.access_type} disabled={busy} onChange={(event) => updateAccess(item.id, event.target.value as "public" | "invite_only")}>
-            <option value="public">Public</option>
-            <option value="invite_only">Invite only</option>
+            <option value="public">{t("challenge.managerPublic")}</option>
+            <option value="invite_only">{t("challenge.managerInviteOnly")}</option>
           </select>}
           {item.status === "draft"
-            ? <button className="button button-primary" disabled={busy} onClick={() => publish(item.id)}>Publish</button>
+            ? <button className="button button-primary" disabled={busy} onClick={() => publish(item.id)}>{t("challenge.publish")}</button>
             : item.access_type === "invite_only"
-              ? <><input value={targetWallet} onChange={(event) => setTargetWallet(event.target.value)} placeholder="Khóa cho ví sinh viên (tùy chọn)" /><button className="button button-dark" disabled={busy} onClick={() => invite(item.id)}>Tạo invitation</button></>
-              : <p className="app-notice">Challenge public đang mở cho mọi ví đăng nhập.</p>}
+              ? <><input value={targetWallet} onChange={(event) => setTargetWallet(event.target.value)} placeholder={t("challenge.targetWallet")} /><button className="button button-dark" disabled={busy} onClick={() => invite(item.id)}>{t("challenge.createInvitation")}</button></>
+              : <p className="app-notice">{t("challenge.publicOpen")}</p>}
         </div> : item.participation_id
-          ? <div className="challenge-actions"><a className="button button-dark" href="/app/submissions">Mở bài nộp</a></div>
+          ? <div className="challenge-actions"><a className="button button-dark" href="/app/submissions">{t("challenge.openSubmission")}</a></div>
           : item.status === "published" && item.access_type === "public"
-            ? <div className="challenge-actions"><button className="button button-primary" disabled={busy} onClick={() => join(item.id)}>Tham gia challenge</button></div>
+            ? <div className="challenge-actions"><button className="button button-primary" disabled={busy} onClick={() => join(item.id)}>{t("challenge.join")}</button></div>
             : null}
       </article>)}
     </section>
 
-    {joinUrl && <div className="join-url sticky-result"><code>{joinUrl}</code><button onClick={() => navigator.clipboard.writeText(joinUrl)}>Sao chép</button></div>}
+    {joinUrl && <div className="join-url sticky-result"><code>{joinUrl}</code><button onClick={() => navigator.clipboard.writeText(joinUrl)}>{t("challenge.copyInvite")}</button></div>}
     {notice && <p className="app-notice" role="status">{notice}</p>}
   </div>;
 }

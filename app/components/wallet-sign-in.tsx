@@ -13,6 +13,7 @@ import {
   type SolanaSignMessageFeature,
 } from "@solana/wallet-standard-features";
 import { createSignInMessage } from "@solana/wallet-standard-util";
+import { useLanguage } from "./i18n";
 
 type CompatibleWallet = Wallet & {
   features: StandardConnectFeature & Partial<SolanaSignInFeature & SolanaSignMessageFeature>;
@@ -31,6 +32,7 @@ function supportsSolana(wallet: Wallet): wallet is CompatibleWallet {
 
 export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [wallets, setWallets] = useState<readonly CompatibleWallet[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,7 +64,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
         const connected = await wallet.features[StandardConnect].connect();
         account = connected.accounts.find((item) => item.chains.some((chain) => chain.startsWith("solana:")));
       }
-      if (!account) throw new Error("Ví không cung cấp tài khoản Solana.");
+      if (!account) throw new Error(t("wallet.noAccount"));
 
       const challengeResponse = await fetch("/api/auth/challenge", {
         method: "POST",
@@ -71,7 +73,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
       });
       const challenge = await challengeResponse.json() as { challengeId?: string; input?: SolanaSignInInput; error?: string };
       if (!challengeResponse.ok || !challenge.challengeId || !challenge.input) {
-        throw new Error(challenge.error ?? "Không thể tạo yêu cầu đăng nhập.");
+        throw new Error(challenge.error ?? t("wallet.challengeError"));
       }
 
       let signedMessage: Uint8Array;
@@ -79,20 +81,20 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
       let signedAddress = account.address;
       if (SolanaSignIn in wallet.features) {
         const feature = wallet.features[SolanaSignIn];
-        if (!feature) throw new Error("Tính năng SIWS không khả dụng.");
+        if (!feature) throw new Error(t("wallet.siwsUnavailable"));
         const [output] = await feature.signIn(challenge.input);
         signedMessage = output.signedMessage;
         signature = output.signature;
         signedAddress = output.account.address;
       } else if (SolanaSignMessage in wallet.features) {
         const feature = wallet.features[SolanaSignMessage];
-        if (!feature) throw new Error("Tính năng ký thông điệp không khả dụng.");
+        if (!feature) throw new Error(t("wallet.signMessageUnavailable"));
         const message = createSignInMessage({ ...challenge.input, domain: challenge.input.domain!, address: account.address });
         const [output] = await feature.signMessage({ account, message });
         signedMessage = output.signedMessage;
         signature = output.signature;
       } else {
-        throw new Error("Ví này chưa hỗ trợ ký thông điệp đăng nhập.");
+        throw new Error(t("wallet.unsupported"));
       }
 
       const verifyResponse = await fetch("/api/auth/verify", {
@@ -106,7 +108,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
         }),
       });
       const verified = await verifyResponse.json() as { error?: string };
-      if (!verifyResponse.ok) throw new Error(verified.error ?? "Không thể xác minh chữ ký.");
+      if (!verifyResponse.ok) throw new Error(verified.error ?? t("wallet.verifyError"));
       router.push(returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/app");
       router.refresh();
     } catch (signInError) {
@@ -120,32 +122,32 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
     <div className="wallet-login-card">
       <div className="wallet-login-heading">
         <span>SIWS · SOLANA DEVNET</span>
-        <h2>Đăng nhập bằng ví</h2>
-        <p>Chữ ký chỉ chứng minh quyền sở hữu ví. Thao tác này không tốn SOL và không tạo giao dịch.</p>
+        <h2>{t("wallet.heading")}</h2>
+        <p>{t("wallet.description")}</p>
       </div>
       {wallets.length ? (
         <>
-          <label className="field-label" htmlFor="wallet-select">Ví được phát hiện</label>
+          <label className="field-label" htmlFor="wallet-select">{t("wallet.detected")}</label>
           <select id="wallet-select" value={selected} onChange={(event) => setSelected(event.target.value)}>
             {wallets.map((item) => <option value={item.name} key={item.name}>{item.name}</option>)}
           </select>
           <label className="consent-check">
             <input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
-            <span>Tôi đã đọc và đồng ý với <a href="/terms" target="_blank">Điều khoản</a> và <a href="/privacy" target="_blank">Chính sách dữ liệu</a>.</span>
+            <span>{t("wallet.consent")} <a href="/terms" target="_blank">{t("wallet.terms")}</a> {t("wallet.consent")} <a href="/privacy" target="_blank">{t("wallet.privacy")}</a>.</span>
           </label>
           <button className="button button-primary wallet-login-button" disabled={busy || !wallet || !accepted} onClick={signIn}>
-            {busy ? "Đang chờ chữ ký…" : `Tiếp tục với ${wallet?.name ?? "ví"}`}
+            {busy ? t("wallet.signing") : `${t("wallet.continue")} ${wallet?.name ?? "wallet"}`}
           </button>
         </>
       ) : (
         <div className="wallet-empty">
-          <strong>Chưa tìm thấy ví tương thích</strong>
-          <p>Cài Phantom, Solflare hoặc ví hỗ trợ Solana Wallet Standard, sau đó tải lại trang.</p>
-          <button className="button button-dark" onClick={() => window.location.reload()}>Tải lại</button>
+          <strong>{t("wallet.empty")}</strong>
+          <p>{t("wallet.install")}</p>
+          <button className="button button-dark" onClick={() => window.location.reload()}>{t("wallet.reload")}</button>
         </div>
       )}
       {error && <p className="demo-error" role="alert">{error}</p>}
-      <div className="wallet-safety"><span>✓ Không yêu cầu seed phrase</span><span>✓ Không tự động gửi transaction</span></div>
+      <div className="wallet-safety"><span>{t("wallet.noSeed")}</span><span>{t("wallet.noTransaction")}</span></div>
     </div>
   );
 }
