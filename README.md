@@ -84,7 +84,9 @@ to the Vercel project:
    `GEMINI_API_KEY`/`GEMINI_MODEL`, and the `SOLANA_*` values from
    `.env.example` to both Preview and Production environments. Set
    `AI_PROVIDER=gemini` to force Gemini, `AI_PROVIDER=tokenrouter` to force
-   TokenRouter, or leave `auto` to prefer Gemini when it is configured.
+   TokenRouter, or leave `auto` to prefer Gemini when it is configured. For a
+   newly created Gemini AI Studio key, use `GEMINI_MODEL=gemini-flash-latest`
+   without a `models/` prefix or `:generateContent` suffix.
 4. Deploy a Preview, test every wallet role, AI assessment, human approval,
    Devnet issuance/revocation, and opportunity verification, then promote that
    exact deployment to Production.

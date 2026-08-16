@@ -205,7 +205,7 @@ async function requestJson<T>(
   }
 
   if (provider === "gemini") {
-    const model = environment.GEMINI_MODEL || "gemini-2.5-flash-lite";
+    const model = environment.GEMINI_MODEL?.trim() || "gemini-flash-latest";
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
       method: "POST",
       headers: {
@@ -220,9 +220,10 @@ async function requestJson<T>(
       signal: AbortSignal.timeout(TOKENROUTER_ATTEMPT_TIMEOUT_MS),
     });
     if (!response.ok) {
-      await response.body?.cancel();
       const status = response.status;
-      if (status === 400 || status === 404) throw new AiProviderError("Cấu hình Gemini model không hợp lệ. Hãy kiểm tra GEMINI_MODEL trên Vercel.", status);
+      await response.body?.cancel();
+      if (status === 400) throw new AiProviderError("Gemini từ chối request. Hãy kiểm tra GEMINI_MODEL và cấu hình Gemini API trên Vercel.", status);
+      if (status === 404) throw new AiProviderError(`Gemini model "${model}" không tồn tại hoặc không khả dụng cho API key hiện tại. Hãy dùng gemini-flash-latest.`, status);
       if (status === 401 || status === 403) throw new AiProviderError("Gemini API key không hợp lệ hoặc không có quyền sử dụng model đã chọn.", status);
       if (RETRYABLE_AI_STATUSES.has(status)) throw new AiProviderError("Gemini đang quá tải hoặc đã hết quota miễn phí. Vui lòng thử lại sau.", 503, 60);
       throw new AiProviderError("Gemini tạm thời không thể xử lý yêu cầu AI.", 502, 60);

@@ -30,3 +30,23 @@ test("Gemini provider returns a validated structured assessment", async () => {
     globalThis.fetch = previousFetch;
   }
 });
+
+test("Gemini provider uses the current latest model when no model is configured", async () => {
+  const previousFetch = globalThis.fetch;
+  let requestUrl = "";
+  globalThis.fetch = (async (input) => {
+    requestUrl = String(input);
+    return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify(makeFixtureAssessment()) }] } }] }), { headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+  try {
+    await generateLiveAssessment(
+      { AI_PROVIDER: "gemini", GEMINI_API_KEY: "test-key" },
+      "test-session",
+      { title: "Growth Strategy 90D", brief: "Test brief", rubric: [] },
+      DEMO_EVIDENCE,
+    );
+    assert.match(requestUrl, /models\/gemini-flash-latest:generateContent$/);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
