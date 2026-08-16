@@ -1,9 +1,11 @@
 import { env } from "@/lib/runtime-env";
 import { ensureCoreSchema } from "../../../../lib/core-schema";
-import { assertSameOrigin, jsonError, randomToken, validSolanaAddress } from "../../../../lib/auth";
+import { assertSameOrigin, jsonError, validSolanaAddress } from "../../../../lib/auth";
+import { randomAlphanumericToken } from "../../../../lib/random-token";
 import { consumeRateLimit, requestClientIdentity } from "../../../../lib/rate-limit";
 
-const STATEMENT = "Đăng nhập SkillBridge Vietnam để quản lý challenge, bằng chứng kỹ năng và credential.";
+// Phantom validates this field against the SIWS ABNF, which permits URI-safe ASCII only.
+const STATEMENT = "Sign in to SkillBridge Vietnam to manage challenges, skill evidence, and credentials.";
 
 export async function POST(request: Request) {
   try {
@@ -27,7 +29,7 @@ export async function POST(request: Request) {
       uri: url.origin,
       version: "1",
       chainId: "solana:devnet",
-      nonce: randomToken(12),
+      nonce: randomAlphanumericToken(24),
       issuedAt: issuedAt.toISOString(),
       expirationTime: expirationTime.toISOString(),
       requestId: id,
