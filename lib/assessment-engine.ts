@@ -33,18 +33,50 @@ type ChatPayload = {
 
 class AiProviderError extends Error {
   readonly status: number;
+  readonly retryAfter?: number;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, retryAfter?: number) {
     super(message);
     this.name = "AiProviderError";
     this.status = status;
+    this.retryAfter = retryAfter;
   }
 }
 
 const RETRYABLE_AI_STATUSES = new Set([429, 502, 503, 504]);
+const TOKENROUTER_MAX_ATTEMPTS = 5;
+const TOKENROUTER_REQUEST_BUDGET_MS = 100_000;
+const TOKENROUTER_ATTEMPT_TIMEOUT_MS = 45_000;
 
 async function wait(milliseconds: number) {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function retryDelay(attempt: number, retryAfter: string | null) {
+  const retryAfterSeconds = retryAfter ? Number(retryAfter) : Number.NaN;
+  if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+    return Math.min(retryAfterSeconds * 1_000, 20_000);
+  }
+  const exponential = 2_000 * (2 ** attempt);
+  const jitter = Math.floor(Math.random() * 750);
+  return Math.min(exponential + jitter, 20_000);
+}
+
+function tokenRouterFailure(status: number) {
+  if (status === 401 || status === 403) {
+    return new AiProviderError("TokenRouter API key không hợp lệ hoặc không có quyền sử dụng model đã chọn.", status);
+  }
+  if (status === 400 || status === 404) {
+    return new AiProviderError("Cấu hình model TokenRouter không hợp lệ. Hãy kiểm tra TOKENROUTER_MODEL trên Vercel.", status);
+  }
+  if (RETRYABLE_AI_STATUSES.has(status)) {
+    return new AiProviderError(
+      "Model AI miễn phí đang quá tải hoặc chưa được khởi động. Hệ thống đã tự thử lại; vui lòng đợi khoảng 1 phút rồi thử lại.",
+      503,
+      60,
+    );
+  }
+  return new AiProviderError("TokenRouter tạm thời không thể xử lý yêu cầu AI.", 502, 60);
 }
 
 const SYSTEM_PROMPT = `You are the SkillBridge evidence assessment engine.
@@ -159,24 +191,49 @@ async function requestJson<T>(
       stream: false,
     });
     let response: Response | null = null;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      response = await fetch(`${tokenRouter.baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${tokenRouter.apiKey}`,
-          "content-type": "application/json",
-        },
-        body: requestBody,
-        signal: AbortSignal.timeout(210_000),
-      });
-      if (response.ok || !RETRYABLE_AI_STATUSES.has(response.status) || attempt === 2) break;
+    const deadline = Date.now() + TOKENROUTER_REQUEST_BUDGET_MS;
+    for (let attempt = 0; attempt < TOKENROUTER_MAX_ATTEMPTS; attempt += 1) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      try {
+        response = await fetch(`${tokenRouter.baseUrl}/chat/completions`, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${tokenRouter.apiKey}`,
+            "content-type": "application/json",
+          },
+          body: requestBody,
+          signal: AbortSignal.timeout(Math.min(TOKENROUTER_ATTEMPT_TIMEOUT_MS, remaining)),
+        });
+      } catch {
+        if (attempt === TOKENROUTER_MAX_ATTEMPTS - 1 || Date.now() >= deadline) {
+          throw new AiProviderError(
+            "Không thể kết nối tới TokenRouter sau nhiều lần thử. Vui lòng đợi khoảng 1 phút rồi thử lại.",
+            503,
+            60,
+          );
+        }
+        const delay = Math.min(retryDelay(attempt, null), Math.max(0, deadline - Date.now()));
+        if (delay > 0) await wait(delay);
+        continue;
+      }
+      if (response.ok || !RETRYABLE_AI_STATUSES.has(response.status) || attempt === TOKENROUTER_MAX_ATTEMPTS - 1) break;
+      const retryAfter = response.headers.get("retry-after");
       await response.body?.cancel();
-      await wait((attempt + 1) * 1_500);
+      response = null;
+      const delay = Math.min(retryDelay(attempt, retryAfter), Math.max(0, deadline - Date.now()));
+      if (delay > 0) await wait(delay);
     }
-    if (!response) throw new AiProviderError("TokenRouter không trả response.", 503);
+    if (!response) {
+      throw new AiProviderError(
+        "TokenRouter chưa phản hồi trong thời gian cho phép. Vui lòng đợi khoảng 1 phút rồi thử lại.",
+        503,
+        60,
+      );
+    }
     if (!response.ok) {
-      const detail = await response.text();
-      throw new AiProviderError(`TokenRouter request failed (${response.status}): ${detail.slice(0, 240)}`, response.status);
+      await response.body?.cancel();
+      throw tokenRouterFailure(response.status);
     }
     const payload = (await response.json()) as ChatPayload;
     const text = payload.choices?.[0]?.message?.content;
@@ -210,8 +267,14 @@ async function requestJson<T>(
     }),
   });
   if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`OpenAI request failed (${response.status}): ${detail.slice(0, 240)}`);
+    await response.body?.cancel();
+    throw new AiProviderError(
+      response.status >= 500
+        ? "OpenAI tạm thời không thể xử lý yêu cầu AI."
+        : "OpenAI từ chối yêu cầu. Hãy kiểm tra API key và cấu hình model.",
+      response.status >= 500 ? 503 : response.status,
+      response.status >= 500 ? 60 : undefined,
+    );
   }
   const text = extractOutputText((await response.json()) as ResponsesPayload);
   if (!text) throw new Error("OpenAI response không chứa structured output.");

@@ -54,11 +54,25 @@ export function ReviewsWorkspace() {
 
   const active = useMemo(() => rows.find((row) => row.submission_id === selected) ?? null, [rows, selected]);
   async function generate() {
-    if (!active) return; setBusy(true); setNotice(null);
-    const response = await fetch("/api/assessments/generate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ submissionId: active.submission_id }) });
-    const data = await response.json() as { error?: string };
-    setNotice(response.ok ? "AI draft thật đã được tạo và vượt qua assessment contract." : data.error ?? "Không thể chạy AI.");
-    await load(); setBusy(false);
+    if (!active) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const response = await fetch("/api/assessments/generate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ submissionId: active.submission_id }),
+      });
+      const data = await response.json().catch(() => ({ error: undefined })) as { error?: string };
+      setNotice(response.ok
+        ? "AI draft thật đã được tạo và vượt qua assessment contract."
+        : data.error ?? "Dịch vụ AI chưa phản hồi. Vui lòng đợi khoảng 1 phút rồi thử lại.");
+      if (response.ok) await load();
+    } catch {
+      setNotice("Mất kết nối khi đang chạy AI. Vui lòng kiểm tra mạng và thử lại.");
+    } finally {
+      setBusy(false);
+    }
   }
   function updateScore(index: number, value: number) {
     setDraft((current) => { if (!current) return current; const rubric = current.rubric.map((item, itemIndex) => itemIndex === index ? { ...item, score: Math.max(0, Math.min(item.maxScore, value)) } : item); return { ...current, rubric, totalScore: rubric.reduce((sum, item) => sum + item.score, 0) }; });
