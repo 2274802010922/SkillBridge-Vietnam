@@ -7,6 +7,12 @@ export type RuntimeEnvironment = Cloudflare.Env & {
   TOKENROUTER_MODEL?: string;
   GEMINI_API_KEY?: string;
   GEMINI_MODEL?: string;
+  AI_MAX_INPUT_TOKENS?: string;
+  AI_MAX_OUTPUT_TOKENS?: string;
+  AI_TOP_K_PER_RUBRIC?: string;
+  AI_CHUNK_TOKENS?: string;
+  AI_CHUNK_OVERLAP_TOKENS?: string;
+  AI_DAILY_LIMIT_PER_REVIEWER?: string;
   SOLANA_USDC_MINT: string;
 };
 
@@ -20,6 +26,12 @@ export const env = {
   get TOKENROUTER_MODEL() { return process.env.TOKENROUTER_MODEL; },
   get GEMINI_API_KEY() { return process.env.GEMINI_API_KEY; },
   get GEMINI_MODEL() { return process.env.GEMINI_MODEL; },
+  get AI_MAX_INPUT_TOKENS() { return process.env.AI_MAX_INPUT_TOKENS; },
+  get AI_MAX_OUTPUT_TOKENS() { return process.env.AI_MAX_OUTPUT_TOKENS; },
+  get AI_TOP_K_PER_RUBRIC() { return process.env.AI_TOP_K_PER_RUBRIC; },
+  get AI_CHUNK_TOKENS() { return process.env.AI_CHUNK_TOKENS; },
+  get AI_CHUNK_OVERLAP_TOKENS() { return process.env.AI_CHUNK_OVERLAP_TOKENS; },
+  get AI_DAILY_LIMIT_PER_REVIEWER() { return process.env.AI_DAILY_LIMIT_PER_REVIEWER; },
   get SOLANA_RPC_URL() { return process.env.SOLANA_RPC_URL; },
   get SOLANA_FEE_PAYER_SECRET() { return process.env.SOLANA_FEE_PAYER_SECRET; },
   get SOLANA_ISSUER_SECRET() { return process.env.SOLANA_ISSUER_SECRET; },

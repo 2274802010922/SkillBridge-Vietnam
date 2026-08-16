@@ -1,10 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { upload as uploadToBlob } from "@vercel/blob/client";
 import { translateStatus, useLanguage } from "./i18n";
 
 type SubmissionListItem = { id: string; state: string; reflection: string; evidence_json: string; challenge_title: string; organization_name: string; reward: string; file_count: number; assessment_status: string | null };
 type FileItem = { id: string; original_name: string; content_type: string; size_bytes: string; sha256: string };
+const CLIENT_UPLOAD_THRESHOLD = 4 * 1024 * 1024;
+
+function safeUploadName(value: string) {
+  return value.normalize("NFKC").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-100) || "evidence";
+}
+
+async function hashFile(file: File) {
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 
 export function SubmissionsWorkspace() {
   const { t } = useLanguage();
@@ -68,12 +79,29 @@ export function SubmissionsWorkspace() {
   async function upload(file: File) {
     if (!selected) return;
     setBusy(true); setNotice(null);
-    const form = new FormData(); form.set("file", file);
-    const response = await fetch(`/api/submissions/${selected}/files`, { method: "POST", body: form });
-    const data = await response.json() as { error?: string };
-    setNotice(response.ok ? t("submission.uploaded") : data.error ?? t("submission.uploadError"));
-    await open(selected);
-    setBusy(false);
+    try {
+      if (file.size > CLIENT_UPLOAD_THRESHOLD) {
+        const fileId = crypto.randomUUID();
+        const sha256 = await hashFile(file);
+        await uploadToBlob(`submissions/${selected}/${fileId}-${safeUploadName(file.name)}`, file, {
+          access: "private",
+          handleUploadUrl: `/api/submissions/${selected}/files/client-upload`,
+          contentType: file.type,
+          clientPayload: JSON.stringify({ submissionId: selected, fileId, originalName: file.name, contentType: file.type, sizeBytes: file.size, sha256 }),
+        });
+        setNotice(t("submission.uploaded"));
+      } else {
+        const form = new FormData(); form.set("file", file);
+        const response = await fetch(`/api/submissions/${selected}/files`, { method: "POST", body: form });
+        const data = await response.json() as { error?: string };
+        setNotice(response.ok ? t("submission.uploaded") : data.error ?? t("submission.uploadError"));
+      }
+      await open(selected);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : t("submission.uploadError"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function uploadMany(fileList: FileList | null) {

@@ -131,6 +131,17 @@ const statements = [
     uploaded_by_user_id TEXT NOT NULL REFERENCES users(id),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS evidence_chunks (
+    id TEXT PRIMARY KEY,
+    submission_id TEXT NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    file_id TEXT NOT NULL REFERENCES submission_files(id) ON DELETE CASCADE,
+    file_hash TEXT NOT NULL,
+    locator TEXT NOT NULL,
+    ordinal INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    token_estimate INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS assessments (
     id TEXT PRIMARY KEY,
     submission_id TEXT NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
@@ -141,6 +152,9 @@ const statements = [
     status TEXT NOT NULL DEFAULT 'in_review',
     ai_result_hash TEXT NOT NULL,
     assessment_mode TEXT NOT NULL DEFAULT 'ai_assisted',
+    cache_key TEXT,
+    input_token_estimate INTEGER,
+    output_token_estimate INTEGER,
     final_result_hash TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -300,6 +314,8 @@ const statements = [
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_submissions_participation ON submissions(participation_id)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_submission_files_r2_key ON submission_files(r2_key)`,
   `CREATE INDEX IF NOT EXISTS idx_submission_files_submission ON submission_files(submission_id)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_evidence_chunks_file_ordinal ON evidence_chunks(file_id, ordinal)`,
+  `CREATE INDEX IF NOT EXISTS idx_evidence_chunks_submission_hash ON evidence_chunks(submission_id, file_hash)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_assessments_submission ON assessments(submission_id)`,
   `CREATE INDEX IF NOT EXISTS idx_assessments_status ON assessments(status)`,
   `CREATE INDEX IF NOT EXISTS idx_reviews_assessment_created ON reviews(assessment_id, created_at)`,
@@ -346,6 +362,18 @@ export async function ensureCoreSchema(db: D1Database) {
   if (!assessmentColumns.results.some((column) => column.name === "assessment_mode")) {
     try {
       await db.prepare("ALTER TABLE assessments ADD COLUMN assessment_mode TEXT NOT NULL DEFAULT 'ai_assisted'").run();
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+    }
+  }
+  for (const definition of [
+    ["cache_key", "TEXT"],
+    ["input_token_estimate", "INTEGER"],
+    ["output_token_estimate", "INTEGER"],
+  ] as const) {
+    if (assessmentColumns.results.some((column) => column.name === definition[0])) continue;
+    try {
+      await db.prepare(`ALTER TABLE assessments ADD COLUMN ${definition[0]} ${definition[1]}`).run();
     } catch (error) {
       if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
     }

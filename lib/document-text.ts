@@ -13,6 +13,11 @@ export type DocumentSection = {
   content: string;
 };
 
+export type DocumentChunk = DocumentSection & {
+  ordinal: number;
+  tokenEstimate: number;
+};
+
 const MAX_SECTION_CHARS = 16_000;
 const MAX_TOTAL_CHARS = 120_000;
 
@@ -80,4 +85,50 @@ export async function extractDocumentSections(files: AssessmentFile[]) {
     warnings.push("Nội dung evidence đã được giới hạn để giữ request AI trong context an toàn.");
   }
   return { sections, warnings };
+}
+
+export function estimateTokenCount(value: string) {
+  return Math.max(1, Math.ceil(value.length / 4));
+}
+
+export function chunkDocumentSections(
+  sections: DocumentSection[],
+  maxTokens = 600,
+  overlapTokens = 60,
+) {
+  const maxChars = Math.max(800, maxTokens * 4);
+  const overlapChars = Math.min(Math.max(0, overlapTokens * 4), Math.floor(maxChars / 3));
+  const chunks: DocumentChunk[] = [];
+  let ordinal = 0;
+
+  for (const section of sections) {
+    const content = cleanText(section.content);
+    if (!content) continue;
+    let start = 0;
+    while (start < content.length) {
+      const hardEnd = Math.min(content.length, start + maxChars);
+      let end = hardEnd;
+      if (hardEnd < content.length) {
+        const boundary = Math.max(
+          content.lastIndexOf("\n", hardEnd),
+          content.lastIndexOf(" ", hardEnd),
+        );
+        if (boundary > start + Math.floor(maxChars * 0.55)) end = boundary;
+      }
+      const chunk = content.slice(start, end).trim();
+      if (chunk.length >= 10) {
+        chunks.push({
+          locator: section.locator,
+          content: chunk,
+          ordinal,
+          tokenEstimate: estimateTokenCount(chunk),
+        });
+        ordinal += 1;
+      }
+      if (end >= content.length) break;
+      start = Math.max(start + 1, end - overlapChars);
+    }
+  }
+
+  return chunks;
 }

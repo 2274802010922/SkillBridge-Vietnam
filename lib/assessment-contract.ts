@@ -39,6 +39,11 @@ export type AssessmentDraft = {
 
 export type AssessmentEnvelope = {
   draft: AssessmentDraft;
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cachedTokens?: number;
+  };
   provenance: {
     mode: "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback" | "manual";
     provider: "tokenrouter" | "gemini" | "openai" | "skillbridge-fixture" | "human-review";

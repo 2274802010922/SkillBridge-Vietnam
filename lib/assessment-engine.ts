@@ -20,6 +20,13 @@ export type AiEnvironment = {
   GEMINI_MODEL?: string;
   OPENAI_API_KEY?: string;
   OPENAI_ASSESSMENT_MODEL?: string;
+  AI_MAX_OUTPUT_TOKENS?: string;
+};
+
+export type AiUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  cachedTokens?: number;
 };
 
 type ResponsesPayload = {
@@ -27,11 +34,13 @@ type ResponsesPayload = {
     type?: string;
     content?: Array<{ type?: string; text?: string }>;
   }>;
+  usage?: { input_tokens?: number; output_tokens?: number };
 };
 
 type ChatPayload = {
   model?: string;
   choices?: Array<{ message?: { content?: string } }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
 };
 
 type GeminiPayload = {
@@ -39,6 +48,7 @@ type GeminiPayload = {
     content?: { parts?: Array<{ text?: string }> };
   }>;
   error?: { message?: string };
+  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; cachedContentTokenCount?: number };
 };
 
 class AiProviderError extends Error {
@@ -54,9 +64,9 @@ class AiProviderError extends Error {
 }
 
 const RETRYABLE_AI_STATUSES = new Set([429, 502, 503, 504]);
-const TOKENROUTER_MAX_ATTEMPTS = 5;
-const TOKENROUTER_REQUEST_BUDGET_MS = 100_000;
-const TOKENROUTER_ATTEMPT_TIMEOUT_MS = 45_000;
+const TOKENROUTER_MAX_ATTEMPTS = 2;
+const TOKENROUTER_REQUEST_BUDGET_MS = 60_000;
+const TOKENROUTER_ATTEMPT_TIMEOUT_MS = 30_000;
 
 async function wait(milliseconds: number) {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -143,6 +153,11 @@ function normalizedText(value: string) {
   return value.replace(/\s+/g, " ").trim().toLocaleLowerCase("vi");
 }
 
+function boundedInteger(value: string | undefined, fallback: number, minimum: number, maximum: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, Math.floor(parsed))) : fallback;
+}
+
 function normalizeDerivedAssessmentFields(draft: AssessmentDraft, evidence: EvidenceSource[]) {
   const evidenceById = new Map(evidence.map((source) => [source.id, source]));
   draft.totalScore = draft.rubric.reduce((sum, item) => sum + Number(item.score || 0), 0);
@@ -178,7 +193,7 @@ async function requestJson<T>(
   input: unknown,
   schemaName: string,
   schema: unknown,
-): Promise<{ value: T; model: string; provider: "tokenrouter" | "gemini" | "openai" }> {
+): Promise<{ value: T; model: string; provider: "tokenrouter" | "gemini" | "openai"; usage?: AiUsage }> {
   const preference = (environment.AI_PROVIDER || "auto").trim().toLowerCase();
   const provider = preference === "tokenrouter"
     ? "tokenrouter"
@@ -206,6 +221,7 @@ async function requestJson<T>(
 
   if (provider === "gemini") {
     const model = environment.GEMINI_MODEL?.trim() || "gemini-flash-latest";
+    const maxOutputTokens = boundedInteger(environment.AI_MAX_OUTPUT_TOKENS, 2_200, 600, 4_096);
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
       method: "POST",
       headers: {
@@ -215,7 +231,7 @@ async function requestJson<T>(
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: "user", parts: [{ text: JSON.stringify({ task: "Return only valid JSON. Do not use Markdown fences.", schemaName, schema, input }) }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.1, maxOutputTokens: 6_144 },
+        generationConfig: { responseMimeType: "application/json", temperature: 0.1, maxOutputTokens },
       }),
       signal: AbortSignal.timeout(TOKENROUTER_ATTEMPT_TIMEOUT_MS),
     });
@@ -231,11 +247,19 @@ async function requestJson<T>(
     const payload = await response.json() as GeminiPayload;
     const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
     if (!text) throw new Error("Gemini response không chứa nội dung JSON.");
-    return { value: parseJsonObject<T>(text), model, provider: "gemini" };
+    return {
+      value: parseJsonObject<T>(text), model, provider: "gemini",
+      usage: payload.usageMetadata ? {
+        inputTokens: payload.usageMetadata.promptTokenCount ?? 0,
+        outputTokens: payload.usageMetadata.candidatesTokenCount ?? 0,
+        cachedTokens: payload.usageMetadata.cachedContentTokenCount ?? 0,
+      } : undefined,
+    };
   }
 
   const tokenRouter = provider === "tokenrouter" ? tokenRouterConfig(environment) : null;
   if (tokenRouter) {
+    const maxOutputTokens = boundedInteger(environment.AI_MAX_OUTPUT_TOKENS, 2_200, 600, 4_096);
     const requestBody = JSON.stringify({
       model: tokenRouter.model,
       messages: [
@@ -252,7 +276,7 @@ async function requestJson<T>(
       ],
       response_format: { type: "json_object" },
       temperature: 0.1,
-      max_tokens: 6_144,
+      max_tokens: maxOutputTokens,
       stream: false,
     });
     let response: Response | null = null;
@@ -307,6 +331,7 @@ async function requestJson<T>(
       value: parseJsonObject<T>(text),
       model: payload.model || tokenRouter.model,
       provider: "tokenrouter",
+      usage: payload.usage ? { inputTokens: payload.usage.prompt_tokens ?? 0, outputTokens: payload.usage.completion_tokens ?? 0 } : undefined,
     };
   }
 
@@ -322,6 +347,7 @@ async function requestJson<T>(
       model,
       store: false,
       reasoning: { effort: "low" },
+      max_output_tokens: boundedInteger(environment.AI_MAX_OUTPUT_TOKENS, 2_200, 600, 4_096),
       input: [
         { role: "system", content: system },
         { role: "user", content: JSON.stringify(input) },
@@ -339,9 +365,13 @@ async function requestJson<T>(
       response.status >= 500 ? 60 : undefined,
     );
   }
-  const text = extractOutputText((await response.json()) as ResponsesPayload);
+  const payload = (await response.json()) as ResponsesPayload;
+  const text = extractOutputText(payload);
   if (!text) throw new Error("OpenAI response không chứa structured output.");
-  return { value: parseJsonObject<T>(text), model, provider: "openai" };
+  return {
+    value: parseJsonObject<T>(text), model, provider: "openai",
+    usage: payload.usage ? { inputTokens: payload.usage.input_tokens ?? 0, outputTokens: payload.usage.output_tokens ?? 0 } : undefined,
+  };
 }
 
 async function requestAssessment(
@@ -360,6 +390,7 @@ async function requestAssessment(
     draft: normalizeDerivedAssessmentFields(generated.value, evidence),
     model: generated.model,
     provider: generated.provider,
+    usage: generated.usage,
   };
 }
 
@@ -408,6 +439,7 @@ export async function generateLiveAssessment(
   const validation = validateAssessment(generated.draft, evidence);
   return {
     draft: generated.draft,
+    usage: generated.usage,
     provenance: {
       mode: generated.provider,
       provider: generated.provider,

@@ -213,6 +213,25 @@ export const submissionFiles = sqliteTable(
   ],
 );
 
+export const evidenceChunks = sqliteTable(
+  "evidence_chunks",
+  {
+    id: text("id").primaryKey(),
+    submissionId: text("submission_id").notNull().references(() => submissions.id, { onDelete: "cascade" }),
+    fileId: text("file_id").notNull().references(() => submissionFiles.id, { onDelete: "cascade" }),
+    fileHash: text("file_hash").notNull(),
+    locator: text("locator").notNull(),
+    ordinal: integer("ordinal").notNull(),
+    content: text("content").notNull(),
+    tokenEstimate: integer("token_estimate").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("idx_evidence_chunks_file_ordinal").on(table.fileId, table.ordinal),
+    index("idx_evidence_chunks_submission_hash").on(table.submissionId, table.fileHash),
+  ],
+);
+
 export const assessments = sqliteTable(
   "assessments",
   {
@@ -225,6 +244,9 @@ export const assessments = sqliteTable(
     status: text("status").notNull().default("in_review"),
     aiResultHash: text("ai_result_hash").notNull(),
     assessmentMode: text("assessment_mode").notNull().default("ai_assisted"),
+    cacheKey: text("cache_key"),
+    inputTokenEstimate: integer("input_token_estimate"),
+    outputTokenEstimate: integer("output_token_estimate"),
     finalResultHash: text("final_result_hash"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
