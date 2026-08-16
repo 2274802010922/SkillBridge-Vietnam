@@ -13,6 +13,7 @@ export async function GET(request: Request) {
         reviewer.name AS reviewer_organization_name, c.reviewer_organization_id,
         a.id AS assessment_id, a.status AS assessment_status, a.assessment_json,
         a.provider, a.model, a.ai_result_hash, a.final_result_hash,
+        (SELECT r.review_json FROM reviews r WHERE r.assessment_id = a.id ORDER BY r.created_at DESC LIMIT 1) AS review_json,
         sc.id AS credential_id, sc.status AS credential_status, sc.attestation_address,
         (SELECT COUNT(*) FROM submission_files f WHERE f.submission_id = s.id) AS file_count
       FROM submissions s

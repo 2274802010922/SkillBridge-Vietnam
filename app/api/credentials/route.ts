@@ -36,7 +36,8 @@ export async function POST(request: Request) {
       SELECT a.id AS assessment_id, a.status AS assessment_status, a.assessment_json,
         a.final_result_hash, s.evidence_json, p.student_user_id,
         w.address AS student_wallet, c.id AS challenge_id,
-        c.reviewer_organization_id, ci.credential_address, ci.schema_address
+        c.reviewer_organization_id, ci.credential_address, ci.schema_address,
+        (SELECT r.review_json FROM reviews r WHERE r.assessment_id = a.id AND r.decision = 'approved' ORDER BY r.created_at DESC LIMIT 1) AS review_json
       FROM assessments a
       JOIN submissions s ON s.id = a.submission_id
       JOIN participations p ON p.id = s.participation_id
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
       assessment_id: string; assessment_status: string; assessment_json: string;
       final_result_hash: string | null; evidence_json: string; student_user_id: string;
       student_wallet: string; challenge_id: string; reviewer_organization_id: string;
-      credential_address: string | null; schema_address: string | null;
+      credential_address: string | null; schema_address: string | null; review_json: string | null;
     }>();
     if (!row) return Response.json({ error: "Assessment không tồn tại." }, { status: 404 });
     await requireCredentialIssuer(user.id, row.reviewer_organization_id);
@@ -63,7 +64,9 @@ export async function POST(request: Request) {
     if (existing) return Response.json({ credential: existing }, { status: 200 });
 
     const envelope = JSON.parse(row.assessment_json) as { draft: AssessmentDraft };
-    const score = Math.round(envelope.draft.totalScore);
+    const approvedReview = row.review_json ? JSON.parse(row.review_json) as { finalDraft?: AssessmentDraft } : null;
+    const officialDraft = approvedReview?.finalDraft ?? envelope.draft;
+    const score = Math.round(officialDraft.totalScore);
     const evidenceHash = await sha256(row.evidence_json);
     const expiryUnix = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
     const issued = await issueAttestation(env, {

@@ -35,6 +35,9 @@ export async function POST(request:Request, { params }:{params:Promise<{id:strin
       return Response.json({error:"Decision không hợp lệ."},{status:400});
     }
     const stored = JSON.parse(row.assessment_json) as {draft:AssessmentDraft};
+    if (body.decision === "approved" && !body.finalDraft) {
+      return Response.json({error:"Reviewer phải nhập và xác nhận điểm chính thức trước khi phê duyệt."},{status:400});
+    }
     const finalDraft = body.finalDraft ?? stored.draft;
     const validation = validateAssessment(finalDraft,JSON.parse(row.evidence_json) as EvidenceSource[]);
     if (body.decision === "approved" && !validation.valid) {
@@ -44,13 +47,14 @@ export async function POST(request:Request, { params }:{params:Promise<{id:strin
     const reviewId = crypto.randomUUID();
     const reviewJson = JSON.stringify({
       decision:body.decision,note:body.note?.trim()||null,finalDraft,validation,
+      source:"human_reviewer",officialScore:body.decision === "approved" ? finalDraft.totalScore : null,
       reviewedAt:new Date().toISOString(),
     });
     await env.DB.batch([
       env.DB.prepare("INSERT INTO reviews (id,assessment_id,reviewer_user_id,decision,review_json) VALUES (?,?,?,?,?)")
         .bind(reviewId,id,user.id,body.decision,reviewJson),
-      env.DB.prepare("UPDATE assessments SET status=?,assessment_json=?,final_result_hash=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")
-        .bind(body.decision,JSON.stringify({...stored,draft:finalDraft}),finalHash,id),
+      env.DB.prepare("UPDATE assessments SET status=?,final_result_hash=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")
+        .bind(body.decision,finalHash,id),
       env.DB.prepare("UPDATE submissions SET state=?,locked_at=CASE WHEN ?='changes_requested' THEN NULL ELSE locked_at END,updated_at=CURRENT_TIMESTAMP WHERE id=?")
         .bind(body.decision,body.decision,row.submission_id),
       env.DB.prepare("UPDATE participations SET state=?,updated_at=CURRENT_TIMESTAMP WHERE id=(SELECT participation_id FROM submissions WHERE id=?)")

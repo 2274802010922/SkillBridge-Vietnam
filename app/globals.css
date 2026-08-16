@@ -1105,3 +1105,36 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .role-grid article:last-child { border-bottom: 0; }
   .role-grid h3 { margin-top: 30px; }
 }
+
+/* Human review is the official scoring surface; AI stays visible and read-only beside it. */
+.review-assessment-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; align-items: start; }
+.assessment-column { min-width: 0; padding: 18px; border: 1px solid rgba(8, 17, 31, .14); border-radius: 18px; background: rgba(255, 255, 255, .72); box-shadow: var(--shadow-card); }
+.ai-assessment-column { border-top: 3px solid var(--violet); }
+.human-assessment-column { border-top: 3px solid var(--lime); }
+.assessment-column-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.assessment-column-heading span { color: var(--muted); font: 700 8px/1.2 var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
+.assessment-column-heading h3 { margin: 7px 0 0; font-size: 20px; letter-spacing: -.05em; }
+.assessment-column-heading > b { flex: none; padding: 5px 7px; border-radius: 999px; background: #eeeaff; color: #5d46b7; font: 700 8px/1 var(--font-geist-mono); letter-spacing: .06em; }
+.human-assessment-column .assessment-column-heading > b { background: #eaf6d1; color: #3d6822; }
+.assessment-column .assessment-summary { grid-template-columns: 88px 1fr; margin: 16px 0; padding: 14px; }
+.assessment-column .assessment-summary > div strong { font-size: 37px; }
+.assessment-column .assessment-summary p { font-size: 11px; }
+.human-summary textarea { width: 100%; min-height: 84px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .8); color: var(--ink-soft); font: inherit; font-size: 11px; line-height: 1.45; resize: vertical; }
+.review-assessment-columns .review-rubric { gap: 8px; }
+.review-assessment-columns .review-rubric > article { padding: 12px; background: rgba(255, 255, 255, .58); }
+.review-assessment-columns .review-rubric > article > div { align-items: center; }
+.review-assessment-columns .review-rubric > article > div > strong { font-size: 12px; }
+.ai-score-badge { padding: 5px 7px; border-radius: 999px; background: #eeeaff; color: #5d46b7; font: 700 10px/1 var(--font-geist-mono); }
+.review-assessment-columns .review-rubric p { margin: 9px 0 0; font-size: 11px; line-height: 1.45; }
+.review-assessment-columns .review-rubric blockquote { font-size: 10px; }
+.review-assessment-columns .review-rubric input { width: 56px; min-height: 34px; text-align: right; font-weight: 750; }
+.rubric-note { width: 100%; min-height: 68px; margin-top: 9px; padding: 9px; border: 1px solid rgba(8, 17, 31, .18); border-radius: 8px; background: rgba(255, 255, 255, .88); color: var(--ink-soft); font: inherit; font-size: 11px; line-height: 1.45; resize: vertical; }
+.rubric-note:disabled, .human-summary textarea:disabled { background: rgba(244, 241, 232, .7); opacity: 1; }
+.official-mark { display: block; margin-top: 8px; color: #3d6822; font: 650 8px/1.35 var(--font-geist-mono); letter-spacing: .04em; }
+.assessment-footnote { margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--muted); font-size: 10px; line-height: 1.45; }
+.human-assessment-column .review-decisions { justify-content: stretch; flex-wrap: wrap; margin-top: 12px; }
+.human-assessment-column .review-decisions > button { flex: 1; min-height: 42px; }
+
+@media (max-width: 900px) {
+  .review-assessment-columns { grid-template-columns: 1fr; }
+}
