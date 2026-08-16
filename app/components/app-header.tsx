@@ -16,8 +16,8 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
     <header className="app-topbar page-shell">
       <Link className="wordmark" href="/"><span className="wordmark-mark">S</span><span>SkillBridge</span><small>VIETNAM</small></Link>
       <div className="topbar-actions">
-        <LanguageSwitcher />
         <div className="wallet-pill"><span className="wallet-status-dot" />{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}<button onClick={logout}>{t("common.logout")}</button></div>
+        <LanguageSwitcher />
       </div>
     </header>
   );

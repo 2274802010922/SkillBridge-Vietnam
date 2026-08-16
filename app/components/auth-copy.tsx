@@ -10,7 +10,7 @@ export function AuthCopy({ returnTo }: { returnTo: string }) {
     <main className="auth-page">
       <header className="auth-header page-shell">
         <Link className="wordmark" href="/" aria-label="SkillBridge Vietnam"><span className="wordmark-mark" aria-hidden="true">S</span><span>SkillBridge</span><small>VIETNAM</small></Link>
-        <div className="topbar-actions"><LanguageSwitcher /><Link className="text-link" href="/">← {t("common.home")}</Link></div>
+        <div className="topbar-actions"><Link className="text-link" href="/">← {t("common.home")}</Link><LanguageSwitcher /></div>
       </header>
       <section className="auth-shell page-shell">
         <div className="auth-copy">
