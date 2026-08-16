@@ -19,12 +19,20 @@ export type RubricAssessment = {
   citations: AssessmentCitation[];
 };
 
+export type SkillSignal = {
+  skill: string;
+  confidence: number;
+  rationale: string;
+  sourceIds: string[];
+};
+
 export type AssessmentDraft = {
   schemaVersion: "skillbridge.assessment.v1";
   rubric: RubricAssessment[];
   totalScore: number;
   confidence: number;
   summary: string;
+  skillSignals?: SkillSignal[];
   strengths: string[];
   reviewerFlags: string[];
   grounding: {
@@ -97,6 +105,7 @@ export const ASSESSMENT_JSON_SCHEMA = {
     "totalScore",
     "confidence",
     "summary",
+    "skillSignals",
     "strengths",
     "reviewerFlags",
     "grounding",
@@ -137,6 +146,10 @@ export const ASSESSMENT_JSON_SCHEMA = {
     totalScore: { type: "number", minimum: 0, maximum: 100 },
     confidence: { type: "number", minimum: 0, maximum: 1 },
     summary: { type: "string" },
+    skillSignals: {
+      type: "array", maxItems: 12,
+      items: { type: "object", additionalProperties: false, required: ["skill", "confidence", "rationale", "sourceIds"], properties: { skill: { type: "string" }, confidence: { type: "number", minimum: 0, maximum: 1 }, rationale: { type: "string" }, sourceIds: { type: "array", items: { type: "string" } } } },
+    },
     strengths: { type: "array", items: { type: "string" } },
     reviewerFlags: { type: "array", items: { type: "string" } },
     grounding: {
@@ -351,6 +364,7 @@ export function makeFixtureAssessment(): AssessmentDraft {
     confidence: 0.84,
     summary:
       "Chiến lược có framing và channel focus tốt; reviewer cần kiểm tra benchmark CAC trước khi phê duyệt.",
+    skillSignals: [],
     strengths: [
       "Persona và channel mix có liên kết evidence.",
       "Trade-off giữa reach và chất lượng pilot được nêu rõ.",

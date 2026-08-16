@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const row = await env.DB.prepare(`
       SELECT a.id AS assessment_id, a.status AS assessment_status, a.assessment_json,
         a.final_result_hash, s.evidence_json, p.student_user_id,
-        w.address AS student_wallet, c.id AS challenge_id,
+        w.address AS student_wallet, c.id AS challenge_id, c.minimum_score, c.reward_type, c.reward_metadata_json,
         c.reviewer_organization_id, ci.credential_address, ci.schema_address,
         (SELECT r.review_json FROM reviews r WHERE r.assessment_id = a.id AND r.decision = 'approved' ORDER BY r.created_at DESC LIMIT 1) AS review_json
       FROM assessments a
@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       assessment_id: string; assessment_status: string; assessment_json: string;
       final_result_hash: string | null; evidence_json: string; student_user_id: string;
       student_wallet: string; challenge_id: string; reviewer_organization_id: string;
+      minimum_score: string; reward_type: string; reward_metadata_json: string;
       credential_address: string | null; schema_address: string | null; review_json: string | null;
     }>();
     if (!row) return Response.json({ error: "Assessment không tồn tại." }, { status: 404 });
@@ -67,6 +68,10 @@ export async function POST(request: Request) {
     const approvedReview = row.review_json ? JSON.parse(row.review_json) as { finalDraft?: AssessmentDraft } : null;
     const officialDraft = approvedReview?.finalDraft ?? envelope.draft;
     const score = Math.round(officialDraft.totalScore);
+    if (score < Number(row.minimum_score || 0)) return Response.json({ error: "Điểm chính thức chưa đạt ngưỡng nhận credential/phần thưởng." }, { status: 409 });
+    const slots = await env.DB.prepare("SELECT reward_slots FROM challenges WHERE id=?").bind(row.challenge_id).first<{ reward_slots: number | null }>();
+    const issuedCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM skill_credentials WHERE challenge_id=? AND status IN ('active','issued')").bind(row.challenge_id).first<{ count: number }>();
+    if (Number(slots?.reward_slots ?? 1) <= Number(issuedCount?.count ?? 0)) return Response.json({ error: "Challenge đã đủ số lượng phần thưởng." }, { status: 409 });
     const evidenceHash = await sha256(row.evidence_json);
     const expiryUnix = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
     const issued = await issueAttestation(env, {
@@ -87,9 +92,9 @@ export async function POST(request: Request) {
         INSERT INTO skill_credentials
           (id, assessment_id, challenge_id, student_user_id, student_wallet,
            issuer_organization_id, nonce_address, attestation_address,
-           schema_address, score, evidence_hash, status, issue_tx, expires_at, issued_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, CURRENT_TIMESTAMP)
-      `).bind(id,row.assessment_id,row.challenge_id,row.student_user_id,row.student_wallet,row.reviewer_organization_id,issued.nonceAddress,issued.attestationAddress,row.schema_address,String(score),evidenceHash,issued.signature,expiresAt),
+           schema_address, score, skills_json, evidence_hash, status, issue_tx, expires_at, issued_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, CURRENT_TIMESTAMP)
+      `).bind(id,row.assessment_id,row.challenge_id,row.student_user_id,row.student_wallet,row.reviewer_organization_id,issued.nonceAddress,issued.attestationAddress,row.schema_address,String(score),JSON.stringify(officialDraft.skillSignals ?? []),evidenceHash,issued.signature,expiresAt),
       env.DB.prepare(`
         UPDATE participations SET state = 'credential_issued', updated_at = CURRENT_TIMESTAMP
         WHERE id = (SELECT participation_id FROM submissions

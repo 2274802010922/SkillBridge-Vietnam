@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const user = await requireSessionUser(request);
     const rows = await env.DB.prepare(`
       SELECT DISTINCT c.id, c.organization_id, o.name AS organization_name,
-        c.title, c.brief, c.skills_json, c.rubric_json, c.reward, c.reward_amount_usdc, c.reward_amount_atomic, c.reward_mint, c.access_type, c.status,
+        c.title, c.brief, c.skills_json, c.rubric_json, c.reward, c.reward_type, c.reward_metadata_json, c.reward_slots, c.minimum_score, c.reward_amount_usdc, c.reward_amount_atomic, c.reward_mint, c.access_type, c.status,
         c.version, c.published_at, c.closes_at, c.created_at,
         CASE WHEN owner.user_id IS NOT NULL THEN 1 ELSE 0 END AS can_manage,
         p.id AS participation_id, p.state AS participation_state
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const user = await requireSessionUser(request);
     const body = (await request.json()) as {
       organizationId?: string; reviewerOrganizationId?: string; title?: string; brief?: string; skills?: string[];
-      reward?: string; rewardAmountUsdc?: string; closesAt?: string | null; accessType?: ChallengeAccessType;
+      reward?: string; rewardType?: "usdc" | "badge"; rewardAmountUsdc?: string; badgeName?: string; badgeDescription?: string; rewardSlots?: number; minimumScore?: string; closesAt?: string | null; accessType?: ChallengeAccessType;
     };
     if (!body.organizationId) return Response.json({ error: "Thiếu tổ chức." }, { status: 400 });
     await requireOrganizationRole(user.id, body.organizationId, ["business_admin", "challenge_manager"], "business");
@@ -45,20 +45,29 @@ export async function POST(request: Request) {
     const title = body.title?.trim() ?? "";
     const brief = body.brief?.trim() ?? "";
     const reward = body.reward?.trim() ?? "";
-    const rewardAmount = body.rewardAmountUsdc?.trim() ? parseUsdcAmount(body.rewardAmountUsdc) : null;
-    const accessType = body.accessType ?? "invite_only";
+    const rewardType = body.rewardType;
+    if (rewardType !== "usdc" && rewardType !== "badge") return Response.json({ error: "Chọn loại phần thưởng USDC hoặc huy hiệu." }, { status: 400 });
+    const rewardAmount = rewardType === "usdc" && body.rewardAmountUsdc?.trim() ? parseUsdcAmount(body.rewardAmountUsdc) : null;
+    const accessType = body.accessType;
+    if (!accessType) return Response.json({ error: "Chọn chế độ công khai hoặc chỉ bằng lời mời." }, { status: 400 });
     if (!isChallengeAccessType(accessType)) return Response.json({ error: "Chế độ tham gia challenge không hợp lệ." }, { status: 400 });
     const skills = (body.skills ?? []).map((item) => item.trim()).filter(Boolean).slice(0, 8);
-    if (body.rewardAmountUsdc?.trim() && !rewardAmount) return Response.json({ error: "Giải thưởng USDC không hợp lệ (tối đa 6 chữ số thập phân)." }, { status: 400 });
+    if (rewardType === "usdc" && (!rewardAmount || !body.rewardAmountUsdc?.trim())) return Response.json({ error: "Challenge USDC cần số tiền hợp lệ (tối đa 6 chữ số thập phân)." }, { status: 400 });
+    if (rewardType === "badge" && (!body.badgeName?.trim() || body.rewardAmountUsdc?.trim())) return Response.json({ error: "Challenge huy hiệu cần tên huy hiệu và không nhận số tiền USDC." }, { status: 400 });
+    const rewardSlots = Math.max(1, Math.min(100, Math.floor(Number(body.rewardSlots ?? 1)) || 1));
+    const minimumScore = body.minimumScore?.trim() || "0";
+    const minimumScoreNumber = Number(minimumScore);
+    if (!Number.isFinite(minimumScoreNumber) || minimumScoreNumber < 0 || minimumScoreNumber > 100) return Response.json({ error: "Điểm tối thiểu phải từ 0 đến 100." }, { status: 400 });
+    const rewardMetadata = rewardType === "badge" ? { name: body.badgeName!.trim().slice(0, 120), description: body.badgeDescription?.trim().slice(0, 500) ?? "" } : {};
     if (title.length < 5 || title.length > 140 || brief.length < 40 || brief.length > 6000 || reward.length < 3 || skills.length < 1) {
       return Response.json({ error: "Challenge cần title, brief tối thiểu 40 ký tự, ít nhất một skill và reward." }, { status: 400 });
     }
     const id = crypto.randomUUID();
     await env.DB.batch([env.DB.prepare(`
       INSERT INTO challenges
-        (id, organization_id, reviewer_organization_id, created_by_user_id, title, brief, skills_json, rubric_json, reward, reward_amount_usdc, reward_amount_atomic, reward_mint, access_type, closes_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, body.organizationId, body.reviewerOrganizationId, user.id, title, brief, JSON.stringify(skills), JSON.stringify(RUBRIC), reward, rewardAmount?.display ?? null, rewardAmount?.atomic ?? null, rewardAmount ? (env.SOLANA_USDC_MINT || "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU") : null, accessType, body.closesAt || null),auditStatement(env.DB,{actorUserId:user.id,organizationId:body.organizationId,action:"challenge.created",targetType:"challenge",targetId:id,metadata:{title,reviewerOrganizationId:body.reviewerOrganizationId,accessType,rewardAmountUsdc:rewardAmount?.display ?? null}})]);
-    return Response.json({ challenge: { id, organizationId: body.organizationId, reviewerOrganizationId: body.reviewerOrganizationId, title, brief, skills, rubric: RUBRIC, reward, rewardAmountUsdc: rewardAmount?.display ?? null, rewardAmountAtomic: rewardAmount?.atomic ?? null, accessType, status: "draft" } }, { status: 201 });
+        (id, organization_id, reviewer_organization_id, created_by_user_id, title, brief, skills_json, rubric_json, reward, reward_type, reward_metadata_json, reward_slots, minimum_score, reward_amount_usdc, reward_amount_atomic, reward_mint, access_type, closes_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, body.organizationId, body.reviewerOrganizationId, user.id, title, brief, JSON.stringify(skills), JSON.stringify(RUBRIC), reward, rewardType, JSON.stringify(rewardMetadata), rewardSlots, minimumScore, rewardAmount?.display ?? null, rewardAmount?.atomic ?? null, rewardAmount ? (env.SOLANA_USDC_MINT || "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU") : null, accessType, body.closesAt || null),auditStatement(env.DB,{actorUserId:user.id,organizationId:body.organizationId,action:"challenge.created",targetType:"challenge",targetId:id,metadata:{title,reviewerOrganizationId:body.reviewerOrganizationId,accessType,rewardType,rewardAmountUsdc:rewardAmount?.display ?? null}})]);
+    return Response.json({ challenge: { id, organizationId: body.organizationId, reviewerOrganizationId: body.reviewerOrganizationId, title, brief, skills, rubric: RUBRIC, reward, rewardType, rewardMetadata, rewardSlots, minimumScore, rewardAmountUsdc: rewardAmount?.display ?? null, rewardAmountAtomic: rewardAmount?.atomic ?? null, accessType, status: "draft" } }, { status: 201 });
   } catch (error) { return jsonError(error); }
 }

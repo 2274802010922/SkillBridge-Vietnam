@@ -19,6 +19,10 @@ type Challenge = {
   brief: string;
   skills_json: string;
   reward: string;
+  reward_type: "usdc" | "badge";
+  reward_metadata_json: string;
+  reward_slots: number;
+  minimum_score: string;
   reward_amount_usdc: string | null;
   reward_amount_atomic: string | null;
   reward_mint: string | null;
@@ -38,10 +42,15 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
   const [reviewerOrganizationId, setReviewerOrganizationId] = useState(universities[0]?.id ?? "");
   const [title, setTitle] = useState("");
   const [brief, setBrief] = useState("");
-  const [skills, setSkills] = useState("Research, Strategy");
-  const [reward, setReward] = useState("Fast-track interview");
+  const [skills, setSkills] = useState("");
+  const [reward, setReward] = useState("");
+  const [rewardType, setRewardType] = useState<"" | "usdc" | "badge">("");
+  const [badgeName, setBadgeName] = useState("");
+  const [badgeDescription, setBadgeDescription] = useState("");
+  const [rewardSlots, setRewardSlots] = useState("1");
+  const [minimumScore, setMinimumScore] = useState("0");
   const [rewardAmountUsdc, setRewardAmountUsdc] = useState("");
-  const [accessType, setAccessType] = useState<"public" | "invite_only">("invite_only");
+  const [accessType, setAccessType] = useState<"" | "public" | "invite_only">("");
   const [targetWallet, setTargetWallet] = useState("");
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -74,6 +83,11 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
         brief,
         skills: skills.split(","),
         reward,
+        rewardType: rewardType || undefined,
+        badgeName: badgeName || undefined,
+        badgeDescription: badgeDescription || undefined,
+        rewardSlots: Number(rewardSlots) || 1,
+        minimumScore,
         rewardAmountUsdc: rewardAmountUsdc || undefined,
         accessType,
       }),
@@ -84,6 +98,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
       setTitle("");
       setBrief("");
       setRewardAmountUsdc("");
+      setRewardType(""); setBadgeName(""); setBadgeDescription(""); setRewardSlots("1"); setMinimumScore("0"); setSkills(""); setReward(""); setAccessType("");
       await load();
     }
     setBusy(false);
@@ -172,7 +187,8 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
           <option value="">{t("challenge.selectReviewer")}</option>
           {universities.map((item) => <option value={item.id} key={item.id}>{item.name} · {translateStatus(t, item.verification_status)}</option>)}
         </select>
-        <select aria-label="Chế độ tham gia" value={accessType} onChange={(event) => setAccessType(event.target.value as "public" | "invite_only")}>
+        <select aria-label="Chế độ tham gia" value={accessType} onChange={(event) => setAccessType(event.target.value as "" | "public" | "invite_only")}>
+          <option value="">{t("challenge.selectAccess")}</option>
           <option value="public">{t("challenge.publicOption")}</option>
           <option value="invite_only">{t("challenge.inviteOption")}</option>
         </select>
@@ -180,8 +196,15 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
         <textarea value={brief} onChange={(event) => setBrief(event.target.value)} placeholder={t("challenge.briefPlaceholder")} />
         <input value={skills} onChange={(event) => setSkills(event.target.value)} placeholder={t("challenge.skillsPlaceholder")} />
         <input value={reward} onChange={(event) => setReward(event.target.value)} placeholder={t("challenge.rewardPlaceholder")} />
-        <input aria-label={t("challenge.rewardAmount")} inputMode="decimal" value={rewardAmountUsdc} onChange={(event) => setRewardAmountUsdc(event.target.value)} placeholder={t("challenge.rewardAmountPlaceholder")} />
-        <button className="button button-primary" disabled={busy || !organizationId || !reviewerOrganizationId} onClick={create}>{t("challenge.create")}</button>
+        <select aria-label={t("challenge.rewardType")} value={rewardType} onChange={(event) => { setRewardType(event.target.value as "" | "usdc" | "badge"); if (event.target.value === "badge") setRewardAmountUsdc(""); }}>
+          <option value="">{t("challenge.selectRewardType")}</option>
+          <option value="usdc">{t("challenge.rewardUsdc")}</option>
+          <option value="badge">{t("challenge.rewardBadge")}</option>
+        </select>
+        {rewardType === "usdc" && <div className="invoice-form-grid"><label>{t("challenge.rewardAmount")}<input aria-label={t("challenge.rewardAmount")} inputMode="decimal" value={rewardAmountUsdc} onChange={(event) => setRewardAmountUsdc(event.target.value)} placeholder={t("challenge.rewardAmountPlaceholder")} /></label><label>{t("challenge.rewardSlots")}<input type="number" min="1" max="100" value={rewardSlots} onChange={(event) => setRewardSlots(event.target.value)} /></label></div>}
+        {rewardType === "badge" && <><input value={badgeName} onChange={(event) => setBadgeName(event.target.value)} placeholder={t("challenge.badgeName")} /><textarea value={badgeDescription} onChange={(event) => setBadgeDescription(event.target.value)} placeholder={t("challenge.badgeDescription")} /><label>{t("challenge.rewardSlots")}<input type="number" min="1" max="100" value={rewardSlots} onChange={(event) => setRewardSlots(event.target.value)} /></label></>}
+        <label>{t("challenge.minimumScore")}<input type="number" min="0" max="100" value={minimumScore} onChange={(event) => setMinimumScore(event.target.value)} /></label>
+        <button className="button button-primary" disabled={busy || !organizationId || !reviewerOrganizationId || !accessType || !rewardType} onClick={create}>{t("challenge.create")}</button>
       </div>
     </section>}
 
@@ -196,7 +219,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
         <div className="entity-tags">{JSON.parse(item.skills_json).map((skill: string) => <span key={skill}>{skill}</span>)}</div>
           <dl>
           <div><dt>{t("challenge.reward")}</dt><dd>{item.reward}</dd></div>
-          <div><dt>{t("challenge.rewardAmount")}</dt><dd>{item.reward_amount_usdc ? `${item.reward_amount_usdc} USDC` : t("challenge.noRewardAmount")}</dd></div>
+          <div><dt>{t("challenge.rewardType")}</dt><dd>{item.reward_type === "usdc" ? `${item.reward_amount_usdc ?? "0"} USDC` : `${t("challenge.rewardBadge")}: ${(() => { try { return (JSON.parse(item.reward_metadata_json) as { name?: string }).name ?? item.reward; } catch { return item.reward; } })()}`}</dd></div>
           <div><dt>{t("challenge.studentState")}</dt><dd>{translateStatus(t, item.participation_state ?? "not_joined")}</dd></div>
         </dl>
 

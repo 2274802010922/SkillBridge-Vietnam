@@ -1,0 +1,18 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useLanguage } from "./i18n";
+
+type Profile = { user_id: string; display_name: string | null; wallet_address: string | null; headline: string; bio: string; visibility: string; availability: string; skills: string[]; credentials: Array<{ score: string; challenge_title: string }> };
+export function TalentWorkspace() {
+  const { t } = useLanguage();
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [headline, setHeadline] = useState(""); const [bio, setBio] = useState(""); const [visibility, setVisibility] = useState("private"); const [availability, setAvailability] = useState("available");
+  const [notice, setNotice] = useState<string | null>(null);
+  async function load() { const response = await fetch("/api/talent", { cache: "no-store" }); if (response.ok) setProfiles(((await response.json()) as { profiles: Profile[] }).profiles); }
+  useEffect(() => { let active = true; fetch("/api/talent", { cache: "no-store" }).then((response) => response.ok ? response.json() as Promise<{ profiles: Profile[] }> : { profiles: [] }).then((data) => { if (active) setProfiles(data.profiles); }); return () => { active = false; }; }, []);
+  async function save() { const response = await fetch("/api/talent", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ headline, bio, visibility, availability }) }); const data = await response.json() as { error?: string }; setNotice(response.ok ? t("talent.saved") : data.error ?? t("talent.error")); if (response.ok) await load(); }
+  return <div className="workspace-product-content"><div className="app-welcome"><div><span>{t("talent.kicker")}</span><h1>{t("talent.title")}</h1><p>{t("talent.description")}</p></div><div className="identity-card"><small>{t("talent.visibleProfiles")}</small><strong className="metric-number">{profiles.length}</strong><b>{t("talent.credentialSignal")}</b></div></div>
+    <section className="app-panel"><div><span className="panel-kicker">{t("talent.myProfile")}</span><h2>{t("talent.profileTitle")}</h2><p>{t("talent.profileDescription")}</p></div><div className="stack-form"><input value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder={t("talent.headlinePlaceholder")} /><textarea value={bio} onChange={(event) => setBio(event.target.value)} placeholder={t("talent.bioPlaceholder")} /><div className="invoice-form-grid"><select value={visibility} onChange={(event) => setVisibility(event.target.value)}><option value="private">{t("talent.private")}</option><option value="public">{t("talent.public")}</option></select><select value={availability} onChange={(event) => setAvailability(event.target.value)}><option value="available">{t("talent.available")}</option><option value="busy">{t("talent.busy")}</option></select></div><button className="button button-primary" onClick={() => void save()}>{t("talent.save")}</button></div></section>
+    <section className="talent-grid">{profiles.map((profile) => <article className="app-panel" key={profile.user_id}><div className="entity-top"><span>{profile.display_name || profile.wallet_address?.slice(0, 10)}</span><b>{profile.availability === "available" ? t("talent.available") : t("talent.busy")}</b></div><h2>{profile.headline || t("talent.untitled")}</h2><p>{profile.bio}</p><div className="entity-tags">{profile.skills.map((skill) => <span key={skill}>{skill}</span>)}</div><small>{profile.credentials.length} {t("talent.credentials")}</small></article>)}</section>{notice && <p className="app-notice" role="status">{notice}</p>}</div>;
+}

@@ -26,8 +26,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const user = await requireSessionUser(request);
     const { id } = await params;
     const challenge = await requireChallengeManager(user.id, id);
+    const challengeConfig = await env.DB.prepare("SELECT reward_type, reward_amount_atomic, reward_metadata_json FROM challenges WHERE id = ?").bind(id).first<{ reward_type?: string; reward_amount_atomic?: string | null; reward_metadata_json?: string }>();
     const body = (await request.json()) as { action?: "publish" | "close" | "set_access"; accessType?: ChallengeAccessType };
     if (body.action === "publish") {
+      const rewardType = String(challengeConfig?.reward_type ?? (challengeConfig?.reward_amount_atomic ? "usdc" : "badge"));
+      if (rewardType === "usdc" && !challengeConfig?.reward_amount_atomic) return Response.json({ error: "Challenge USDC cần số tiền thưởng trước khi công bố." }, { status: 400 });
+      if (rewardType === "badge") {
+        try {
+          const metadata = JSON.parse(String(challengeConfig?.reward_metadata_json ?? "{}")) as { name?: string };
+          if (!metadata.name?.trim()) return Response.json({ error: "Challenge huy hiệu cần tên huy hiệu trước khi công bố." }, { status: 400 });
+        } catch { return Response.json({ error: "Cấu hình huy hiệu không hợp lệ." }, { status: 400 }); }
+      }
       const result = await env.DB.prepare(`
         UPDATE challenges SET status = 'published', published_at = CURRENT_TIMESTAMP,
           version = CAST(CAST(version AS INTEGER) + 1 AS TEXT), updated_at = CURRENT_TIMESTAMP

@@ -78,6 +78,10 @@ const statements = [
     skills_json TEXT NOT NULL DEFAULT '[]',
     rubric_json TEXT NOT NULL,
     reward TEXT NOT NULL,
+    reward_type TEXT NOT NULL DEFAULT 'badge',
+    reward_metadata_json TEXT NOT NULL DEFAULT '{}',
+    reward_slots INTEGER NOT NULL DEFAULT 1,
+    minimum_score TEXT NOT NULL DEFAULT '0',
     reward_amount_usdc TEXT,
     reward_amount_atomic TEXT,
     reward_mint TEXT,
@@ -189,6 +193,7 @@ const statements = [
     attestation_address TEXT NOT NULL,
     schema_address TEXT NOT NULL,
     score TEXT NOT NULL,
+    skills_json TEXT NOT NULL DEFAULT '[]',
     evidence_hash TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'issuing',
     issue_tx TEXT,
@@ -277,6 +282,58 @@ const statements = [
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS talent_profiles (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    headline TEXT NOT NULL DEFAULT '',
+    bio TEXT NOT NULL DEFAULT '',
+    visibility TEXT NOT NULL DEFAULT 'private',
+    availability TEXT NOT NULL DEFAULT 'available',
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS external_attestations (
+    id TEXT PRIMARY KEY,
+    recipient_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    issuer_organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    evidence_hash TEXT,
+    attestation_address TEXT,
+    issue_tx TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    issued_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TEXT,
+    created_by_user_id TEXT NOT NULL REFERENCES users(id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS freelance_contracts (
+    id TEXT PRIMARY KEY,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    created_by_user_id TEXT NOT NULL REFERENCES users(id),
+    freelancer_user_id TEXT NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    total_amount_usdc TEXT NOT NULL,
+    total_amount_atomic TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'proposed',
+    settlement_mode TEXT NOT NULL DEFAULT 'direct_devnet',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS contract_milestones (
+    id TEXT PRIMARY KEY,
+    contract_id TEXT NOT NULL REFERENCES freelance_contracts(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    amount_usdc TEXT NOT NULL,
+    amount_atomic TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    submission_note TEXT,
+    payment_tx TEXT,
+    paid_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS audit_events (
     id TEXT PRIMARY KEY,
     actor_user_id TEXT REFERENCES users(id),
@@ -332,6 +389,10 @@ const statements = [
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_payouts_submission ON challenge_payouts(submission_id)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_payouts_tx ON challenge_payouts(payment_tx)`,
   `CREATE INDEX IF NOT EXISTS idx_challenge_payouts_recipient_status ON challenge_payouts(recipient_user_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_talent_profiles_visibility ON talent_profiles(visibility, updated_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_external_attestations_recipient ON external_attestations(recipient_user_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_contracts_org_status ON freelance_contracts(organization_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_contract_milestones_contract ON contract_milestones(contract_id, position)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_actor_created ON audit_events(actor_user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_target_created ON audit_events(target_type, target_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_rate_limits_expiry ON rate_limits(expires_at)`,
@@ -358,7 +419,26 @@ export async function ensureCoreSchema(db: D1Database) {
       if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
     }
   }
+  for (const definition of [
+    ["reward_type", "TEXT NOT NULL DEFAULT 'badge'"],
+    ["reward_metadata_json", "TEXT NOT NULL DEFAULT '{}'"],
+    ["reward_slots", "INTEGER NOT NULL DEFAULT 1"],
+    ["minimum_score", "TEXT NOT NULL DEFAULT '0'"],
+  ] as const) {
+    if (challengeColumns.results.some((column) => column.name === definition[0])) continue;
+    try {
+      await db.prepare(`ALTER TABLE challenges ADD COLUMN ${definition[0]} ${definition[1]}`).run();
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+    }
+  }
+  await db.prepare("UPDATE challenges SET reward_type = 'usdc' WHERE reward_type = 'badge' AND reward_amount_atomic IS NOT NULL").run();
   const assessmentColumns = await db.prepare("PRAGMA table_info(assessments)").all<{ name: string }>();
+  const credentialColumns = await db.prepare("PRAGMA table_info(skill_credentials)").all<{ name: string }>();
+  if (!credentialColumns.results.some((column) => column.name === "skills_json")) {
+    try { await db.prepare("ALTER TABLE skill_credentials ADD COLUMN skills_json TEXT NOT NULL DEFAULT '[]'").run(); }
+    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+  }
   if (!assessmentColumns.results.some((column) => column.name === "assessment_mode")) {
     try {
       await db.prepare("ALTER TABLE assessments ADD COLUMN assessment_mode TEXT NOT NULL DEFAULT 'ai_assisted'").run();

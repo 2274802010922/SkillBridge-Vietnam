@@ -23,7 +23,7 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
   );
 }
 
-export function AppSidebar({ active }: { active: "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "audit" }) {
+export function AppSidebar({ active }: { active: "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "talent" | "contracts" | "audit" }) {
   const { t } = useLanguage();
   const links = [
     ["overview", "/app", "nav.overview"],
@@ -34,6 +34,8 @@ export function AppSidebar({ active }: { active: "overview" | "challenges" | "su
     ["passport", "/app/passport", "nav.passport"],
     ["invoices", "/app/invoices", "nav.invoices"],
     ["payouts", "/app/payouts", "nav.payouts"],
+    ["talent", "/app/talent", "nav.talent"],
+    ["contracts", "/app/contracts", "nav.contracts"],
     ["audit", "/app/audit", "nav.audit"],
   ] as const;
   return (

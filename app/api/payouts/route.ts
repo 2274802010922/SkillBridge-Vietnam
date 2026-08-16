@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       JOIN users u ON u.id = p.student_user_id
       JOIN assessments a ON a.submission_id = s.id AND a.status = 'approved'
       LEFT JOIN challenge_payouts cp ON cp.submission_id = s.id
-      WHERE c.reward_amount_atomic IS NOT NULL
+      WHERE c.reward_type = 'usdc' AND c.reward_amount_atomic IS NOT NULL
       ORDER BY s.submitted_at DESC
     `).bind(user.id).all();
     return Response.json({ payouts: rows.results }, { headers: { "cache-control": "private, no-store" } });
