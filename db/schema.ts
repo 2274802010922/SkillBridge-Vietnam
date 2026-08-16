@@ -125,6 +125,7 @@ export const challenges = sqliteTable(
     skillsJson: text("skills_json").notNull().default("[]"),
     rubricJson: text("rubric_json").notNull(),
     reward: text("reward").notNull(),
+    accessType: text("access_type").notNull().default("invite_only"),
     status: text("status").notNull().default("draft"),
     version: text("version").notNull().default("1"),
     publishedAt: text("published_at"),

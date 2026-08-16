@@ -1,0 +1,1 @@
+ALTER TABLE `challenges` ADD `access_type` text DEFAULT 'invite_only' NOT NULL;

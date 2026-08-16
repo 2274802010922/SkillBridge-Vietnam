@@ -78,6 +78,7 @@ const statements = [
     skills_json TEXT NOT NULL DEFAULT '[]',
     rubric_json TEXT NOT NULL,
     reward TEXT NOT NULL,
+    access_type TEXT NOT NULL DEFAULT 'invite_only',
     status TEXT NOT NULL DEFAULT 'draft',
     version TEXT NOT NULL DEFAULT '1',
     published_at TEXT,
@@ -264,5 +265,13 @@ let initialized = false;
 export async function ensureCoreSchema(db: D1Database) {
   if (initialized) return;
   await db.batch(statements.map((statement) => db.prepare(statement)));
+  const challengeColumns = await db.prepare("PRAGMA table_info(challenges)").all<{ name: string }>();
+  if (!challengeColumns.results.some((column) => column.name === "access_type")) {
+    try {
+      await db.prepare("ALTER TABLE challenges ADD COLUMN access_type TEXT NOT NULL DEFAULT 'invite_only'").run();
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+    }
+  }
   initialized = true;
 }
