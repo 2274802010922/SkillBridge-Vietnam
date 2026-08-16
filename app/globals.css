@@ -1155,3 +1155,30 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 @media (max-width: 680px) {
   .review-path-choice { grid-template-columns: 1fr; }
 }
+
+/* Product-first landing sections: explain the problem and the real workflow before asking for sign-in. */
+.problem-section { padding-block: 128px; border-top: 1px solid rgba(8, 17, 31, .08); }
+.problem-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid rgba(8, 17, 31, .14); border-radius: 22px; background: rgba(8, 17, 31, .14); box-shadow: var(--shadow-card); }
+.problem-card { min-height: 230px; padding: 28px; background: rgba(255, 255, 255, .72); transition: background .2s ease, transform .2s ease; }
+.problem-card:hover { position: relative; z-index: 1; background: white; transform: translateY(-3px); }
+.problem-index, .feature-index { color: var(--violet); font: 700 10px/1 var(--font-geist-mono); letter-spacing: .1em; }
+.problem-card p { max-width: 270px; margin: 90px 0 0; color: var(--ink-soft); font-size: 16px; line-height: 1.5; letter-spacing: -.02em; }
+.product-features-section { padding-block: 128px; border-top: 1px solid rgba(8, 17, 31, .08); }
+.feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.feature-card { min-height: 220px; padding: 25px; border: 1px solid rgba(8, 17, 31, .13); border-radius: 18px; background: rgba(255, 255, 255, .66); box-shadow: var(--shadow-card); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.feature-card:hover { border-color: rgba(93, 107, 255, .38); box-shadow: var(--shadow-float); transform: translateY(-4px); }
+.feature-card h3 { margin: 55px 0 10px; font-size: 24px; letter-spacing: -.055em; }
+.feature-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+@media (max-width: 900px) {
+  .problem-grid, .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .problem-section, .product-features-section { padding-block: 82px; }
+  .problem-grid, .feature-grid { grid-template-columns: 1fr; }
+  .problem-card { min-height: 190px; }
+  .problem-card p { margin-top: 62px; }
+  .feature-card { min-height: 0; }
+  .feature-card h3 { margin-top: 34px; }
+}

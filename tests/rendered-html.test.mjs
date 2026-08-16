@@ -48,9 +48,11 @@ test("server-renders the SkillBridge product page", async () => {
   const html = await response.text();
   assert.match(html, /SkillBridge Vietnam/i);
   assert.match(html, /Bài làm tốt/i);
-  assert.match(html, /Luồng tương tác mẫu/i);
-  assert.match(html, /AI đề xuất/i);
-  assert.match(html, /15\/15 bài kiểm tra hợp đồng đạt/i);
+  assert.match(html, /LUỒNG PROOF-TO-PAYOUT/i);
+  assert.match(html, /AI tùy chọn/i);
+  assert.match(html, /AI chỉ là trợ lý tùy chọn theo rubric/i);
+  assert.match(html, /product-features-section/i);
+  assert.doesNotMatch(html, /Luồng tương tác mẫu|Interactive vertical slice|demo-section/i);
   assert.match(html, /language-switcher/i);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|SkeletonPreview/i);
 });
