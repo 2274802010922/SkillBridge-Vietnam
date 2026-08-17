@@ -2014,3 +2014,84 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .landing-home .landing-role-list article:hover,
   .landing-home .landing-trust-grid article:hover { transform: none; }
 }
+
+/* Landing v8 — readable type hierarchy across the dark visual system. */
+.landing-home .eyebrow {
+  color: var(--landing-ink-soft);
+  font-size: 12px;
+  font-weight: 760;
+  letter-spacing: .1em;
+}
+.landing-home .eyebrow > span { background: var(--landing-coral); }
+.landing-home .landing-hero-inner .landing-hero-copy .eyebrow { color: rgba(255, 255, 255, .92); }
+.landing-home .landing-hero-inner .landing-hero-copy .eyebrow > span { background: var(--landing-lime); }
+.landing-home .landing-pilot .eyebrow { color: #0c0a0c; }
+.landing-home .landing-pilot .eyebrow > span { background: #0c0a0c; }
+
+.landing-home .landing-signal > span,
+.landing-home .landing-problem-list article > span,
+.landing-home .landing-capability-index,
+.landing-home .landing-role-list article > span {
+  color: var(--landing-lime);
+  font-size: 11px;
+  font-weight: 760;
+}
+.landing-home .landing-signal strong { color: var(--landing-ink); font-weight: 760; }
+.landing-home .landing-signal small { color: var(--landing-ink-soft); font-size: 11px; }
+.landing-home .landing-signal-marquee { color: rgba(255, 255, 255, .78); font-size: 10px; }
+
+.landing-home .landing-section-heading > p,
+.landing-home .landing-flow-copy > p,
+.landing-home .landing-role-list p,
+.landing-home .landing-capability-primary p,
+.landing-home .landing-capability-support p,
+.landing-home .landing-trust-grid p {
+  color: var(--landing-muted);
+}
+.landing-home .landing-trust-grid small {
+  color: var(--landing-violet);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: .06em;
+}
+.landing-home .landing-stage-brief small,
+.landing-home .landing-stage-checks span,
+.landing-home .landing-flow-guardrails span,
+.landing-home .landing-hero-proof-tags small {
+  font-size: 9px;
+}
+.landing-home .landing-hero-proof-header,
+.landing-home .landing-hero-meta,
+.landing-home .landing-hero-proof-note { font-size: 10px; }
+.landing-home .landing-hero-proof-note small { font-size: 11px; }
+
+/* The auth page is intentionally single-column on phones; avoid vertical
+   centering and let long wallet/error copy determine the document height. */
+@media (max-width: 680px) {
+  .auth-page { overflow-x: clip; }
+  .auth-header {
+    min-height: 68px;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding-block: 12px;
+  }
+  .auth-header .wordmark { min-width: 0; flex: 1 1 auto; }
+  .auth-header .topbar-actions { min-width: 0; flex: 0 1 auto; gap: 8px; }
+  .auth-header .text-link { max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .auth-shell {
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 34px;
+    padding-block: 42px 56px;
+  }
+  .auth-copy, .wallet-login-card { min-width: 0; width: 100%; }
+  .auth-copy h1 { font-size: clamp(43px, 12.8vw, 60px); overflow-wrap: anywhere; }
+  .wallet-login-card { padding: 22px 18px; }
+  .wallet-login-heading h2 { font-size: clamp(28px, 8.5vw, 34px); line-height: 1.05; }
+  .wallet-login-card select, .wallet-login-button { min-height: 48px; }
+  .consent-check span, .demo-error { min-width: 0; overflow-wrap: anywhere; }
+  .demo-error { line-height: 1.45; }
+  .landing-home .landing-trust-grid small { font-size: 10px; }
+}
