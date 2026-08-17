@@ -4181,9 +4181,29 @@ button:hover .k95-kinetic-char .char-bot {
   gap: 16px;
 }
 
+.solana-footer-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .solana-footer-audience {
   color: var(--solana-text-silver);
   font-size: 13px;
+}
+
+.solana-footer-dot {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+}
+
+.solana-footer-credit {
+  color: var(--solana-lime);
+  font-weight: 600;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
 }
 
 .solana-footer-copy {

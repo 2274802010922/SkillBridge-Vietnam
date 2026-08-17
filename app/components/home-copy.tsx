@@ -416,7 +416,11 @@ export function HomeCopy() {
             <div className="solana-footer-divider" />
 
             <div className="solana-footer-bottom">
-              <span className="solana-footer-audience">{t("home.builtFor")}</span>
+              <div className="solana-footer-bottom-left">
+                <span className="solana-footer-audience">{t("home.builtFor")}</span>
+                <span className="solana-footer-dot">·</span>
+                <span className="solana-footer-credit">{isEn ? "Developed by Team 404" : "Được phát triển bởi Team 404"}</span>
+              </div>
               <span className="solana-footer-copy">© 2026 SkillBridge Vietnam. Built on Solana Devnet.</span>
             </div>
           </div>
