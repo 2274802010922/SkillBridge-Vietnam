@@ -1934,24 +1934,27 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 .landing-home [data-reveal="card"].landing-reveal-visible > :nth-child(3) { transition-delay: 140ms; }
 .landing-home [data-reveal="card"].landing-reveal-visible > :nth-child(4) { transition-delay: 190ms; }
 
-.landing-home [data-reveal="title"].landing-reveal-observed {
+.landing-home [data-reveal="hero-copy"].landing-reveal-observed [data-reveal-title],
+.landing-home [data-reveal="heading"].landing-reveal-observed [data-reveal-title] {
   clip-path: inset(0 0 100% 0);
   opacity: 0;
   transform: translate3d(0, 24px, 0);
   transition: clip-path .7s cubic-bezier(.22, 1, .36, 1), opacity .48s ease, transform .7s cubic-bezier(.22, 1, .36, 1);
+  transition-delay: 70ms;
 }
-.landing-home [data-reveal="title"].landing-reveal-visible {
+.landing-home [data-reveal="hero-copy"].landing-reveal-visible [data-reveal-title],
+.landing-home [data-reveal="heading"].landing-reveal-visible [data-reveal-title] {
   clip-path: inset(0 0 0 0);
   opacity: 1;
   transform: translate3d(0, 0, 0);
 }
-.landing-home [data-reveal="panel"].landing-reveal-observed {
+.landing-home .landing-capabilities:has(.landing-section-heading.landing-reveal-observed) [data-reveal-panel] {
   clip-path: inset(0 100% 0 0);
   opacity: 1;
   transform: none;
   transition: clip-path .9s cubic-bezier(.22, 1, .36, 1);
 }
-.landing-home [data-reveal="panel"].landing-reveal-visible { clip-path: inset(0 0 0 0); }
+.landing-home .landing-capabilities:has(.landing-section-heading.landing-reveal-visible) [data-reveal-panel] { clip-path: inset(0 0 0 0); }
 
 .landing-home .landing-problem-list article,
 .landing-home .landing-capability-grid article,
@@ -2001,8 +2004,8 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-home [data-reveal="title"].landing-reveal-observed,
-  .landing-home [data-reveal="panel"].landing-reveal-observed { clip-path: none; }
+  .landing-home [data-reveal-title],
+  .landing-home [data-reveal-panel] { clip-path: none; }
   .landing-home [data-reveal="hero-copy"].landing-reveal-observed > *,
   .landing-home [data-reveal="heading"].landing-reveal-observed > *,
   .landing-home [data-reveal="card"].landing-reveal-observed > * { opacity: 1; transform: none; transition: none; }

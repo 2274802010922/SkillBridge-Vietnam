@@ -72,7 +72,7 @@ export function HomeCopy() {
         <div className="page-shell landing-hero-inner">
           <div className="landing-hero-copy" data-reveal="hero-copy">
             <div className="eyebrow"><span /> {t("home.eyebrow")}</div>
-            <h1 data-reveal="title" data-reveal-delay="70">{t("home.heroTitle")}</h1>
+            <h1 data-reveal-title>{t("home.heroTitle")}</h1>
             <p>{t("home.heroDescription")}</p>
             <div className="landing-hero-actions">
               <a className="button button-primary" href="/auth">{t("home.start")}</a>
@@ -108,7 +108,7 @@ export function HomeCopy() {
 
       <section className="landing-editorial page-shell" id="product">
         <div className="landing-section-heading" data-reveal="heading">
-          <div><div className="eyebrow"><span /> {t("home.problemEyebrow")}</div><h2 data-reveal="title" data-reveal-delay="70">{t("home.problemTitle")}</h2></div>
+          <div><div className="eyebrow"><span /> {t("home.problemEyebrow")}</div><h2 data-reveal-title>{t("home.problemTitle")}</h2></div>
           <p>{t("home.problemDescription")}</p>
         </div>
         <div className="landing-problem-list">
@@ -122,7 +122,7 @@ export function HomeCopy() {
         <div className="page-shell landing-flow-layout">
           <div className="landing-flow-copy" data-reveal="heading">
             <div className="eyebrow"><span /> {t("home.flowEyebrow")}</div>
-            <h2 data-reveal="title" data-reveal-delay="70">{t("home.flowTitle")}</h2>
+            <h2 data-reveal-title>{t("home.flowTitle")}</h2>
             <p>{t("home.flowDescription")}</p>
             <div className="landing-flow-guardrails"><span>{t("home.noPii")}</span><span>{t("home.aiOptional")}</span></div>
           </div>
@@ -136,10 +136,10 @@ export function HomeCopy() {
 
       <section className="landing-capabilities page-shell">
         <div className="landing-section-heading" data-reveal="heading">
-          <div><div className="eyebrow"><span /> {t("home.featuresEyebrow")}</div><h2 data-reveal="title" data-reveal-delay="70">{t("home.featuresTitle")}</h2></div>
+          <div><div className="eyebrow"><span /> {t("home.featuresEyebrow")}</div><h2 data-reveal-title>{t("home.featuresTitle")}</h2></div>
           <p>{t("home.featuresDescription")}</p>
         </div>
-        <div className="landing-capability-grid" data-reveal="panel" data-reveal-delay="130">
+        <div className="landing-capability-grid" data-reveal-panel>
           {capabilityGroups.map(([number, titleKey, descriptionKey, supportingTitleKey, supportingDescriptionKey]) => (
             <article data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number}>
               <span className="landing-capability-index">{number}</span>
@@ -151,7 +151,7 @@ export function HomeCopy() {
       </section>
 
       <section className="landing-roles page-shell" id="roles">
-        <div className="landing-roles-intro" data-reveal="heading"><div className="eyebrow"><span /> {t("home.rolesEyebrow")}</div><h2 data-reveal="title" data-reveal-delay="70">{t("home.rolesTitle")}</h2></div>
+        <div className="landing-roles-intro" data-reveal="heading"><div className="eyebrow"><span /> {t("home.rolesEyebrow")}</div><h2 data-reveal-title>{t("home.rolesTitle")}</h2></div>
         <div className="landing-role-list">
           {roles.map(([number, titleKey, descriptionKey, actionKey, href]) => (
             <article data-reveal="card" data-reveal-delay={`${Number(number) * 75}`} key={number}><span>{number}</span><div><h3>{t(titleKey)}</h3><p>{t(descriptionKey)}</p></div><a href={href} aria-label={`${t(actionKey)} — ${t(titleKey)}`}>↗</a></article>
@@ -161,7 +161,7 @@ export function HomeCopy() {
 
       <section className="landing-trust" id="trust">
         <div className="page-shell">
-          <div className="landing-section-heading" data-reveal="heading"><div><div className="eyebrow"><span /> {t("home.trustEyebrow")}</div><h2 data-reveal="title" data-reveal-delay="70">{t("home.trustTitle")}</h2></div><p>{t("home.trustDescription")}</p></div>
+          <div className="landing-section-heading" data-reveal="heading"><div><div className="eyebrow"><span /> {t("home.trustEyebrow")}</div><h2 data-reveal-title>{t("home.trustTitle")}</h2></div><p>{t("home.trustDescription")}</p></div>
           <div className="landing-trust-grid">
             <article data-reveal="card" data-reveal-delay="70"><span>AI</span><h3>{t("home.assessmentContract")}</h3><p>{t("home.assessmentDescription")}</p><small>{t("home.aiOptional")}</small></article>
             <article data-reveal="card" data-reveal-delay="140"><span>H</span><h3>{t("home.humanReview")}</h3><p>{t("home.humanDescription")}</p><small>{t("home.auditAppeal")}</small></article>
@@ -172,7 +172,7 @@ export function HomeCopy() {
       </section>
 
       <section className="landing-pilot page-shell" id="pilot">
-        <div data-reveal="heading"><div className="eyebrow"><span /> {t("home.pilotEyebrow")}</div><h2 data-reveal="title" data-reveal-delay="70">{t("home.pilotTitle")}</h2></div>
+        <div data-reveal="heading"><div className="eyebrow"><span /> {t("home.pilotEyebrow")}</div><h2 data-reveal-title>{t("home.pilotTitle")}</h2></div>
         <div data-reveal="copy" data-reveal-delay="140"><p>{t("home.pilotDescription")}</p><a className="button button-dark" href="mailto:pilot@skillbridge.vn">{t("home.designPartner")}</a></div>
       </section>
 
