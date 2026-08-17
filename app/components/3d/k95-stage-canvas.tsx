@@ -102,13 +102,13 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     // --- THREE.JS SCENE SETUP (K95 ROYAL COBALT BLUE THEME) ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a00d8);
-    scene.fog = new THREE.Fog(0x0a00d8, 20, 62);
+    scene.fog = new THREE.Fog(0x0a00d8, 35, 95); // Deep fog so cards are NEVER fogged out
 
     const camera = new THREE.PerspectiveCamera(
       45,
       window.innerWidth / window.innerHeight,
       0.1,
-      100
+      120
     );
     camera.position.set(0, 0, 13.5);
 
@@ -119,8 +119,8 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     container.appendChild(renderer.domElement);
 
     // --- K95 3D CURVED PERSPECTIVE WIREFRAME GRID (CARO GRID DOME) ---
-    const gridRadius = 15.5;
-    const gridHeight = 42;
+    const gridRadius = 16;
+    const gridHeight = 44;
     const gridSegmentsRadial = 32;
     const gridSegmentsHeight = 24;
     const gridCylinderGeo = new THREE.CylinderGeometry(
@@ -157,11 +157,11 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     pointLightLime.position.set(0, 0, 5);
     scene.add(pointLightLime);
 
-    // --- K95 3D KINETIC PARAMETRIC BLOOMING FLOWER (ENLARGED) ---
+    // --- K95 3D KINETIC PARAMETRIC BLOOMING FLOWER ---
     const flowerGroup = new THREE.Group();
     flowerGroup.position.set(0, 0, -2.5);
 
-    // 1. Center Pistil (Glowing Crystal Sphere - Enlarged)
+    // 1. Center Pistil (Glowing Crystal Sphere)
     const pistilGeo = new THREE.SphereGeometry(0.72, 32, 32);
     const pistilMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
@@ -173,7 +173,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     const pistilMesh = new THREE.Mesh(pistilGeo, pistilMat);
     flowerGroup.add(pistilMesh);
 
-    // 2. Outer Layer Petals (8 Symmetrical Blooming Petals - Chrome White & Electric Lime - Radius 3.45)
+    // 2. Outer Layer Petals (8 Symmetrical Blooming Petals - Chrome White & Electric Lime)
     const outerPetalCount = 8;
     const outerPetalRadius = 3.45;
 
@@ -213,7 +213,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       flowerGroup.add(petalMesh);
     }
 
-    // 3. Inner Layer Petals (6 Offset Petals - Neon Purple #9945FF - Radius 2.35)
+    // 3. Inner Layer Petals (6 Offset Petals - Neon Purple #9945FF)
     const innerPetalCount = 6;
     const innerPetalRadius = 2.35;
 
@@ -273,7 +273,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     const particleSystem = new THREE.Points(particleGeo, particleMat);
     scene.add(particleSystem);
 
-    // --- 3D ORBIT CARDS (EXPANDED TO FRAME THE LARGER FLOWER) ---
+    // --- 3D CONTINUOUS PLANETARY ORBIT CARDS (NEVER DRIFT OR DISAPPEAR) ---
     const main3DGroup = new THREE.Group();
     scene.add(main3DGroup);
 
@@ -284,12 +284,11 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     interface CardMeshState {
       mesh: THREE.Mesh;
       node: OrbitNodeItem;
-      ringAngle: number;
+      index: number;
+      isInner: boolean;
+      baseAngle: number;
       ringRadius: number;
-      ringY: number;
-      spiralAngle: number;
-      spiralRadius: number;
-      spiralBaseY: number;
+      baseY: number;
     }
 
     const cardStates: CardMeshState[] = [];
@@ -306,36 +305,22 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       const mesh = new THREE.Mesh(cardGeometry, material);
       mesh.userData = { node };
 
-      // Rings Mode: Expanded concentric orbiting rings (Inner R=5.4, Outer R=8.2)
       const isInner = i < 3;
-      const ringRadius = isInner ? 5.4 : 8.2;
-      const countInRing = isInner ? 3 : 4;
-      const idxInRing = isInner ? i : i - 3;
-      const ringAngle = (idxInRing / countInRing) * Math.PI * 2 + (isInner ? 0 : 0.6);
-      const ringY = isInner ? 1.2 : -1.4;
-
-      // Spiral Mode: vertical spiral wrapping around the scroll space
-      const spiralT = i / (ORBIT_NODES.length - 1);
-      const spiralAngle = spiralT * Math.PI * 2.8;
-      const spiralRadius = 5.8 + (i % 2 === 0 ? 1.0 : -0.5);
-      const spiralBaseY = (0.5 - spiralT) * 13;
-
-      mesh.position.set(
-        Math.cos(spiralAngle) * spiralRadius,
-        spiralBaseY,
-        Math.sin(spiralAngle) * spiralRadius
-      );
+      const countInGroup = isInner ? 3 : 4;
+      const idxInGroup = isInner ? i : i - 3;
+      const baseAngle = (idxInGroup / countInGroup) * Math.PI * 2;
+      const ringRadius = isInner ? 4.9 : 7.2;
+      const baseY = isInner ? 0.8 : -0.8;
 
       main3DGroup.add(mesh);
       cardStates.push({
         mesh,
         node,
-        ringAngle,
+        index: i,
+        isInner,
+        baseAngle,
         ringRadius,
-        ringY,
-        spiralAngle,
-        spiralRadius,
-        spiralBaseY,
+        baseY,
       });
     });
 
@@ -418,7 +403,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     };
     window.addEventListener("resize", handleResize);
 
-    // --- ANIMATION LOOP ---
+    // --- ANIMATION LOOP (CONTINUOUS ORBIT 24/7) ---
     let animId: number;
     let clock = new THREE.Clock();
 
@@ -431,7 +416,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
 
       // Inertia & ambient auto-spin
       if (!isDragging) {
-        targetRotationY += 0.0012;
+        targetRotationY += 0.0015;
         velX *= 0.94;
         velY *= 0.94;
         targetRotationY += velX;
@@ -446,7 +431,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       // K95 3D Grid rotation & perspective tilt
       gridMesh.rotation.y = elapsedTime * 0.03 + currentRotationY * 0.35;
       gridMesh.rotation.x = currentRotationX * 0.3;
-      gridMesh.position.y = (currentScrollProgress - 0.2) * 6;
+      gridMesh.position.y = (currentScrollProgress - 0.2) * 4;
 
       // K95 3D KINETIC FLOWER BLOOMING & ROTATION
       flowerGroup.rotation.z = -elapsedTime * 0.25;
@@ -460,14 +445,9 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       // Particles drift
       particleSystem.rotation.y = elapsedTime * 0.02;
 
-      // 3D group position and rotation linked directly to scroll progress
-      const currentMode = modeRef.current;
-      const scrollYOffset = (currentScrollProgress - 0.2) * 14;
-      const scrollYRotation = currentScrollProgress * Math.PI * 2.0;
-
-      main3DGroup.position.y = currentMode === "spiral" ? scrollYOffset : -currentScrollProgress * 2;
-      main3DGroup.rotation.y = currentRotationY + (currentMode === "spiral" ? scrollYRotation : scrollYRotation * 0.4);
-      main3DGroup.rotation.x = currentRotationX;
+      // Group position remains centered in the viewport with subtle parallax
+      main3DGroup.position.y = (currentScrollProgress - 0.2) * 1.5;
+      main3DGroup.rotation.x = currentRotationX * 0.5;
 
       // Raycasting hover check
       raycaster.setFromCamera(mouse, camera);
@@ -482,27 +462,40 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       }
       setHoveredNode(currentHovered);
 
-      // Lerp card positions & apply 100% AUTO-BILLBOARD
+      // --- CONTINUOUS REVOLVING CARD ORBITS ---
+      const currentMode = modeRef.current;
+
       cardStates.forEach((state) => {
-        let targetPos: THREE.Vector3;
+        let targetX = 0;
+        let targetY = 0;
+        let targetZ = 0;
 
         if (currentMode === "spiral") {
-          const a = state.spiralAngle;
-          const r = state.spiralRadius;
-          const y = state.spiralBaseY;
-          targetPos = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+          // Continuous spiral revolution: cards revolve vertically around the flower
+          const angle = elapsedTime * 0.22 + (state.index / 7) * Math.PI * 2 + currentRotationY;
+          const radius = 5.8 + (state.index % 2 === 0 ? 0.6 : -0.4);
+          targetX = Math.cos(angle) * radius;
+          targetZ = Math.sin(angle) * radius;
+          targetY = Math.sin(angle * 1.5 + state.index) * 1.6 + (state.index % 2 === 0 ? 0.8 : -0.8);
         } else {
-          const a = state.ringAngle;
-          const r = state.ringRadius;
-          const y = state.ringY + Math.sin(a * 2) * 0.3;
-          targetPos = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+          // Continuous dual-ring planetary orbits
+          const orbitSpeed = state.isInner ? 0.24 : -0.18;
+          const angle = elapsedTime * orbitSpeed + state.baseAngle + currentRotationY;
+          targetX = Math.cos(angle) * state.ringRadius;
+          targetZ = Math.sin(angle) * state.ringRadius;
+          targetY = state.baseY + Math.sin(angle * 2 + elapsedTime) * 0.35;
         }
 
-        state.mesh.position.lerp(targetPos, 0.07);
+        const targetPos = new THREE.Vector3(targetX, targetY, targetZ);
+        state.mesh.position.lerp(targetPos, 0.08);
+
+        // 100% AUTO-BILLBOARD (Always face the camera)
         state.mesh.quaternion.copy(camera.quaternion);
 
+        // Dynamic depth scaling (front cards slightly larger, back cards slightly smaller)
         const isHovered = currentHovered?.id === state.node.id;
-        const targetScale = isHovered ? 1.15 : 1.0;
+        const depthBonus = targetZ > 0 ? 1.05 : 0.94;
+        const targetScale = isHovered ? 1.2 : depthBonus;
         state.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
       });
 
