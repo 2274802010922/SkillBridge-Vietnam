@@ -295,6 +295,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "rings" }: K95StageC
       const material = new THREE.MeshStandardMaterial({
         map: texture,
         transparent: true,
+        side: THREE.DoubleSide,
         roughness: 0.15,
         metalness: 0.1,
       });
@@ -469,13 +470,12 @@ export function K95StageCanvas({ isEn = false, layoutMode = "rings" }: K95StageC
         const targetPos = new THREE.Vector3(targetX, targetY, targetZ);
         state.mesh.position.lerp(targetPos, 0.08);
 
-        // K95 Tangent Cylindrical Orientation (Cards face outwards in perspective)
-        state.mesh.lookAt(0, targetY, 0);
-        state.mesh.rotateY(Math.PI);
+        // 100% AUTO-BILLBOARD: Cards ALWAYS face the camera directly, remaining 100% visible & readable at all angles including the back
+        state.mesh.quaternion.copy(camera.quaternion);
 
-        // Dynamic depth scaling (front cards slightly larger & crisp)
+        // Dynamic depth scaling (front cards slightly larger & crisp, back cards fully visible & scaled)
         const isHovered = currentHovered?.id === state.node.id;
-        const depthBonus = targetZ > 0 ? 1.06 : 0.92;
+        const depthBonus = targetZ > 0 ? 1.08 : 0.94;
         const targetScale = isHovered ? 1.22 : depthBonus;
         state.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
       });
