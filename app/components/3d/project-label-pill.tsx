@@ -11,21 +11,9 @@ interface ProjectLabelPillProps {
 }
 
 export function ProjectLabelPill({ activeNode, position, visible, isEn = false }: ProjectLabelPillProps) {
-  if (!activeNode) {
-    return (
-      <div
-        className="k95-label-layer"
-        style={{
-          transform: `translate3d(${position.x + 18}px, ${position.y + 18}px, 0)`,
-          opacity: visible ? 1 : 0,
-          visibility: visible ? "visible" : "hidden",
-        }}
-      >
-        <div className="k95-label-pill k95-label-pill--cue visible">
-          <span className="k95-label-cue">KÉO / CUỘN ĐỂ KHÁM PHÁ</span>
-        </div>
-      </div>
-    );
+  // Only display the pill when the user is hovering over a specific 3D node card
+  if (!activeNode || !visible) {
+    return null;
   }
 
   return (
@@ -33,8 +21,8 @@ export function ProjectLabelPill({ activeNode, position, visible, isEn = false }
       className="k95-label-layer"
       style={{
         transform: `translate3d(${position.x + 18}px, ${position.y + 18}px, 0)`,
-        opacity: visible ? 1 : 0,
-        visibility: visible ? "visible" : "hidden",
+        opacity: 1,
+        visibility: "visible",
       }}
     >
       <div className="k95-label-pill k95-label-pill--project visible">

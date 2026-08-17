@@ -6,7 +6,6 @@ import { LanguageSwitcher, useLanguage } from "./i18n";
 import { K95StageCanvas } from "./3d/k95-stage-canvas";
 import { K95Cursor } from "./ui/k95-cursor";
 import { K95BootLoader } from "./ui/k95-boot-loader";
-import { KineticText } from "./ui/kinetic-text";
 import { useSmoothScroll } from "./ui/use-smooth-scroll";
 import { useScrollReveal } from "./scroll-reveal";
 
@@ -57,217 +56,229 @@ export function HomeCopy() {
       <K95BootLoader />
       <K95Cursor />
 
-      {/* FULL-PAGE PERSISTENT 3D WEBGL BACKGROUND (Runs from top to bottom) */}
+      {/* K95 PERSISTENT 3D CANVAS BACKGROUND — RUNS CONTINUOUSLY ACROSS ENTIRE PAGE */}
       <K95StageCanvas isEn={isEn} />
 
-      <main className="landing-home k95-landing" id="top" ref={landingRef}>
+      <main className="solana-landing" id="top" ref={landingRef}>
         <a className="landing-skip-link" href="#landing-content">
           {t("home.skipContent")}
         </a>
 
-        {/* K95 TOPBAR / NAVBAR */}
-        <header className="site-header landing-header page-shell k95-header">
-          <Link className="wordmark k95-wordmark" href="#top" aria-label="SkillBridge Vietnam" data-hover>
-            <span className="wordmark-mark k95-logo-badge" aria-hidden="true">SB</span>
-            <span className="k95-brand-title">SkillBridge</span>
-            <small className="k95-brand-sub">VIETNAM</small>
-          </Link>
-
-          <nav className="k95-desktop-nav" aria-label={t("home.navHow")}>
-            <a href="#product" className="k95-nav-link" data-hover>
-              <KineticText text={t("home.navProduct")} />
-            </a>
-            <a href="#flow" className="k95-nav-link" data-hover>
-              <KineticText text={t("home.navFlow")} />
-            </a>
-            <a href="#roles" className="k95-nav-link" data-hover>
-              <KineticText text={t("home.navRoles")} />
-            </a>
-            <a href="#trust" className="k95-nav-link" data-hover>
-              <KineticText text={t("home.navHow")} />
-            </a>
-          </nav>
-
-          <div className="topbar-actions k95-actions">
-            <Link className="header-cta k95-pill-cta" href="/auth" data-hover>
-              <KineticText text={t("home.login")} />
+        {/* SOLANA-INSPIRED CLEAN HEADER */}
+        <header className="solana-header page-shell">
+          <div className="solana-header-inner">
+            <Link className="solana-wordmark" href="#top" aria-label="SkillBridge Vietnam" data-hover>
+              <span className="solana-logo-badge">SB</span>
+              <span className="solana-brand-name">SkillBridge</span>
+              <span className="solana-tag">SOLANA</span>
             </Link>
-            <LanguageSwitcher />
 
-            {/* Mobile Menu Trigger */}
-            <button
-              type="button"
-              className={`k95-mobile-menu-btn ${mobileMenuOpen ? "is-open" : ""}`}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle navigation"
-              data-hover
-            >
-              <span className="k95-menu-icon" aria-hidden="true" />
-              <span>{mobileMenuOpen ? (isEn ? "CLOSE" : "ĐÓNG") : "MENU"}</span>
-            </button>
+            <nav className="solana-desktop-nav" aria-label={t("home.navHow")}>
+              <a href="#product" className="solana-nav-link" data-hover>
+                {t("home.navProduct")}
+              </a>
+              <a href="#flow" className="solana-nav-link" data-hover>
+                {t("home.navFlow")}
+              </a>
+              <a href="#roles" className="solana-nav-link" data-hover>
+                {t("home.navRoles")}
+              </a>
+              <a href="#trust" className="solana-nav-link" data-hover>
+                {t("home.navHow")}
+              </a>
+            </nav>
+
+            <div className="solana-header-actions">
+              <LanguageSwitcher />
+              <Link className="solana-btn-pill-primary" href="/auth" data-hover>
+                <span>{t("home.login")}</span>
+                <span className="solana-pill-icon" aria-hidden="true">↗</span>
+              </Link>
+
+              {/* Mobile Menu Trigger */}
+              <button
+                type="button"
+                className={`solana-mobile-menu-btn ${mobileMenuOpen ? "is-open" : ""}`}
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle navigation"
+                data-hover
+              >
+                <span>{mobileMenuOpen ? "✕" : "☰"}</span>
+              </button>
+            </div>
           </div>
         </header>
 
-        {/* FULLSCREEN FROSTED MOBILE MENU */}
+        {/* MOBILE MENU OVERLAY */}
         {mobileMenuOpen && (
-          <div className="k95-mobile-overlay" onClick={() => setMobileMenuOpen(false)}>
-            <nav className="k95-mobile-nav" onClick={(e) => e.stopPropagation()}>
-              <a href="#product" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+          <div className="solana-mobile-overlay" onClick={() => setMobileMenuOpen(false)}>
+            <nav className="solana-mobile-nav" onClick={(e) => e.stopPropagation()}>
+              <a href="#product" className="solana-mobile-link" onClick={() => setMobileMenuOpen(false)}>
                 {t("home.navProduct")}
               </a>
-              <a href="#flow" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#flow" className="solana-mobile-link" onClick={() => setMobileMenuOpen(false)}>
                 {t("home.navFlow")}
               </a>
-              <a href="#roles" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#roles" className="solana-mobile-link" onClick={() => setMobileMenuOpen(false)}>
                 {t("home.navRoles")}
               </a>
-              <a href="#trust" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#trust" className="solana-mobile-link" onClick={() => setMobileMenuOpen(false)}>
                 {t("home.navHow")}
               </a>
-              <Link href="/auth" className="k95-mobile-link k95-mobile-cta" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/auth" className="solana-mobile-link solana-mobile-cta" onClick={() => setMobileMenuOpen(false)}>
                 {t("home.login")} ↗
               </Link>
             </nav>
           </div>
         )}
 
-        {/* K95 HERO SECTION */}
-        <section className="landing-hero landing-hero-immersive k95-hero page-shell" id="landing-content" tabIndex={-1}>
-          <div className="k95-hero-inner">
-            <div className="landing-hero-copy k95-hero-copy" data-reveal="hero-copy">
-              <div className="eyebrow k95-eyebrow">
-                <span className="k95-pulse-dot" /> {t("home.eyebrow")}
-              </div>
-              <h1 className="k95-hero-heading" data-reveal-title>
-                {t("home.heroTitle")}
-              </h1>
-              <p className="k95-hero-lead">{t("home.heroDescription")}</p>
-
-              <div className="landing-hero-actions k95-hero-actions">
-                <Link className="button button-primary k95-btn-primary" href="/auth" data-hover>
-                  <KineticText text={t("home.start")} />
-                </Link>
-                <a className="text-link k95-link-secondary" href="#flow" data-hover>
-                  <span>{t("home.navFlow")}</span> <span aria-hidden="true">↓</span>
-                </a>
-              </div>
-
-              <p className="landing-network-note k95-network-live">
-                <span className="k95-live-indicator" aria-hidden="true" />
-                {t("home.networkLive")}
-              </p>
+        {/* SOLANA-INSPIRED HERO SECTION */}
+        <section className="solana-hero page-shell" id="landing-content" tabIndex={-1}>
+          <div className="solana-hero-container">
+            <div className="solana-hero-badge" data-reveal="hero-badge">
+              <span className="solana-live-dot" />
+              <span>{t("home.eyebrow")}</span>
             </div>
 
-            <div className="landing-hero-proof-note k95-proof-badge" data-reveal="hero-note" data-reveal-delay="140">
-              <span>{t("home.cardProof")}</span>
-              <strong>{t("home.cardVerified")}</strong>
-              <small>{t("home.humanApproved")} · {t("home.evidenceLinked")}</small>
+            {/* Solana Two-Tone Headline */}
+            <h1 className="solana-hero-title" data-reveal-title>
+              {isEn ? (
+                <>
+                  Proven Student Work. <br />
+                  <span className="solana-title-light">Never Goes To Waste.</span>
+                </>
+              ) : (
+                <>
+                  Bài làm tốt <br />
+                  <span className="solana-title-light">không nên biến mất.</span>
+                </>
+              )}
+            </h1>
+
+            <p className="solana-hero-desc" data-reveal="hero-desc">
+              {t("home.heroDescription")}
+            </p>
+
+            <div className="solana-hero-cta-row" data-reveal="hero-actions">
+              <Link className="solana-btn-main" href="/auth" data-hover>
+                <span>{t("home.start")}</span>
+                <span className="solana-btn-arrow">→</span>
+              </Link>
+              <a className="solana-btn-secondary" href="#flow" data-hover>
+                <span>{t("home.navFlow")}</span>
+                <span aria-hidden="true">↓</span>
+              </a>
             </div>
 
-            <div className="landing-hero-meta k95-meta-bar" data-reveal="meta" data-reveal-delay="260" aria-hidden="true">
-              <span>SKILLBRIDGE / VIETNAM</span>
-              <span>SOLANA DEVNET</span>
-              <span>PROOF-TO-PAYOUT</span>
-              <span>CUỘN TRANG ĐỂ DU HÀNH 3D ↓</span>
+            {/* Network Note Bar */}
+            <div className="solana-network-bar" data-reveal="hero-meta">
+              <div className="solana-net-item">
+                <span className="solana-net-label">NETWORK</span>
+                <span className="solana-net-val">Solana Devnet</span>
+              </div>
+              <div className="solana-net-item">
+                <span className="solana-net-label">PROTOCOL</span>
+                <span className="solana-net-val">Proof-to-Payout</span>
+              </div>
+              <div className="solana-net-item">
+                <span className="solana-net-label">VERIFIED NODES</span>
+                <span className="solana-net-val">07 Live Organizations</span>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* K95 SIGNAL BAND MARQUEE */}
-        <section className="landing-signal-band k95-signal-band" aria-label={t("home.trustArchitecture")}>
-          <div className="page-shell landing-signal-grid k95-signal-grid">
+        {/* 4 PROOF SIGNALS / METRIC CARDS */}
+        <section className="solana-signals-section page-shell" aria-label={t("home.trustArchitecture")}>
+          <div className="solana-signal-grid">
             {proofSignals.map(([number, titleKey, detailKey]) => (
-              <div className="landing-signal k95-signal-card" data-reveal="signal" data-reveal-delay={`${Number(number) * 60}`} key={number} data-hover>
-                <span className="k95-signal-index">[{number}]</span>
-                <div>
-                  <strong>{t(titleKey)}</strong>
-                  <small>{t(detailKey)}</small>
+              <div className="solana-signal-card" data-reveal="card" data-reveal-delay={`${Number(number) * 60}`} key={number} data-hover>
+                <div className="solana-signal-top">
+                  <span className="solana-signal-num">[{number}]</span>
+                  <span className="solana-signal-dot" />
                 </div>
+                <h3 className="solana-signal-title">{t(titleKey)}</h3>
+                <p className="solana-signal-sub">{t(detailKey)}</p>
               </div>
             ))}
           </div>
-
-          <div className="landing-signal-marquee k95-marquee" aria-hidden="true">
-            <div className="k95-marquee-content">
-              <span>{t("home.humanApproved")}</span><i>+</i>
-              <span>{t("home.evidenceLinked")}</span><i>+</i>
-              <span>{t("home.solanaProofTitle")}</span><i>+</i>
-              <span>{t("home.networkPayout")}</span><i>+</i>
-              <span>{t("home.humanApproved")}</span><i>+</i>
-              <span>{t("home.evidenceLinked")}</span><i>+</i>
-              <span>{t("home.solanaProofTitle")}</span><i>+</i>
-              <span>{t("home.networkPayout")}</span><i>+</i>
-            </div>
-          </div>
         </section>
 
-        {/* EDITORIAL / PROBLEM SECTION */}
-        <section className="landing-editorial page-shell k95-editorial" id="product">
-          <div className="landing-section-heading k95-section-heading" data-reveal="heading">
-            <div>
-              <div className="eyebrow k95-eyebrow"><span /> {t("home.problemEyebrow")}</div>
-              <h2 data-reveal-title className="k95-section-title">{t("home.problemTitle")}</h2>
-            </div>
-            <p className="k95-section-desc">{t("home.problemDescription")}</p>
+        {/* SECTION 2: EDITORIAL / PROBLEM SOLVING */}
+        <section className="solana-section page-shell" id="product">
+          <div className="solana-section-header" data-reveal="heading">
+            <span className="solana-section-tag">{t("home.problemEyebrow")}</span>
+            <h2 className="solana-section-title" data-reveal-title>
+              {isEn ? (
+                <>Real Challenges. <span className="solana-title-light">Clear Verification.</span></>
+              ) : (
+                <>Vấn đề thực tế. <span className="solana-title-light">Cần một lối đi rõ ràng.</span></>
+              )}
+            </h2>
+            <p className="solana-section-desc">{t("home.problemDescription")}</p>
           </div>
 
-          <div className="landing-problem-list k95-problem-grid">
+          <div className="solana-grid-3">
             {problems.map(([number, roleKey, problemKey]) => (
-              <article className="k95-card" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
-                <span className="k95-card-num">[{number}]</span>
-                <h3>{t(roleKey)}</h3>
-                <p>{t(problemKey)}</p>
+              <article className="solana-card" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
+                <div className="solana-card-badge">[{number}]</div>
+                <h3 className="solana-card-title">{t(roleKey)}</h3>
+                <p className="solana-card-text">{t(problemKey)}</p>
               </article>
             ))}
           </div>
         </section>
 
-        {/* 5-STEP PROOF-TO-PAYOUT FLOW */}
-        <section className="landing-flow-section k95-flow-section" id="flow">
-          <div className="page-shell landing-flow-layout k95-flow-layout">
-            <div className="landing-flow-copy k95-flow-copy" data-reveal="heading">
-              <div className="eyebrow k95-eyebrow"><span /> {t("home.flowEyebrow")}</div>
-              <h2 data-reveal-title className="k95-section-title">{t("home.flowTitle")}</h2>
-              <p className="k95-section-desc">{t("home.flowDescription")}</p>
-              <div className="landing-flow-guardrails k95-guardrails">
-                <span>{t("home.noPii")}</span>
-                <span>{t("home.aiOptional")}</span>
-              </div>
-            </div>
+        {/* SECTION 3: 5-STEP PROOF-TO-PAYOUT FLOW */}
+        <section className="solana-section page-shell" id="flow">
+          <div className="solana-section-header" data-reveal="heading">
+            <span className="solana-section-tag">{t("home.flowEyebrow")}</span>
+            <h2 className="solana-section-title" data-reveal-title>
+              {isEn ? (
+                <>5-Step Protocol. <span className="solana-title-light">From Submission to Payout.</span></>
+              ) : (
+                <>Quy trình 5 bước. <span className="solana-title-light">Từ bài làm đến thanh toán.</span></>
+              )}
+            </h2>
+            <p className="solana-section-desc">{t("home.flowDescription")}</p>
+          </div>
 
-            <ol className="landing-flow-rail k95-flow-rail">
-              {flowNodes.map(([number, titleKey, detailKey]) => (
-                <li className="k95-flow-step" data-reveal="flow" data-reveal-delay={`${Number(number) * 75}`} key={number} data-hover>
-                  <span className="k95-flow-index">[{number}]</span>
-                  <div className="k95-flow-info">
-                    <strong>{t(titleKey)}</strong>
-                    <small>{t(detailKey)}</small>
-                  </div>
-                </li>
-              ))}
-            </ol>
+          <div className="solana-flow-list">
+            {flowNodes.map(([number, titleKey, detailKey]) => (
+              <div className="solana-flow-item" data-reveal="flow" data-reveal-delay={`${Number(number) * 70}`} key={number} data-hover>
+                <div className="solana-flow-index-box">{number}</div>
+                <div className="solana-flow-content">
+                  <h3 className="solana-flow-title">{t(titleKey)}</h3>
+                  <p className="solana-flow-desc">{t(detailKey)}</p>
+                </div>
+                <span className="solana-flow-status">✓ VERIFIED</span>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* CAPABILITIES GRID */}
-        <section className="landing-capabilities page-shell k95-capabilities">
-          <div className="landing-section-heading k95-section-heading" data-reveal="heading">
-            <div>
-              <div className="eyebrow k95-eyebrow"><span /> {t("home.featuresEyebrow")}</div>
-              <h2 data-reveal-title className="k95-section-title">{t("home.featuresTitle")}</h2>
-            </div>
-            <p className="k95-section-desc">{t("home.featuresDescription")}</p>
+        {/* SECTION 4: CAPABILITIES */}
+        <section className="solana-section page-shell">
+          <div className="solana-section-header" data-reveal="heading">
+            <span className="solana-section-tag">{t("home.featuresEyebrow")}</span>
+            <h2 className="solana-section-title" data-reveal-title>
+              {isEn ? (
+                <>Full Architecture. <span className="solana-title-light">Built for Reliability.</span></>
+              ) : (
+                <>Hạ tầng toàn diện. <span className="solana-title-light">Đảm bảo độ tin cậy tuyệt đối.</span></>
+              )}
+            </h2>
+            <p className="solana-section-desc">{t("home.featuresDescription")}</p>
           </div>
 
-          <div className="landing-capability-grid k95-capability-grid" data-reveal-panel>
+          <div className="solana-grid-3">
             {capabilityGroups.map(([number, titleKey, descriptionKey, supportingTitleKey, supportingDescriptionKey]) => (
-              <article className="k95-capability-card" data-reveal="card" data-reveal-delay={`${Number(number) * 85}`} key={number} data-hover>
-                <span className="landing-capability-index k95-cap-index">[{number}]</span>
-                <div className="landing-capability-primary">
-                  <h3>{t(titleKey)}</h3>
-                  <p>{t(descriptionKey)}</p>
-                </div>
-                <div className="landing-capability-support k95-cap-support">
+              <article className="solana-card solana-card--tall" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
+                <div className="solana-card-badge">[{number}]</div>
+                <h3 className="solana-card-title">{t(titleKey)}</h3>
+                <p className="solana-card-text">{t(descriptionKey)}</p>
+                <div className="solana-card-divider" />
+                <div className="solana-card-support">
                   <strong>{t(supportingTitleKey)}</strong>
                   <p>{t(supportingDescriptionKey)}</p>
                 </div>
@@ -276,101 +287,109 @@ export function HomeCopy() {
           </div>
         </section>
 
-        {/* ROLES SECTION */}
-        <section className="landing-roles page-shell k95-roles" id="roles">
-          <div className="landing-roles-intro k95-section-heading" data-reveal="heading">
-            <div className="eyebrow k95-eyebrow"><span /> {t("home.rolesEyebrow")}</div>
-            <h2 data-reveal-title className="k95-section-title">{t("home.rolesTitle")}</h2>
+        {/* SECTION 5: ROLES */}
+        <section className="solana-section page-shell" id="roles">
+          <div className="solana-section-header" data-reveal="heading">
+            <span className="solana-section-tag">{t("home.rolesEyebrow")}</span>
+            <h2 className="solana-section-title" data-reveal-title>
+              {isEn ? (
+                <>For Every Participant. <span className="solana-title-light">Students, Businesses & Schools.</span></>
+              ) : (
+                <>Dành cho mọi đối tượng. <span className="solana-title-light">Sinh viên, Doanh nghiệp & Nhà trường.</span></>
+              )}
+            </h2>
           </div>
 
-          <div className="landing-role-list k95-role-grid">
+          <div className="solana-grid-3">
             {roles.map(([number, titleKey, descriptionKey, actionKey, href]) => (
-              <article className="k95-role-card" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
-                <span className="k95-role-num">[{number}]</span>
-                <div className="k95-role-content">
-                  <h3>{t(titleKey)}</h3>
-                  <p>{t(descriptionKey)}</p>
+              <article className="solana-card solana-role-card" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
+                <div className="solana-card-badge">[{number}]</div>
+                <h3 className="solana-card-title">{t(titleKey)}</h3>
+                <p className="solana-card-text">{t(descriptionKey)}</p>
+                <div className="solana-card-bottom">
+                  <Link href={href} className="solana-link-cta" data-hover>
+                    <span>{t(actionKey)}</span>
+                    <span aria-hidden="true">↗</span>
+                  </Link>
                 </div>
-                <Link href={href} className="k95-role-arrow" aria-label={`${t(actionKey)} — ${t(titleKey)}`} data-hover>
-                  ↗
-                </Link>
               </article>
             ))}
           </div>
         </section>
 
-        {/* TRUST ARCHITECTURE */}
-        <section className="landing-trust k95-trust" id="trust">
-          <div className="page-shell">
-            <div className="landing-section-heading k95-section-heading" data-reveal="heading">
-              <div>
-                <div className="eyebrow k95-eyebrow"><span /> {t("home.trustEyebrow")}</div>
-                <h2 data-reveal-title className="k95-section-title">{t("home.trustTitle")}</h2>
-              </div>
-              <p className="k95-section-desc">{t("home.trustDescription")}</p>
+        {/* SECTION 6: TRUST ARCHITECTURE */}
+        <section className="solana-section page-shell" id="trust">
+          <div className="solana-section-header" data-reveal="heading">
+            <span className="solana-section-tag">{t("home.trustEyebrow")}</span>
+            <h2 className="solana-section-title" data-reveal-title>
+              {isEn ? (
+                <>Trust & Verification. <span className="solana-title-light">AI + Human Consensus.</span></>
+              ) : (
+                <>Độ tin cậy & Kiểm chứng. <span className="solana-title-light">Kết hợp AI & Đồng thuận con người.</span></>
+              )}
+            </h2>
+            <p className="solana-section-desc">{t("home.trustDescription")}</p>
+          </div>
+
+          <div className="solana-grid-4">
+            <article className="solana-card" data-reveal="card" data-reveal-delay="70" data-hover>
+              <div className="solana-card-tag">AI ENGINE</div>
+              <h3 className="solana-card-title">{t("home.assessmentContract")}</h3>
+              <p className="solana-card-text">{t("home.assessmentDescription")}</p>
+            </article>
+
+            <article className="solana-card" data-reveal="card" data-reveal-delay="140" data-hover>
+              <div className="solana-card-tag">HUMAN AUDIT</div>
+              <h3 className="solana-card-title">{t("home.humanReview")}</h3>
+              <p className="solana-card-text">{t("home.humanDescription")}</p>
+            </article>
+
+            <article className="solana-card" data-reveal="card" data-reveal-delay="210" data-hover>
+              <div className="solana-card-tag">SOLANA DEVNET</div>
+              <h3 className="solana-card-title">{t("home.solanaProofTitle")}</h3>
+              <p className="solana-card-text">{t("home.solanaDescription")}</p>
+            </article>
+
+            <article className="solana-card" data-reveal="card" data-reveal-delay="280" data-hover>
+              <div className="solana-card-tag">USDC PAYOUT</div>
+              <h3 className="solana-card-title">{t("home.accessTitle")}</h3>
+              <p className="solana-card-text">{t("home.accessDescription")}</p>
+            </article>
+          </div>
+        </section>
+
+        {/* SECTION 7: PILOT CALLOUT BANNER */}
+        <section className="solana-pilot-section page-shell" id="pilot">
+          <div className="solana-pilot-card" data-reveal="card">
+            <div className="solana-pilot-left">
+              <span className="solana-section-tag">{t("home.pilotEyebrow")}</span>
+              <h2 className="solana-pilot-title">{t("home.pilotTitle")}</h2>
+              <p className="solana-pilot-desc">{t("home.pilotDescription")}</p>
             </div>
-
-            <div className="landing-trust-grid k95-trust-grid">
-              <article className="k95-trust-card" data-reveal="card" data-reveal-delay="70" data-hover>
-                <span className="k95-trust-tag">AI</span>
-                <h3>{t("home.assessmentContract")}</h3>
-                <p>{t("home.assessmentDescription")}</p>
-                <small>{t("home.aiOptional")}</small>
-              </article>
-
-              <article className="k95-trust-card" data-reveal="card" data-reveal-delay="140" data-hover>
-                <span className="k95-trust-tag">H</span>
-                <h3>{t("home.humanReview")}</h3>
-                <p>{t("home.humanDescription")}</p>
-                <small>{t("home.auditAppeal")}</small>
-              </article>
-
-              <article className="k95-trust-card" data-reveal="card" data-reveal-delay="210" data-hover>
-                <span className="k95-trust-tag">S</span>
-                <h3>{t("home.solanaProofTitle")}</h3>
-                <p>{t("home.solanaDescription")}</p>
-                <small>{t("home.noPii")}</small>
-              </article>
-
-              <article className="landing-trust-outcome k95-trust-card k95-trust-outcome" data-reveal="card" data-reveal-delay="280" data-hover>
-                <span className="k95-trust-tag">↗</span>
-                <h3>{t("home.accessTitle")}</h3>
-                <p>{t("home.accessDescription")}</p>
-                <small>{t("home.verifyLoop")}</small>
-              </article>
+            <div className="solana-pilot-right">
+              <a className="solana-btn-main" href="mailto:pilot@skillbridge.vn" data-hover>
+                <span>{t("home.designPartner")}</span>
+                <span className="solana-btn-arrow">→</span>
+              </a>
             </div>
           </div>
         </section>
 
-        {/* PILOT SECTION */}
-        <section className="landing-pilot page-shell k95-pilot" id="pilot">
-          <div data-reveal="heading" className="k95-pilot-head">
-            <div className="eyebrow k95-eyebrow"><span /> {t("home.pilotEyebrow")}</div>
-            <h2 data-reveal-title className="k95-pilot-title">{t("home.pilotTitle")}</h2>
-          </div>
-
-          <div data-reveal="copy" data-reveal-delay="140" className="k95-pilot-body">
-            <p>{t("home.pilotDescription")}</p>
-            <a className="button button-dark k95-btn-dark" href="mailto:pilot@skillbridge.vn" data-hover>
-              <KineticText text={t("home.designPartner")} />
-            </a>
-          </div>
-        </section>
-
-        {/* K95 FOOTER */}
-        <footer className="site-footer landing-footer page-shell k95-footer">
-          <div className="k95-footer-col k95-footer-left">
-            <span className="k95-tabular-line">BRAND & PROOF-OF-SKILL PLATFORM</span>
-          </div>
-
-          <div className="k95-footer-col k95-footer-center">
-            <span className="k95-tabular-line">
-              07 / 07 <span className="k95-dim">VERIFIED NODES</span> · <Link href="/workspace" className="k95-footer-link" data-hover>Workspace</Link>
-            </span>
-          </div>
-
-          <div className="k95-footer-col k95-footer-right">
-            <span className="k95-tabular-line">© 2026 SKILLBRIDGE VIETNAM</span>
+        {/* FOOTER */}
+        <footer className="solana-footer page-shell">
+          <div className="solana-footer-inner">
+            <div className="solana-footer-brand">
+              <strong>SKILLBRIDGE VIETNAM</strong>
+              <small>Solana Proof-of-Skill & Assessment Infrastructure</small>
+            </div>
+            <div className="solana-footer-meta">
+              <span>07 LIVE VERIFIED NODES</span>
+              <span>·</span>
+              <Link href="/workspace" className="solana-footer-link" data-hover>Workspace ↗</Link>
+            </div>
+            <div className="solana-footer-copy">
+              <span>© 2026 SkillBridge. All rights reserved.</span>
+            </div>
           </div>
         </footer>
       </main>
