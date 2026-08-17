@@ -1185,20 +1185,21 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 
 /* Landing v3 — UI/UX Pro Max light-terminal direction. */
 .landing-home {
-  --landing-canvas: #f5f3ec;
-  --landing-surface: #fffdf8;
-  --landing-ink: #0b1426;
-  --landing-ink-soft: #2b3850;
-  --landing-muted: #606b7d;
-  --landing-lime: #c7f36b;
-  --landing-violet: #7557ff;
-  --landing-coral: #ff6b4a;
-  --landing-line: rgba(11, 20, 38, .14);
+  --landing-canvas: #f7f7f4;
+  --landing-surface: #ffffff;
+  --landing-ink: #0c0a0c;
+  --landing-ink-soft: #2a2934;
+  --landing-muted: #696873;
+  --landing-lime: #c7fb5b;
+  --landing-violet: #1500e1;
+  --landing-blue: #1500e1;
+  --landing-coral: #ff6248;
+  --landing-line: rgba(12, 10, 12, .15);
   min-height: 100vh;
   overflow: clip;
   background:
-    radial-gradient(circle at 90% 4%, rgba(117, 87, 255, .12), transparent 23rem),
-    radial-gradient(circle at 4% 34%, rgba(199, 243, 107, .14), transparent 20rem),
+    radial-gradient(circle at 94% 5%, rgba(21, 0, 225, .12), transparent 25rem),
+    radial-gradient(circle at 4% 32%, rgba(199, 251, 91, .15), transparent 22rem),
     var(--landing-canvas);
   color: var(--landing-ink);
 }
@@ -1229,7 +1230,7 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   padding: 10px 12px 10px 16px;
   border: 1px solid var(--landing-line);
   border-radius: 18px;
-  background: rgba(255, 253, 248, .9);
+  background: rgba(255, 255, 255, .88);
   box-shadow: 0 16px 45px rgba(11, 20, 38, .07);
   backdrop-filter: blur(18px);
 }
@@ -1259,13 +1260,14 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 .landing-network-note { display: flex; align-items: center; gap: 10px; margin-top: 40px !important; color: var(--landing-muted) !important; font: 700 10px/1.3 var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
 .landing-network-note > span { width: 8px; height: 8px; border-radius: 50%; background: #35a95e; box-shadow: 0 0 0 5px rgba(53, 169, 94, .13); }
 
-.landing-proof-stage { position: relative; overflow: hidden; border: 1px solid rgba(11, 20, 38, .35); border-radius: 24px; background: rgba(255, 253, 248, .8); box-shadow: 14px 16px 0 rgba(11, 20, 38, .08), 0 34px 80px rgba(11, 20, 38, .12); }
-.landing-proof-stage::before { position: absolute; inset: 0; background-image: linear-gradient(rgba(11, 20, 38, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(11, 20, 38, .05) 1px, transparent 1px); background-size: 32px 32px; content: ""; mask-image: linear-gradient(to bottom, black, transparent 88%); pointer-events: none; }
+.landing-proof-stage { position: relative; overflow: hidden; border: 1px solid rgba(12, 10, 12, .4); border-radius: 24px; background: rgba(255, 255, 255, .82); box-shadow: 14px 16px 0 rgba(12, 10, 12, .08), 0 34px 80px rgba(12, 10, 12, .12); }
+.landing-proof-stage::before { position: absolute; inset: 0; background-image: linear-gradient(rgba(12, 10, 12, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(12, 10, 12, .055) 1px, transparent 1px); background-size: 32px 32px; content: ""; mask-image: linear-gradient(to bottom, black, transparent 88%); pointer-events: none; }
 .landing-stage-toolbar { position: relative; z-index: 1; min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 22px; border-bottom: 1px solid var(--landing-line); background: rgba(255, 255, 255, .65); color: var(--landing-muted); font: 700 9px/1 var(--font-geist-mono); letter-spacing: .08em; }
 .landing-stage-toolbar > span { display: flex; align-items: center; gap: 8px; color: #287b45; }
 .landing-stage-toolbar i { width: 7px; height: 7px; border-radius: 50%; background: #35a95e; }
 .landing-stage-toolbar code { color: var(--landing-violet); font: inherit; }
-.landing-stage-content { position: relative; z-index: 1; min-height: 470px; display: grid; grid-template-rows: 1fr 54px auto; padding: 30px; }
+.landing-stage-content { position: relative; z-index: 1; min-height: 470px; padding: 22px 24px 28px; }
+.landing-stage-visual { display: grid; gap: 18px; }
 .landing-stage-brief { max-width: 430px; }
 .landing-stage-brief > span, .landing-stage-card > div:first-child { color: var(--landing-violet); font: 700 9px/1.2 var(--font-geist-mono); letter-spacing: .09em; text-transform: uppercase; }
 .landing-stage-brief h2 { max-width: 440px; margin: 18px 0 12px; font-size: clamp(30px, 3.2vw, 48px); line-height: .98; letter-spacing: -.065em; }
@@ -1282,6 +1284,51 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 .landing-stage-card > p { margin: 0; color: #b7c1d1; font-size: 11px; line-height: 1.5; }
 .landing-stage-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, .15); }
 .landing-stage-checks span { color: var(--landing-lime); font: 650 8px/1.3 var(--font-geist-mono); }
+.landing-stage-visual-footer { display: grid; grid-template-columns: minmax(0, .95fr) minmax(240px, .8fr); gap: 18px; align-items: end; }
+
+/* K95-inspired proof constellation: a light, kinetic visual layer without external assets. */
+.proof-constellation { position: relative; min-height: 438px; overflow: hidden; isolation: isolate; border: 1px solid rgba(12, 10, 12, .18); background: #1500e1; color: white; }
+.proof-constellation::before { position: absolute; inset: 0; background: radial-gradient(circle at 50% 48%, rgba(255, 255, 255, .14), transparent 25%), linear-gradient(135deg, rgba(255, 255, 255, .08), transparent 50%); content: ""; pointer-events: none; }
+.constellation-grid { position: absolute; inset: 0; opacity: .22; background-image: linear-gradient(rgba(255, 255, 255, .22) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .22) 1px, transparent 1px); background-size: 38px 38px; mask-image: radial-gradient(circle at center, black 10%, transparent 76%); }
+.constellation-orbit { position: absolute; top: 50%; left: 50%; border: 1px solid rgba(255, 255, 255, .34); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+.constellation-orbit-large { width: min(79%, 490px); aspect-ratio: 1; border-style: dashed; animation: constellation-orbit-spin 32s linear infinite; }
+.constellation-orbit-small { width: min(53%, 320px); aspect-ratio: 1; transform: translate(-50%, -50%) rotate(21deg); border-color: rgba(199, 251, 91, .62); }
+.constellation-crosshair { position: absolute; top: 50%; left: 50%; width: min(82%, 515px); height: 1px; background: rgba(255, 255, 255, .22); transform: translate(-50%, -50%); }
+.constellation-crosshair::after { position: absolute; top: 50%; left: 50%; width: 1px; height: min(82%, 515px); background: rgba(255, 255, 255, .22); content: ""; transform: translate(-50%, -50%); }
+.constellation-center { position: absolute; top: 50%; left: 50%; z-index: 2; display: grid; width: 175px; height: 175px; place-items: center; border: 1px solid rgba(255, 255, 255, .68); border-radius: 50%; background: rgba(12, 10, 12, .55); box-shadow: 0 0 0 10px rgba(255, 255, 255, .07), 0 20px 45px rgba(12, 10, 12, .24); transform: translate(-50%, -50%); }
+.constellation-flower { position: absolute; inset: -19px; width: calc(100% + 38px); height: calc(100% + 38px); animation: constellation-flower-breathe 7s ease-in-out infinite; }
+.constellation-flower-spin { transform-origin: 120px 120px; animation: constellation-flower-spin 18s linear infinite; }
+.constellation-center span { z-index: 1; margin-top: 85px; color: rgba(255, 255, 255, .7); font: 700 7px/1 var(--font-geist-mono); letter-spacing: .11em; }
+.constellation-center strong { z-index: 1; margin-top: -2px; color: var(--landing-lime); font: 800 20px/1 var(--font-geist-mono); letter-spacing: -.08em; }
+.constellation-node { position: absolute; z-index: 3; display: flex; align-items: center; gap: 9px; width: 154px; padding: 8px 9px 8px 8px; border: 1px solid rgba(255, 255, 255, .42); background: rgba(12, 10, 12, .76); box-shadow: 4px 4px 0 rgba(12, 10, 12, .22); backdrop-filter: blur(9px); transition: transform .22s ease, background .22s ease; }
+.constellation-node:hover { background: #ffffff; color: var(--landing-ink); transform: translateY(-4px) rotate(-1deg); }
+.constellation-node-media { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .56); background: rgba(255, 255, 255, .1); color: white; font: 800 12px/1 var(--font-geist-mono); }
+.constellation-node:hover .constellation-node-media { border-color: var(--landing-ink); color: var(--landing-ink); }
+.constellation-node strong, .constellation-node small { display: block; }
+.constellation-node strong { font: 800 8px/1.1 var(--font-geist-mono); letter-spacing: .08em; }
+.constellation-node small { max-width: 96px; margin-top: 5px; color: rgba(255, 255, 255, .7); font-size: 9px; line-height: 1.2; }
+.constellation-node:hover small { color: var(--landing-muted); }
+.media-solana { background: linear-gradient(135deg, #9945ff, #14f195); }
+.media-vlu { background: var(--landing-lime); color: var(--landing-ink); }
+.media-hackfest { background: var(--landing-coral); }
+.media-evidence { background: #ffffff; color: var(--landing-violet); }
+.media-credential { background: #b7b1ff; color: var(--landing-ink); }
+.media-usdc { background: #2775ca; }
+.node-solana { top: 10%; left: 10%; transform: rotate(-5deg); }
+.node-vlu { top: 8%; right: 9%; transform: rotate(4deg); }
+.node-hackfest { right: 2%; bottom: 18%; transform: rotate(-3deg); }
+.node-evidence { bottom: 7%; left: 11%; transform: rotate(3deg); }
+.node-credential { top: 47%; left: 1%; transform: translateY(-50%) rotate(-4deg); }
+.node-usdc { top: 48%; right: 1%; transform: translateY(-50%) rotate(4deg); }
+.constellation-coordinate { position: absolute; z-index: 2; color: rgba(255, 255, 255, .58); font: 700 8px/1 var(--font-geist-mono); letter-spacing: .1em; }
+.coordinate-top { top: 16px; left: 18px; }
+.coordinate-bottom { right: 18px; bottom: 16px; }
+@keyframes constellation-orbit-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes constellation-flower-spin { to { transform: rotate(360deg); } }
+@keyframes constellation-flower-breathe { 0%, 100% { transform: scale(.98); } 50% { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) {
+  .constellation-orbit-large, .constellation-flower-spin, .constellation-flower { animation: none; }
+}
 
 .landing-signal-band { border-block: 1px solid var(--landing-line); background: rgba(255, 255, 255, .55); }
 .landing-signal-grid { min-height: 112px; display: grid; grid-template-columns: repeat(4, 1fr); }
@@ -1388,6 +1435,7 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .landing-section-heading { grid-template-columns: 1fr; gap: 24px; }
   .landing-section-heading > p { justify-self: start; }
   .landing-capability-grid { grid-template-columns: 1fr; }
+  .landing-stage-visual-footer { grid-template-columns: 1fr; }
   .landing-capability-grid article, .landing-capability-grid article:nth-child(2), .landing-capability-grid article:nth-child(3) { min-height: 0; grid-column: auto; grid-template-columns: 40px 1fr; grid-template-rows: auto auto; border-right: 0; border-bottom: 1px solid var(--landing-line); }
   .landing-capability-grid article:last-child { border-bottom: 0; }
   .landing-capability-grid article:nth-child(3) .landing-capability-primary h3 { margin-top: 54px; }
@@ -1409,7 +1457,22 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .landing-proof-stage { border-radius: 17px; box-shadow: 8px 9px 0 rgba(11, 20, 38, .08); }
   .landing-stage-toolbar { padding-inline: 14px; }
   .landing-stage-toolbar code { display: none; }
-  .landing-stage-content { min-height: 590px; grid-template-rows: 1fr 54px auto; padding: 22px 18px 24px; }
+  .landing-stage-content { min-height: 0; padding: 18px 14px 20px; }
+  .proof-constellation { min-height: 476px; }
+  .constellation-node { width: 132px; padding: 7px; gap: 7px; }
+  .constellation-node-media { width: 29px; height: 29px; font-size: 10px; }
+  .constellation-node strong { font-size: 7px; }
+  .constellation-node small { margin-top: 4px; font-size: 8px; }
+  .node-solana { top: 8%; left: 3%; }
+  .node-vlu { top: 8%; right: 3%; }
+  .node-hackfest { right: 1%; bottom: 15%; }
+  .node-evidence { bottom: 5%; left: 3%; }
+  .node-credential { top: 48%; left: -2%; }
+  .node-usdc { top: 48%; right: -2%; }
+  .constellation-center { width: 145px; height: 145px; }
+  .constellation-center span { margin-top: 72px; font-size: 6px; }
+  .constellation-center strong { font-size: 17px; }
+  .constellation-coordinate { font-size: 7px; }
   .landing-stage-brief h2 { font-size: 34px; }
   .landing-stage-route { width: 90%; }
   .landing-stage-card { padding: 20px; }

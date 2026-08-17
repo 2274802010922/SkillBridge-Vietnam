@@ -1,6 +1,7 @@
 "use client";
 
 import { LanguageSwitcher, useLanguage } from "./i18n";
+import { ProofConstellation } from "./proof-constellation";
 
 const proofSignals = [
   ["01", "home.humanReview", "home.aiOptional"],
@@ -78,25 +79,21 @@ export function HomeCopy() {
             <span><i aria-hidden="true" /> {t("home.networkLive")}</span>
             <code>PROOF ROUTE / 01</code>
           </div>
-          <div className="landing-stage-content">
-            <div className="landing-stage-brief">
-              <span>01 / {t("home.featureChallenges")}</span>
-              <h2>{t("home.featuresTitle")}</h2>
-              <p>{t("home.featureChallengesDescription")}</p>
-              <div><small>{t("status.public")}</small><small>{t("status.inviteOnly")}</small><small>{t("challenge.rewardUsdc")}</small><small>{t("challenge.rewardBadge")}</small></div>
-            </div>
-            <div className="landing-stage-route" aria-hidden="true">
-              <span />
-              <b>→</b>
-              <span />
-              <b>→</b>
-              <span />
-            </div>
-            <div className="landing-stage-card">
-              <div><span>{t("home.cardProof")}</span><strong>{t("home.cardVerified")}</strong></div>
-              <h3>{t("home.cardScore")}</h3>
-              <p>{t("home.cardChallenge")}</p>
-              <div className="landing-stage-checks"><span>{t("home.humanApproved")}</span><span>{t("home.evidenceLinked")}</span></div>
+          <div className="landing-stage-content landing-stage-visual">
+            <ProofConstellation />
+            <div className="landing-stage-visual-footer">
+              <div className="landing-stage-brief">
+                <span>01 / {t("home.featureChallenges")}</span>
+                <h2>{t("home.featuresTitle")}</h2>
+                <p>{t("home.featureChallengesDescription")}</p>
+                <div><small>{t("status.public")}</small><small>{t("status.inviteOnly")}</small><small>{t("challenge.rewardUsdc")}</small><small>{t("challenge.rewardBadge")}</small></div>
+              </div>
+              <div className="landing-stage-card">
+                <div><span>{t("home.cardProof")}</span><strong>{t("home.cardVerified")}</strong></div>
+                <h3>{t("home.cardScore")}</h3>
+                <p>{t("home.cardChallenge")}</p>
+                <div className="landing-stage-checks"><span>{t("home.humanApproved")}</span><span>{t("home.evidenceLinked")}</span></div>
+              </div>
             </div>
           </div>
         </div>
