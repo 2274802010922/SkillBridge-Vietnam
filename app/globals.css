@@ -1819,3 +1819,89 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .landing-signal-marquee > div, .proof-constellation::after { animation: none; }
   .constellation-grid, .constellation-center, .constellation-coordinate { transform: none; }
 }
+
+/* Landing v6 — Solana night palette. The authenticated product UI keeps its
+   light terminal theme; only the public marketing surface changes here. */
+.landing-home {
+  --landing-canvas: #09071c;
+  --landing-surface: #14112d;
+  --landing-ink: #f8f7ff;
+  --landing-ink-soft: #e4e0f1;
+  --landing-muted: #b7b3d1;
+  --landing-lime: #c7fb5b;
+  --landing-violet: #46d6e8;
+  --landing-blue: #1500e1;
+  --landing-coral: #c7fb5b;
+  --landing-line: rgba(255, 255, 255, .16);
+  background: var(--landing-canvas);
+  color: var(--landing-ink);
+}
+.landing-home .landing-skip-link { color: #0c0a0c; }
+.landing-home .landing-editorial,
+.landing-home .landing-roles { background: #09071c; color: var(--landing-ink); }
+.landing-home .landing-editorial::before,
+.landing-home .landing-roles::before {
+  background-image: linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px);
+}
+.landing-home .landing-flow-section {
+  border-color: rgba(255, 255, 255, .12);
+  background: linear-gradient(135deg, #241c57 0%, #14112d 78%);
+  color: var(--landing-ink);
+}
+.landing-home .landing-flow-guardrails span {
+  border-color: rgba(199, 251, 91, .28);
+  background: rgba(20, 17, 45, .78);
+  color: var(--landing-ink-soft);
+}
+.landing-home .landing-flow-rail li { border-color: rgba(255, 255, 255, .14); }
+.landing-home .landing-flow-rail::before { background: rgba(199, 251, 91, .45); }
+.landing-home .landing-flow-rail li > span { border-color: var(--landing-lime); background: #14112d; color: var(--landing-lime); }
+.landing-home .landing-capabilities {
+  background: #1500e1;
+  color: #fff;
+}
+.landing-home .landing-capabilities::after { border-color: rgba(199, 251, 91, .24); }
+.landing-home .landing-capability-grid {
+  border-color: rgba(255, 255, 255, .22);
+  background: rgba(9, 7, 28, .25);
+  box-shadow: 12px 14px 0 rgba(9, 7, 28, .4);
+}
+.landing-home .landing-capability-grid article {
+  border-color: rgba(255, 255, 255, .18);
+  background: #14112d;
+}
+.landing-home .landing-capability-grid article:hover { background: #241c57; }
+.landing-home .landing-capability-primary p,
+.landing-home .landing-capability-support p { color: #b7b3d1; }
+.landing-home .landing-trust {
+  border-color: rgba(255, 255, 255, .12);
+  background: #14112d;
+  color: var(--landing-ink);
+}
+.landing-home .landing-trust-grid { border-color: rgba(255, 255, 255, .18); }
+.landing-home .landing-trust-grid article {
+  border-color: rgba(255, 255, 255, .18);
+  background: #19153a;
+}
+.landing-home .landing-trust-grid .landing-trust-outcome {
+  background: var(--landing-lime);
+  color: #0c0a0c;
+}
+.landing-home .landing-trust-grid .landing-trust-outcome > span,
+.landing-home .landing-trust-grid .landing-trust-outcome small { color: #0c0a0c; }
+.landing-home .landing-pilot {
+  border-color: #0c0a0c;
+  background: var(--landing-lime);
+  color: #0c0a0c;
+  box-shadow: 10px 10px 0 #0c0a0c;
+}
+.landing-home .landing-pilot .eyebrow { color: #0c0a0c; }
+.landing-home .landing-pilot .eyebrow > span { background: #0c0a0c; }
+.landing-home .landing-pilot p { color: #241c57; }
+.landing-home .landing-pilot .button-dark { background: #0c0a0c; color: #fff; }
+.landing-home .landing-footer {
+  border-top-color: rgba(255, 255, 255, .16);
+  background: #09071c;
+  color: #f8f7ff;
+}
+.landing-home .landing-footer .wordmark-mark { background: var(--landing-lime); color: #0c0a0c; }
