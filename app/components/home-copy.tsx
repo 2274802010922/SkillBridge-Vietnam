@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef } from "react";
 import { LanguageSwitcher, useLanguage } from "./i18n";
 import { ProofConstellation } from "./proof-constellation";
+import { useScrollReveal } from "./scroll-reveal";
 
 const proofSignals = [
   ["01", "home.humanReview", "home.aiOptional"],
@@ -38,9 +40,11 @@ const roles = [
 
 export function HomeCopy() {
   const { t } = useLanguage();
+  const landingRef = useRef<HTMLElement>(null);
+  useScrollReveal(landingRef);
 
   return (
-    <main className="landing-home" id="top">
+    <main className="landing-home" id="top" ref={landingRef}>
       <a className="landing-skip-link" href="#landing-content">
         {t("home.skipContent")}
       </a>
@@ -66,7 +70,7 @@ export function HomeCopy() {
       <section className="landing-hero landing-hero-immersive" id="landing-content" tabIndex={-1}>
         <div className="landing-hero-scene"><ProofConstellation /></div>
         <div className="page-shell landing-hero-inner">
-          <div className="landing-hero-copy">
+          <div className="landing-hero-copy" data-reveal="hero-copy">
             <div className="eyebrow"><span /> {t("home.eyebrow")}</div>
             <h1>{t("home.heroTitle")}</h1>
             <p>{t("home.heroDescription")}</p>
@@ -76,12 +80,12 @@ export function HomeCopy() {
             </div>
             <p className="landing-network-note"><span aria-hidden="true" /> {t("home.networkLive")}</p>
           </div>
-          <div className="landing-hero-proof-note">
+          <div className="landing-hero-proof-note" data-reveal="hero-note" data-reveal-delay="140">
             <span>{t("home.cardProof")}</span>
             <strong>{t("home.cardVerified")}</strong>
             <small>{t("home.humanApproved")} · {t("home.evidenceLinked")}</small>
           </div>
-          <div className="landing-hero-meta" aria-hidden="true">
+          <div className="landing-hero-meta" data-reveal="meta" data-reveal-delay="260" aria-hidden="true">
             <span>SKILLBRIDGE / VIETNAM</span><span>SOLANA DEVNET</span><span>PROOF-TO-PAYOUT</span><span>SCROLL ↓</span>
           </div>
         </div>
@@ -91,26 +95,32 @@ export function HomeCopy() {
       <section className="landing-signal-band" aria-label={t("home.trustArchitecture")}>
         <div className="page-shell landing-signal-grid">
           {proofSignals.map(([number, titleKey, detailKey]) => (
-            <div className="landing-signal" key={number}><span>{number}</span><div><strong>{t(titleKey)}</strong><small>{t(detailKey)}</small></div></div>
+            <div className="landing-signal" data-reveal="signal" data-reveal-delay={`${Number(number) * 55}`} key={number}><span>{number}</span><div><strong>{t(titleKey)}</strong><small>{t(detailKey)}</small></div></div>
           ))}
+        </div>
+        <div className="landing-signal-marquee" aria-hidden="true">
+          <div>
+            <span>{t("home.humanApproved")}</span><i>+</i><span>{t("home.evidenceLinked")}</span><i>+</i><span>{t("home.solanaProofTitle")}</span><i>+</i><span>{t("home.networkPayout")}</span><i>+</i>
+            <span>{t("home.humanApproved")}</span><i>+</i><span>{t("home.evidenceLinked")}</span><i>+</i><span>{t("home.solanaProofTitle")}</span><i>+</i><span>{t("home.networkPayout")}</span><i>+</i>
+          </div>
         </div>
       </section>
 
       <section className="landing-editorial page-shell" id="product">
-        <div className="landing-section-heading">
+        <div className="landing-section-heading" data-reveal="heading">
           <div><div className="eyebrow"><span /> {t("home.problemEyebrow")}</div><h2>{t("home.problemTitle")}</h2></div>
           <p>{t("home.problemDescription")}</p>
         </div>
         <div className="landing-problem-list">
           {problems.map(([number, roleKey, problemKey]) => (
-            <article key={number}><span>{number}</span><h3>{t(roleKey)}</h3><p>{t(problemKey)}</p></article>
+            <article data-reveal="card" data-reveal-delay={`${Number(number) * 70}`} key={number}><span>{number}</span><h3>{t(roleKey)}</h3><p>{t(problemKey)}</p></article>
           ))}
         </div>
       </section>
 
       <section className="landing-flow-section" id="flow">
         <div className="page-shell landing-flow-layout">
-          <div className="landing-flow-copy">
+          <div className="landing-flow-copy" data-reveal="heading">
             <div className="eyebrow"><span /> {t("home.flowEyebrow")}</div>
             <h2>{t("home.flowTitle")}</h2>
             <p>{t("home.flowDescription")}</p>
@@ -118,20 +128,20 @@ export function HomeCopy() {
           </div>
           <ol className="landing-flow-rail">
             {flowNodes.map(([number, titleKey, detailKey]) => (
-              <li key={number}><span>{number}</span><div><strong>{t(titleKey)}</strong><small>{t(detailKey)}</small></div></li>
+              <li data-reveal="flow" data-reveal-delay={`${Number(number) * 70}`} key={number}><span>{number}</span><div><strong>{t(titleKey)}</strong><small>{t(detailKey)}</small></div></li>
             ))}
           </ol>
         </div>
       </section>
 
       <section className="landing-capabilities page-shell">
-        <div className="landing-section-heading">
+        <div className="landing-section-heading" data-reveal="heading">
           <div><div className="eyebrow"><span /> {t("home.featuresEyebrow")}</div><h2>{t("home.featuresTitle")}</h2></div>
           <p>{t("home.featuresDescription")}</p>
         </div>
         <div className="landing-capability-grid">
           {capabilityGroups.map(([number, titleKey, descriptionKey, supportingTitleKey, supportingDescriptionKey]) => (
-            <article key={number}>
+            <article data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number}>
               <span className="landing-capability-index">{number}</span>
               <div className="landing-capability-primary"><h3>{t(titleKey)}</h3><p>{t(descriptionKey)}</p></div>
               <div className="landing-capability-support"><strong>{t(supportingTitleKey)}</strong><p>{t(supportingDescriptionKey)}</p></div>
@@ -141,29 +151,29 @@ export function HomeCopy() {
       </section>
 
       <section className="landing-roles page-shell" id="roles">
-        <div className="landing-roles-intro"><div className="eyebrow"><span /> {t("home.rolesEyebrow")}</div><h2>{t("home.rolesTitle")}</h2></div>
+        <div className="landing-roles-intro" data-reveal="heading"><div className="eyebrow"><span /> {t("home.rolesEyebrow")}</div><h2>{t("home.rolesTitle")}</h2></div>
         <div className="landing-role-list">
           {roles.map(([number, titleKey, descriptionKey, actionKey, href]) => (
-            <article key={number}><span>{number}</span><div><h3>{t(titleKey)}</h3><p>{t(descriptionKey)}</p></div><a href={href} aria-label={`${t(actionKey)} — ${t(titleKey)}`}>↗</a></article>
+            <article data-reveal="card" data-reveal-delay={`${Number(number) * 75}`} key={number}><span>{number}</span><div><h3>{t(titleKey)}</h3><p>{t(descriptionKey)}</p></div><a href={href} aria-label={`${t(actionKey)} — ${t(titleKey)}`}>↗</a></article>
           ))}
         </div>
       </section>
 
       <section className="landing-trust" id="trust">
         <div className="page-shell">
-          <div className="landing-section-heading"><div><div className="eyebrow"><span /> {t("home.trustEyebrow")}</div><h2>{t("home.trustTitle")}</h2></div><p>{t("home.trustDescription")}</p></div>
+          <div className="landing-section-heading" data-reveal="heading"><div><div className="eyebrow"><span /> {t("home.trustEyebrow")}</div><h2>{t("home.trustTitle")}</h2></div><p>{t("home.trustDescription")}</p></div>
           <div className="landing-trust-grid">
-            <article><span>AI</span><h3>{t("home.assessmentContract")}</h3><p>{t("home.assessmentDescription")}</p><small>{t("home.aiOptional")}</small></article>
-            <article><span>H</span><h3>{t("home.humanReview")}</h3><p>{t("home.humanDescription")}</p><small>{t("home.auditAppeal")}</small></article>
-            <article><span>S</span><h3>{t("home.solanaProofTitle")}</h3><p>{t("home.solanaDescription")}</p><small>{t("home.noPii")}</small></article>
-            <article className="landing-trust-outcome"><span>↗</span><h3>{t("home.accessTitle")}</h3><p>{t("home.accessDescription")}</p><small>{t("home.verifyLoop")}</small></article>
+            <article data-reveal="card" data-reveal-delay="70"><span>AI</span><h3>{t("home.assessmentContract")}</h3><p>{t("home.assessmentDescription")}</p><small>{t("home.aiOptional")}</small></article>
+            <article data-reveal="card" data-reveal-delay="140"><span>H</span><h3>{t("home.humanReview")}</h3><p>{t("home.humanDescription")}</p><small>{t("home.auditAppeal")}</small></article>
+            <article data-reveal="card" data-reveal-delay="210"><span>S</span><h3>{t("home.solanaProofTitle")}</h3><p>{t("home.solanaDescription")}</p><small>{t("home.noPii")}</small></article>
+            <article className="landing-trust-outcome" data-reveal="card" data-reveal-delay="280"><span>↗</span><h3>{t("home.accessTitle")}</h3><p>{t("home.accessDescription")}</p><small>{t("home.verifyLoop")}</small></article>
           </div>
         </div>
       </section>
 
       <section className="landing-pilot page-shell" id="pilot">
-        <div><div className="eyebrow"><span /> {t("home.pilotEyebrow")}</div><h2>{t("home.pilotTitle")}</h2></div>
-        <div><p>{t("home.pilotDescription")}</p><a className="button button-dark" href="mailto:pilot@skillbridge.vn">{t("home.designPartner")}</a></div>
+        <div data-reveal="heading"><div className="eyebrow"><span /> {t("home.pilotEyebrow")}</div><h2>{t("home.pilotTitle")}</h2></div>
+        <div data-reveal="copy" data-reveal-delay="140"><p>{t("home.pilotDescription")}</p><a className="button button-dark" href="mailto:pilot@skillbridge.vn">{t("home.designPartner")}</a></div>
       </section>
 
       <footer className="site-footer landing-footer page-shell"><div className="wordmark"><span className="wordmark-mark">S</span><span>SkillBridge</span></div><p>{t("home.footerTagline")} <a href="/privacy">{t("home.data")}</a> · <a href="/terms">{t("home.terms")}</a> · <a href="/risk">{t("home.risk")}</a></p><span>{t("home.builtFor")}</span></footer>

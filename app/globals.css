@@ -1620,3 +1620,202 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 @media (prefers-reduced-motion: reduce) {
   .landing-home *, .landing-home *::before, .landing-home *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Landing v5 — progressive reveal, depth, and a single visual rhythm. */
+.landing-home [data-reveal] {
+  --reveal-delay: 0ms;
+}
+.landing-home [data-reveal].landing-reveal-observed {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity .52s cubic-bezier(.22, 1, .36, 1), transform .52s cubic-bezier(.22, 1, .36, 1);
+  transition-delay: var(--reveal-delay);
+}
+.landing-home [data-reveal="heading"].landing-reveal-observed {
+  transform: translate3d(0, 26px, 0);
+}
+.landing-home [data-reveal="hero-copy"].landing-reveal-observed {
+  transform: translate3d(-18px, 18px, 0);
+}
+.landing-home [data-reveal="meta"].landing-reveal-observed {
+  transform: translate3d(0, 10px, 0);
+}
+.landing-home [data-reveal].landing-reveal-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.landing-signal-band {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255, 255, 255, .22);
+  background: #0f00a8;
+  color: #fff;
+}
+.landing-signal-band::after {
+  position: absolute;
+  right: -10%;
+  bottom: -80px;
+  width: 42%;
+  height: 180px;
+  border: 1px solid rgba(199, 251, 91, .28);
+  border-radius: 50%;
+  content: "";
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+.landing-signal { border-color: rgba(255, 255, 255, .2); }
+.landing-signal > span { color: var(--landing-lime); }
+.landing-signal strong { color: #fff; }
+.landing-signal small { color: rgba(255, 255, 255, .68); }
+.landing-signal-marquee {
+  position: relative;
+  overflow: hidden;
+  padding: 12px 0 14px;
+  border-top: 1px solid rgba(255, 255, 255, .16);
+  color: rgba(255, 255, 255, .58);
+  font: 700 9px/1 var(--font-geist-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.landing-signal-marquee > div {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 18px;
+  animation: landing-signal-marquee 30s linear infinite;
+}
+.landing-signal-marquee i { color: var(--landing-lime); font-style: normal; }
+.landing-editorial { position: relative; background: var(--landing-canvas); }
+.landing-editorial::before,
+.landing-roles::before {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(12, 10, 12, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(12, 10, 12, .035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  content: "";
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+  pointer-events: none;
+}
+.landing-editorial > *, .landing-roles > * { position: relative; z-index: 1; }
+.landing-flow-section { background: linear-gradient(135deg, #f3f1ff 0%, #f8f7f2 75%); }
+.landing-flow-rail::before { transform: scaleY(.1); transform-origin: top; transition: transform .85s cubic-bezier(.22, 1, .36, 1); }
+.landing-flow-section:has(.landing-flow-copy.landing-reveal-visible) .landing-flow-rail::before { transform: scaleY(1); }
+.landing-capabilities { position: relative; background: linear-gradient(135deg, #f8f7f2 0%, #efedff 100%); }
+.landing-capabilities::after {
+  position: absolute;
+  top: 15%;
+  right: -12%;
+  width: 360px;
+  height: 360px;
+  border: 1px solid rgba(21, 0, 225, .12);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+.landing-roles { position: relative; background: var(--landing-canvas); }
+.landing-trust { background: linear-gradient(135deg, rgba(199, 251, 91, .12), rgba(255, 255, 255, .68)); }
+.landing-pilot { position: relative; overflow: hidden; }
+.landing-pilot::after {
+  position: absolute;
+  right: -80px;
+  bottom: -120px;
+  width: 360px;
+  height: 360px;
+  border: 1px solid rgba(12, 10, 12, .18);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+.landing-pilot > * { position: relative; z-index: 1; }
+.landing-footer {
+  width: 100% !important;
+  max-width: none !important;
+  margin-top: 0;
+  padding-inline: max(24px, calc((100vw - 1280px) / 2));
+  border-top-color: rgba(255, 255, 255, .22);
+  background: #1500e1;
+  color: #fff;
+}
+.landing-footer .wordmark, .landing-footer p, .landing-footer > span { color: rgba(255, 255, 255, .8); }
+.landing-footer .wordmark-mark { background: #fff; color: #1500e1; }
+.landing-footer a { color: #c7fb5b; }
+
+.proof-constellation {
+  --pointer-x: 0px;
+  --pointer-y: 0px;
+}
+.proof-constellation::after {
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  background: radial-gradient(circle at 38% 32%, rgba(70, 214, 232, .24), transparent 25%), radial-gradient(circle at 75% 70%, rgba(199, 251, 91, .16), transparent 28%);
+  content: "";
+  pointer-events: none;
+  animation: proof-mesh-drift 18s ease-in-out infinite alternate;
+}
+.constellation-grid {
+  transition: transform .28s ease-out;
+  transform: translate3d(calc(var(--pointer-x) * .16), calc(var(--pointer-y) * .16), 0);
+  z-index: 1;
+}
+.constellation-center {
+  transition: transform .32s ease-out;
+  transform: translate(-50%, -50%) translate3d(calc(var(--pointer-x) * .42), calc(var(--pointer-y) * .42), 0);
+}
+.constellation-coordinate { transition: transform .42s ease-out; }
+.coordinate-top { transform: translate3d(calc(var(--pointer-x) * .12), calc(var(--pointer-y) * .12), 0); }
+.coordinate-bottom { transform: translate3d(calc(var(--pointer-x) * -.12), calc(var(--pointer-y) * -.12), 0); }
+@keyframes landing-signal-marquee { to { transform: translateX(-50%); } }
+@keyframes proof-mesh-drift { from { transform: translate3d(-2%, -1%, 0) scale(1); } to { transform: translate3d(3%, 2%, 0) scale(1.08); } }
+.landing-hero-scene .constellation-node {
+  width: clamp(214px, 13vw, 270px);
+  min-height: 74px;
+  padding: 12px 13px 12px 12px;
+  gap: 12px;
+  cursor: default;
+  overflow: hidden;
+}
+.landing-hero-scene .constellation-node::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(199, 251, 91, .24) 50%, transparent 65%);
+  content: "";
+  pointer-events: none;
+  transform: translateX(-130%);
+  transition: transform .7s ease;
+}
+.landing-hero-scene .constellation-node:hover::after { transform: translateX(130%); }
+.landing-hero-scene .constellation-node > * { position: relative; z-index: 1; }
+.landing-hero-scene .constellation-node-media { width: 48px; height: 48px; }
+.landing-hero-scene .media-corelia { width: 54px; height: 54px; }
+.landing-hero-scene .constellation-node strong { font-size: 11px; }
+.landing-hero-scene .constellation-node small { max-width: 155px; margin-top: 6px; font-size: 10px; }
+
+@media (max-width: 1080px) {
+  .landing-hero-scene .constellation-node { width: 204px; }
+}
+@media (max-width: 820px) {
+  .landing-hero-scene .constellation-node { width: 170px; min-height: 64px; padding: 9px; gap: 9px; }
+  .landing-hero-scene .constellation-node-media { width: 42px; height: 42px; }
+  .landing-hero-scene .media-corelia { width: 46px; height: 46px; }
+  .landing-hero-scene .constellation-node strong { font-size: 9px; }
+  .landing-hero-scene .constellation-node small { max-width: 108px; margin-top: 4px; font-size: 9px; }
+  .landing-footer { padding-inline: 24px; }
+}
+@media (max-width: 560px) {
+  .landing-hero-scene .constellation-node { width: 148px; min-height: 58px; padding: 7px; gap: 7px; }
+  .landing-hero-scene .constellation-node-media { width: 36px; height: 36px; }
+  .landing-hero-scene .media-corelia { width: 40px; height: 40px; }
+  .landing-hero-scene .constellation-node strong { font-size: 8px; }
+  .landing-hero-scene .constellation-node small { max-width: 91px; font-size: 8px; }
+  .landing-pilot::after { right: -160px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-home [data-reveal].landing-reveal-observed,
+  .landing-home [data-reveal].landing-reveal-visible { opacity: 1; transform: none; }
+  .landing-signal-marquee > div, .proof-constellation::after { animation: none; }
+  .constellation-grid, .constellation-center, .constellation-coordinate { transform: none; }
+}

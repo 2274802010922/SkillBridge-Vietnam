@@ -28,6 +28,9 @@ export function ProofConstellation() {
     let isVisible = true;
     let isDocumentVisible = document.visibilityState === "visible";
     let isPointerPaused = false;
+    let pointerFrame = 0;
+    let pointerX = 0;
+    let pointerY = 0;
 
     const getCenter = (width: number, height: number) => ({
       x: width * (width <= 820 ? 0.5 : width <= 1080 ? 0.61 : 0.66),
@@ -45,14 +48,15 @@ export function ProofConstellation() {
         const isOuter = item.lane === "outer";
         const speed = isOuter ? (Math.PI * 2) / 48 : (Math.PI * 2) / 36;
         const angle = item.phase + seconds * speed;
-        const radiusX = Math.min(rect.width * (isOuter ? 0.235 : 0.165), isOuter ? 540 : 380);
-        const radiusY = Math.min(rect.height * (isOuter ? 0.31 : 0.22), isOuter ? 270 : 205);
+        const isCompact = rect.width <= 820;
+        const radiusX = Math.min(rect.width * (isOuter ? (isCompact ? 0.31 : 0.265) : (isCompact ? 0.22 : 0.185)), isOuter ? 620 : 450);
+        const radiusY = Math.min(rect.height * (isOuter ? (isCompact ? 0.22 : 0.34) : (isCompact ? 0.16 : 0.25)), isOuter ? 320 : 235);
         const depth = (Math.sin(angle) + 1) / 2;
         const x = Math.cos(angle) * radiusX;
         const y = Math.sin(angle) * radiusY;
-        const scale = 0.78 + depth * 0.27;
-        const opacity = 0.54 + depth * 0.46;
-        const blur = (1 - depth) * 0.5;
+        const scale = 0.88 + depth * 0.2;
+        const opacity = 0.64 + depth * 0.36;
+        const blur = (1 - depth) * 0.35;
 
         node.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) scale(${scale}) rotate(${Math.sin(angle) * 4}deg)`;
         node.style.opacity = `${opacity}`;
@@ -97,18 +101,40 @@ export function ProofConstellation() {
       isPointerPaused = false;
       start();
     };
+    const applyPointerParallax = () => {
+      pointerFrame = 0;
+      scene.style.setProperty("--pointer-x", `${pointerX}px`);
+      scene.style.setProperty("--pointer-y", `${pointerY}px`);
+    };
+    const handlePointerMove = (event: PointerEvent) => {
+      if (reducedMotion.matches || event.pointerType !== "mouse") return;
+      const rect = scene.getBoundingClientRect();
+      pointerX = ((event.clientX - rect.left) / rect.width - 0.5) * 12;
+      pointerY = ((event.clientY - rect.top) / rect.height - 0.5) * 10;
+      if (!pointerFrame) pointerFrame = window.requestAnimationFrame(applyPointerParallax);
+    };
+    const resetPointerParallax = () => {
+      pointerX = 0;
+      pointerY = 0;
+      if (!pointerFrame) pointerFrame = window.requestAnimationFrame(applyPointerParallax);
+    };
 
     document.addEventListener("visibilitychange", handleVisibility);
     scene.addEventListener("pointerenter", handlePointerEnter);
     scene.addEventListener("pointerleave", handlePointerLeave);
+    scene.addEventListener("pointermove", handlePointerMove);
+    scene.addEventListener("pointerleave", resetPointerParallax);
     start();
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
+      window.cancelAnimationFrame(pointerFrame);
       observer.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
       scene.removeEventListener("pointerenter", handlePointerEnter);
       scene.removeEventListener("pointerleave", handlePointerLeave);
+      scene.removeEventListener("pointermove", handlePointerMove);
+      scene.removeEventListener("pointerleave", resetPointerParallax);
     };
   }, []);
 
