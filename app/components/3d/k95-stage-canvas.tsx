@@ -86,7 +86,7 @@ function createCardTexture(node: OrbitNodeItem, isEn: boolean): THREE.CanvasText
   return texture;
 }
 
-export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95StageCanvasProps) {
+export function K95StageCanvas({ isEn = false, layoutMode = "rings" }: K95StageCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredNode, setHoveredNode] = useState<OrbitNodeItem | null>(null);
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
@@ -102,7 +102,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     // --- THREE.JS SCENE SETUP (K95 ROYAL COBALT BLUE THEME) ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a00d8);
-    scene.fog = new THREE.Fog(0x0a00d8, 35, 95); // Deep fog so cards are NEVER fogged out
+    scene.fog = new THREE.Fog(0x0a00d8, 35, 95);
 
     const camera = new THREE.PerspectiveCamera(
       45,
@@ -119,7 +119,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     container.appendChild(renderer.domElement);
 
     // --- K95 3D CURVED PERSPECTIVE WIREFRAME GRID (CARO GRID DOME) ---
-    const gridRadius = 16;
+    const gridRadius = 16.5;
     const gridHeight = 44;
     const gridSegmentsRadial = 32;
     const gridSegmentsHeight = 24;
@@ -273,7 +273,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     const particleSystem = new THREE.Points(particleGeo, particleMat);
     scene.add(particleSystem);
 
-    // --- 3D CONTINUOUS PLANETARY ORBIT CARDS (NEVER DRIFT OR DISAPPEAR) ---
+    // --- K95 PERFECT 360° CYLINDRICAL CAROUSEL RING (EQUIDISTANT & CLEAN) ---
     const main3DGroup = new THREE.Group();
     scene.add(main3DGroup);
 
@@ -285,13 +285,10 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       mesh: THREE.Mesh;
       node: OrbitNodeItem;
       index: number;
-      isInner: boolean;
-      baseAngle: number;
-      ringRadius: number;
-      baseY: number;
     }
 
     const cardStates: CardMeshState[] = [];
+    const totalCards = ORBIT_NODES.length; // 7 cards
 
     ORBIT_NODES.forEach((node, i) => {
       const texture = createCardTexture(node, isEn);
@@ -305,22 +302,11 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       const mesh = new THREE.Mesh(cardGeometry, material);
       mesh.userData = { node };
 
-      const isInner = i < 3;
-      const countInGroup = isInner ? 3 : 4;
-      const idxInGroup = isInner ? i : i - 3;
-      const baseAngle = (idxInGroup / countInGroup) * Math.PI * 2;
-      const ringRadius = isInner ? 4.9 : 7.2;
-      const baseY = isInner ? 0.8 : -0.8;
-
       main3DGroup.add(mesh);
       cardStates.push({
         mesh,
         node,
         index: i,
-        isInner,
-        baseAngle,
-        ringRadius,
-        baseY,
       });
     });
 
@@ -403,7 +389,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     };
     window.addEventListener("resize", handleResize);
 
-    // --- ANIMATION LOOP (CONTINUOUS ORBIT 24/7) ---
+    // --- ANIMATION LOOP (K95 PERFECT CAROUSEL RING) ---
     let animId: number;
     let clock = new THREE.Clock();
 
@@ -414,9 +400,9 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       // Smooth scroll interpolation
       currentScrollProgress += (targetScrollProgress - currentScrollProgress) * 0.07;
 
-      // Inertia & ambient auto-spin
+      // Inertia & continuous smooth carousel spin
       if (!isDragging) {
-        targetRotationY += 0.0015;
+        targetRotationY += 0.002;
         velX *= 0.94;
         velY *= 0.94;
         targetRotationY += velX;
@@ -445,9 +431,9 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       // Particles drift
       particleSystem.rotation.y = elapsedTime * 0.02;
 
-      // Group position remains centered in the viewport with subtle parallax
-      main3DGroup.position.y = (currentScrollProgress - 0.2) * 1.5;
-      main3DGroup.rotation.x = currentRotationX * 0.5;
+      // Center the carousel in view
+      main3DGroup.position.y = 0;
+      main3DGroup.rotation.x = currentRotationX * 0.4;
 
       // Raycasting hover check
       raycaster.setFromCamera(mouse, camera);
@@ -462,40 +448,35 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       }
       setHoveredNode(currentHovered);
 
-      // --- CONTINUOUS REVOLVING CARD ORBITS ---
+      // --- K95 360° EQUIDISTANT CYLINDRICAL CAROUSEL MATH ---
       const currentMode = modeRef.current;
+      const ringRadius = 7.4; // Perfectly scaled radius with spacious 3.6m gaps between cards
 
       cardStates.forEach((state) => {
-        let targetX = 0;
-        let targetY = 0;
-        let targetZ = 0;
+        // Equidistant angular slot for each of the 7 cards
+        const baseAngle = (state.index / totalCards) * Math.PI * 2;
+        const angle = baseAngle + currentRotationY;
 
-        if (currentMode === "spiral") {
-          // Continuous spiral revolution: cards revolve vertically around the flower
-          const angle = elapsedTime * 0.22 + (state.index / 7) * Math.PI * 2 + currentRotationY;
-          const radius = 5.8 + (state.index % 2 === 0 ? 0.6 : -0.4);
-          targetX = Math.cos(angle) * radius;
-          targetZ = Math.sin(angle) * radius;
-          targetY = Math.sin(angle * 1.5 + state.index) * 1.6 + (state.index % 2 === 0 ? 0.8 : -0.8);
-        } else {
-          // Continuous dual-ring planetary orbits
-          const orbitSpeed = state.isInner ? 0.24 : -0.18;
-          const angle = elapsedTime * orbitSpeed + state.baseAngle + currentRotationY;
-          targetX = Math.cos(angle) * state.ringRadius;
-          targetZ = Math.sin(angle) * state.ringRadius;
-          targetY = state.baseY + Math.sin(angle * 2 + elapsedTime) * 0.35;
-        }
+        const targetX = Math.cos(angle) * ringRadius;
+        const targetZ = Math.sin(angle) * ringRadius;
+        
+        // In "rings" mode: cards form a clean horizontal 360° ring
+        // In "spiral" mode: cards form a clean cascading helix
+        const targetY = currentMode === "spiral" 
+          ? ((state.index - (totalCards - 1) / 2) / (totalCards / 2)) * 2.2
+          : 0;
 
         const targetPos = new THREE.Vector3(targetX, targetY, targetZ);
         state.mesh.position.lerp(targetPos, 0.08);
 
-        // 100% AUTO-BILLBOARD (Always face the camera)
-        state.mesh.quaternion.copy(camera.quaternion);
+        // K95 Tangent Cylindrical Orientation (Cards face outwards in perspective)
+        state.mesh.lookAt(0, targetY, 0);
+        state.mesh.rotateY(Math.PI);
 
-        // Dynamic depth scaling (front cards slightly larger, back cards slightly smaller)
+        // Dynamic depth scaling (front cards slightly larger & crisp)
         const isHovered = currentHovered?.id === state.node.id;
-        const depthBonus = targetZ > 0 ? 1.05 : 0.94;
-        const targetScale = isHovered ? 1.2 : depthBonus;
+        const depthBonus = targetZ > 0 ? 1.06 : 0.92;
+        const targetScale = isHovered ? 1.22 : depthBonus;
         state.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
       });
 

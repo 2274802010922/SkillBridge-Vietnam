@@ -48,7 +48,7 @@ export function HomeCopy() {
   const isEn = locale === "en";
   const landingRef = useRef<HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>("spiral");
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("rings");
 
   useScrollReveal(landingRef);
   useSmoothScroll();
