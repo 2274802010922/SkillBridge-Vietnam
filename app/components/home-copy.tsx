@@ -64,7 +64,7 @@ export function HomeCopy() {
       </header>
 
       <section className="landing-hero landing-hero-immersive" id="landing-content" tabIndex={-1}>
-        <div className="landing-hero-scene" aria-hidden="true"><ProofConstellation /></div>
+        <div className="landing-hero-scene"><ProofConstellation /></div>
         <div className="page-shell landing-hero-inner">
           <div className="landing-hero-copy">
             <div className="eyebrow"><span /> {t("home.eyebrow")}</div>
@@ -76,12 +76,10 @@ export function HomeCopy() {
             </div>
             <p className="landing-network-note"><span aria-hidden="true" /> {t("home.networkLive")}</p>
           </div>
-          <div className="landing-hero-proof-panel">
-            <div className="landing-hero-proof-header"><span>01 / {t("home.featureChallenges")}</span><strong>{t("home.cardVerified")}</strong></div>
-            <h2>{t("home.featuresTitle")}</h2>
-            <p>{t("home.featureChallengesDescription")}</p>
-            <div className="landing-hero-proof-tags"><small>{t("status.public")}</small><small>{t("status.inviteOnly")}</small><small>{t("challenge.rewardUsdc")}</small><small>{t("challenge.rewardBadge")}</small></div>
-            <div className="landing-stage-checks"><span>{t("home.humanApproved")}</span><span>{t("home.evidenceLinked")}</span></div>
+          <div className="landing-hero-proof-note">
+            <span>{t("home.cardProof")}</span>
+            <strong>{t("home.cardVerified")}</strong>
+            <small>{t("home.humanApproved")} · {t("home.evidenceLinked")}</small>
           </div>
           <div className="landing-hero-meta" aria-hidden="true">
             <span>SKILLBRIDGE / VIETNAM</span><span>SOLANA DEVNET</span><span>PROOF-TO-PAYOUT</span><span>SCROLL ↓</span>

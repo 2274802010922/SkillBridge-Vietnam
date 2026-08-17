@@ -1593,6 +1593,25 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .landing-hero-scene .node-solflare { right: 24%; bottom: 4%; }
 }
 
+/* Orbit engine overrides: JavaScript owns card transforms so every logo shares
+   one elliptical track and gains depth instead of sitting at fixed corners. */
+.proof-constellation { --orbit-center-x: 50%; --orbit-center-y: 49%; }
+.constellation-orbit, .constellation-crosshair, .constellation-center { left: var(--orbit-center-x); top: var(--orbit-center-y); }
+.landing-hero-scene .constellation-orbit, .landing-hero-scene .constellation-crosshair, .landing-hero-scene .constellation-center { left: var(--orbit-center-x); top: var(--orbit-center-y); }
+.landing-hero-scene .proof-constellation { --orbit-center-x: 66%; --orbit-center-y: 49%; }
+.constellation-node, .landing-hero-scene .constellation-node { top: var(--orbit-center-y); right: auto; bottom: auto; left: var(--orbit-center-x); cursor: pointer; will-change: transform, opacity, filter; transition: background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.constellation-node:hover, .constellation-node:focus-visible { border-color: #fff; background: rgba(12, 10, 12, .9); box-shadow: 5px 5px 0 rgba(199, 251, 91, .85); outline: 2px solid #c7fb5b; outline-offset: 4px; }
+.landing-hero-proof-note { grid-column: 2; justify-self: end; align-self: end; width: min(100%, 330px); display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; padding: 16px 18px; border-block: 1px solid rgba(255, 255, 255, .36); color: rgba(255, 255, 255, .8); font: 700 9px/1.2 var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
+.landing-hero-proof-note strong { color: #c7fb5b; text-align: right; }
+.landing-hero-proof-note small { grid-column: 1 / -1; color: rgba(255, 255, 255, .68); font: 600 10px/1.4 var(--font-geist-sans); letter-spacing: 0; text-transform: none; }
+@media (max-width: 1080px) {
+  .landing-hero-scene .proof-constellation { --orbit-center-x: 61%; }
+}
+@media (max-width: 820px) {
+  .landing-hero-scene .proof-constellation { --orbit-center-x: 50%; }
+  .landing-hero-proof-note { grid-column: 1; justify-self: start; width: min(100%, 430px); }
+}
+
 @media (max-width: 400px) {
   .landing-header .wordmark > span:not(.wordmark-mark),
   .landing-header .wordmark > small { display: none; }
