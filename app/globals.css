@@ -3415,25 +3415,24 @@ button:hover .k95-kinetic-char .char-bot {
    ========================================================================== */
 
 :root {
-  --k95-royal-blue: #1500e1;
   --solana-purple: #9945ff;
   --solana-cyan: #14f195;
   --solana-lime: #c7fb5b;
   --solana-bg: #000000;
-  --solana-surface: rgba(14, 8, 48, 0.72);
-  --solana-surface-hover: rgba(24, 14, 76, 0.88);
-  --solana-border: rgba(255, 255, 255, 0.16);
-  --solana-border-hover: rgba(199, 251, 91, 0.45);
+  --solana-surface: rgba(16, 16, 24, 0.65);
+  --solana-surface-hover: rgba(28, 24, 44, 0.85);
+  --solana-border: rgba(255, 255, 255, 0.12);
+  --solana-border-hover: rgba(255, 255, 255, 0.28);
   --solana-text: #ffffff;
   --solana-text-silver: #e2e8f0;
-  --solana-text-muted: rgba(255, 255, 255, 0.82);
+  --solana-text-muted: rgba(255, 255, 255, 0.72);
 }
 
 .solana-landing {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: radial-gradient(ellipse at 50% 12%, rgba(21, 0, 225, 0.45) 0%, rgba(10, 0, 104, 0.82) 48%, #05002b 100%), #040024;
+  background: transparent;
   color: var(--solana-text);
   overflow-x: hidden;
   z-index: 1;
@@ -3448,11 +3447,11 @@ button:hover .k95-kinetic-char .char-bot {
   z-index: 100;
   width: 100%;
   height: 72px;
-  background: rgba(5, 0, 43, 0.78);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.45);
+  border-bottom: 1px solid var(--solana-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
 .solana-header-inner {
