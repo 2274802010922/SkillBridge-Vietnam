@@ -129,11 +129,11 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       gridHeight,
       gridSegmentsRadial,
       gridSegmentsHeight,
-      true // open ended curved cylinder
+      true
     );
     const wireframeGeo = new THREE.WireframeGeometry(gridCylinderGeo);
     const gridLineMat = new THREE.LineBasicMaterial({
-      color: 0x000078, // Deep blue wireframe line matching K95
+      color: 0x000078,
       transparent: true,
       opacity: 0.55,
       linewidth: 1,
@@ -153,32 +153,107 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     pointLightPurple.position.set(-8, -6, 6);
     scene.add(pointLightPurple);
 
-    // --- SLEEK GLOWING GYROSCOPIC CORE ---
-    const coreGroup = new THREE.Group();
-    coreGroup.position.set(0, 0, -3);
+    const pointLightLime = new THREE.PointLight(0xc7fb5b, 3, 30);
+    pointLightLime.position.set(0, 0, 4);
+    scene.add(pointLightLime);
 
-    const ringGeo1 = new THREE.TorusGeometry(2.4, 0.04, 16, 64);
-    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x1500e1, transparent: true, opacity: 0.65 });
-    const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
-    coreGroup.add(ringMesh1);
+    // --- K95 3D KINETIC PARAMETRIC BLOOMING FLOWER ---
+    const flowerGroup = new THREE.Group();
+    flowerGroup.position.set(0, 0, -2.5);
 
-    const ringGeo2 = new THREE.TorusGeometry(1.6, 0.03, 16, 64);
-    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xc7fb5b, transparent: true, opacity: 0.75 });
-    const ringMesh2 = new THREE.Mesh(ringGeo2, ringMat2);
-    ringMesh2.rotation.x = Math.PI / 3;
-    coreGroup.add(ringMesh2);
-
-    const sphereCoreGeo = new THREE.SphereGeometry(0.5, 32, 32);
-    const sphereCoreMat = new THREE.MeshStandardMaterial({
-      color: 0x1500e1,
-      emissive: 0x2412b8,
-      emissiveIntensity: 0.95,
-      roughness: 0.2,
-      metalness: 0.8,
+    // 1. Center Pistil (Glowing Crystal Sphere)
+    const pistilGeo = new THREE.SphereGeometry(0.55, 32, 32);
+    const pistilMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xc7fb5b,
+      emissiveIntensity: 0.85,
+      roughness: 0.15,
+      metalness: 0.9,
     });
-    const sphereCore = new THREE.Mesh(sphereCoreGeo, sphereCoreMat);
-    coreGroup.add(sphereCore);
-    scene.add(coreGroup);
+    const pistilMesh = new THREE.Mesh(pistilGeo, pistilMat);
+    flowerGroup.add(pistilMesh);
+
+    // 2. Outer Layer Petals (8 Symmetrical Blooming Petals - Chrome White & Electric Lime)
+    const outerPetalCount = 8;
+    const outerPetalRadius = 2.6;
+
+    for (let i = 0; i < outerPetalCount; i++) {
+      const angle = (i / outerPetalCount) * Math.PI * 2;
+      const isLime = i % 2 === 0;
+
+      // Parametric curve defining the 3D loop of the petal
+      const pStart = new THREE.Vector3(0, 0, 0.1);
+      const pMid1 = new THREE.Vector3(
+        Math.cos(angle - 0.22) * (outerPetalRadius * 0.55),
+        Math.sin(angle - 0.22) * (outerPetalRadius * 0.55),
+        0.45
+      );
+      const pTip = new THREE.Vector3(
+        Math.cos(angle) * outerPetalRadius,
+        Math.sin(angle) * outerPetalRadius,
+        0.1
+      );
+      const pMid2 = new THREE.Vector3(
+        Math.cos(angle + 0.22) * (outerPetalRadius * 0.55),
+        Math.sin(angle + 0.22) * (outerPetalRadius * 0.55),
+        -0.35
+      );
+
+      const petalCurve = new THREE.CatmullRomCurve3([pStart, pMid1, pTip, pMid2, pStart]);
+      const petalTubeGeo = new THREE.TubeGeometry(petalCurve, 36, 0.04, 8, true);
+
+      const petalMat = new THREE.MeshStandardMaterial({
+        color: isLime ? 0xc7fb5b : 0xffffff,
+        emissive: isLime ? 0x82b814 : 0x555555,
+        emissiveIntensity: 0.85,
+        roughness: 0.2,
+        metalness: 0.8,
+      });
+
+      const petalMesh = new THREE.Mesh(petalTubeGeo, petalMat);
+      flowerGroup.add(petalMesh);
+    }
+
+    // 3. Inner Layer Petals (6 Offset Petals - Neon Purple #9945FF)
+    const innerPetalCount = 6;
+    const innerPetalRadius = 1.75;
+
+    for (let j = 0; j < innerPetalCount; j++) {
+      const angle = (j / innerPetalCount) * Math.PI * 2 + Math.PI / 6;
+
+      const pStart = new THREE.Vector3(0, 0, 0.15);
+      const pMid1 = new THREE.Vector3(
+        Math.cos(angle - 0.25) * (innerPetalRadius * 0.5),
+        Math.sin(angle - 0.25) * (innerPetalRadius * 0.5),
+        0.35
+      );
+      const pTip = new THREE.Vector3(
+        Math.cos(angle) * innerPetalRadius,
+        Math.sin(angle) * innerPetalRadius,
+        0.2
+      );
+      const pMid2 = new THREE.Vector3(
+        Math.cos(angle + 0.25) * (innerPetalRadius * 0.5),
+        Math.sin(angle + 0.25) * (innerPetalRadius * 0.5),
+        -0.2
+      );
+
+      const innerCurve = new THREE.CatmullRomCurve3([pStart, pMid1, pTip, pMid2, pStart]);
+      const innerTubeGeo = new THREE.TubeGeometry(innerCurve, 28, 0.035, 8, true);
+
+      const innerMat = new THREE.MeshStandardMaterial({
+        color: 0x9945ff,
+        emissive: 0x721ae6,
+        emissiveIntensity: 0.9,
+        roughness: 0.2,
+        metalness: 0.8,
+      });
+
+      const innerPetalMesh = new THREE.Mesh(innerTubeGeo, innerMat);
+      flowerGroup.add(innerPetalMesh);
+    }
+
+    scene.add(flowerGroup);
 
     // Ambient Stardust Particles
     const particleCount = 180;
@@ -374,11 +449,14 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       gridMesh.rotation.x = currentRotationX * 0.3;
       gridMesh.position.y = (currentScrollProgress - 0.2) * 6;
 
-      // Gyroscope core motion
-      coreGroup.rotation.y = elapsedTime * 0.25;
-      coreGroup.rotation.x = Math.sin(elapsedTime * 0.3) * 0.2;
-      ringMesh1.rotation.z = -elapsedTime * 0.4;
-      ringMesh2.rotation.y = elapsedTime * 0.5;
+      // K95 3D KINETIC FLOWER BLOOMING & ROTATION
+      flowerGroup.rotation.z = -elapsedTime * 0.25;
+      flowerGroup.rotation.y = Math.sin(elapsedTime * 0.35) * 0.4 + currentRotationY * 0.5;
+      flowerGroup.rotation.x = Math.cos(elapsedTime * 0.25) * 0.2 + currentRotationX * 0.5;
+
+      // Breathing kinetic pulse (Bloom cycle)
+      const bloomScale = 1.0 + Math.sin(elapsedTime * 1.5) * 0.08;
+      flowerGroup.scale.set(bloomScale, bloomScale, bloomScale);
 
       // Particles drift
       particleSystem.rotation.y = elapsedTime * 0.02;
