@@ -3411,49 +3411,55 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 /* ==========================================================================
-   SOLANA DESIGN SYSTEM + K95 3D BACKGROUND INTEGRATION
+   MASTER PLAN: K95 ROYAL ATMOSPHERE + SOLANA TYPOGRAPHY + HEADER 3D SWITCH
    ========================================================================== */
 
 :root {
+  --k95-royal-blue: #1500e1;
   --solana-purple: #9945ff;
   --solana-cyan: #14f195;
   --solana-lime: #c7fb5b;
   --solana-bg: #000000;
-  --solana-surface: rgba(16, 16, 24, 0.65);
-  --solana-surface-hover: rgba(28, 24, 44, 0.85);
-  --solana-border: rgba(255, 255, 255, 0.12);
-  --solana-border-hover: rgba(255, 255, 255, 0.28);
+  --solana-surface: rgba(14, 8, 48, 0.72);
+  --solana-surface-hover: rgba(24, 14, 76, 0.88);
+  --solana-border: rgba(255, 255, 255, 0.16);
+  --solana-border-hover: rgba(199, 251, 91, 0.45);
   --solana-text: #ffffff;
-  --solana-text-muted: rgba(255, 255, 255, 0.65);
+  --solana-text-silver: #e2e8f0;
+  --solana-text-muted: rgba(255, 255, 255, 0.82);
 }
 
 .solana-landing {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: transparent;
+  background: radial-gradient(ellipse at 50% 12%, rgba(21, 0, 225, 0.45) 0%, rgba(10, 0, 104, 0.82) 48%, #05002b 100%), #040024;
   color: var(--solana-text);
   overflow-x: hidden;
   z-index: 1;
 }
 
-/* Header */
+/* FIXED STICKY HEADER — Pinned seamlessly throughout the page */
 .solana-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 50;
+  left: 0;
+  right: 0;
+  z-index: 100;
   width: 100%;
-  background: rgba(0, 0, 0, 0.65);
+  height: 72px;
+  background: rgba(5, 0, 43, 0.78);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--solana-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.45);
 }
 
 .solana-header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 72px;
+  height: 100%;
 }
 
 .solana-wordmark {
@@ -3489,8 +3495,8 @@ button:hover .k95-kinetic-char .char-bot {
 .solana-tag {
   padding: 3px 8px;
   border-radius: 9999px;
-  border: 1px solid rgba(20, 241, 149, 0.4);
-  background: rgba(20, 241, 149, 0.1);
+  border: 1px solid rgba(20, 241, 149, 0.5);
+  background: rgba(20, 241, 149, 0.15);
   color: var(--solana-cyan);
   font-family: var(--font-geist-mono), monospace;
   font-size: 10px;
@@ -3505,7 +3511,7 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .solana-nav-link {
-  color: var(--solana-text-muted);
+  color: var(--solana-text-silver);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -3514,31 +3520,46 @@ button:hover .k95-kinetic-char .char-bot {
 
 .solana-nav-link:hover {
   color: #ffffff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
 }
 
 .solana-header-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* 3D Switch embedded cleanly in Header */
+.solana-header-3d-switch {
+  display: flex;
+  align-items: center;
+}
+
+.solana-header-3d-switch .k95-layout-switch {
+  transform: scale(0.9);
+  margin-right: 2px;
 }
 
 .solana-btn-pill-primary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 18px;
+  padding: 8px 20px;
   border-radius: 9999px;
   background: #ffffff;
   color: #000000;
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
 }
 
 .solana-btn-pill-primary:hover {
-  background: var(--solana-cyan);
+  background: var(--solana-lime);
+  color: #000000;
   transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(199, 251, 91, 0.45);
 }
 
 .solana-pill-icon {
@@ -3548,8 +3569,8 @@ button:hover .k95-kinetic-char .char-bot {
 
 .solana-mobile-menu-btn {
   display: none;
-  background: transparent;
-  border: 1px solid var(--solana-border);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
   padding: 6px 12px;
   border-radius: 8px;
@@ -3557,13 +3578,14 @@ button:hover .k95-kinetic-char .char-bot {
   cursor: pointer;
 }
 
-/* Mobile Overlay */
+/* Fullscreen Mobile Drawer */
 .solana-mobile-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
-  background: rgba(0, 0, 0, 0.92);
-  backdrop-filter: blur(24px);
+  z-index: 150;
+  background: rgba(4, 0, 36, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -3573,28 +3595,35 @@ button:hover .k95-kinetic-char .char-bot {
 .solana-mobile-nav {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
+}
+
+.solana-mobile-3d-row {
+  display: flex;
+  margin-bottom: 12px;
 }
 
 .solana-mobile-link {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   color: #ffffff;
   text-decoration: none;
+  letter-spacing: -0.02em;
 }
 
 .solana-mobile-cta {
-  color: var(--solana-cyan);
+  color: var(--solana-lime);
+  margin-top: 12px;
 }
 
-/* Hero Section */
+/* HERO SECTION */
 .solana-hero {
-  padding-top: clamp(60px, 12vh, 120px);
+  padding-top: clamp(110px, 18vh, 170px);
   padding-bottom: clamp(40px, 8vh, 80px);
 }
 
 .solana-hero-container {
-  max-width: 820px;
+  max-width: 860px;
 }
 
 .solana-hero-badge {
@@ -3603,13 +3632,13 @@ button:hover .k95-kinetic-char .char-bot {
   gap: 8px;
   padding: 6px 14px;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
   font-weight: 600;
-  color: var(--solana-text-muted);
+  color: var(--solana-text-silver);
   letter-spacing: 0.08em;
   margin-bottom: 24px;
 }
@@ -3618,8 +3647,8 @@ button:hover .k95-kinetic-char .char-bot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--solana-cyan);
-  box-shadow: 0 0 10px var(--solana-cyan);
+  background: var(--solana-lime);
+  box-shadow: 0 0 10px var(--solana-lime);
   animation: solanaPulse 2s infinite ease-in-out;
 }
 
@@ -3629,18 +3658,19 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .solana-hero-title {
-  font-size: clamp(44px, 7vw, 88px);
+  font-size: clamp(42px, 7vw, 90px);
   font-weight: 900;
-  line-height: 0.96;
+  line-height: 0.98;
   letter-spacing: -0.05em;
   color: #ffffff;
   margin-bottom: 24px;
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
 }
 
 .solana-title-light {
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--solana-text-silver);
+  opacity: 0.78;
   letter-spacing: -0.03em;
 }
 
@@ -3648,8 +3678,9 @@ button:hover .k95-kinetic-char .char-bot {
   font-size: clamp(16px, 1.8vw, 20px);
   line-height: 1.6;
   color: var(--solana-text-muted);
-  max-width: 640px;
-  margin-bottom: 36px;
+  max-width: 680px;
+  margin-bottom: 38px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .solana-hero-cta-row {
@@ -3664,7 +3695,7 @@ button:hover .k95-kinetic-char .char-bot {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 28px;
+  padding: 15px 30px;
   border-radius: 9999px;
   background: #ffffff;
   color: #000000;
@@ -3672,14 +3703,14 @@ button:hover .k95-kinetic-char .char-bot {
   font-weight: 700;
   text-decoration: none;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
 }
 
 .solana-btn-main:hover {
   background: linear-gradient(135deg, var(--solana-purple) 0%, var(--solana-cyan) 100%);
   color: #000000;
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(20, 241, 149, 0.35);
+  box-shadow: 0 12px 40px rgba(20, 241, 149, 0.4);
 }
 
 .solana-btn-arrow {
@@ -3696,11 +3727,11 @@ button:hover .k95-kinetic-char .char-bot {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 26px;
+  padding: 15px 28px;
   border-radius: 9999px;
-  border: 1px solid var(--solana-border);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
@@ -3709,8 +3740,8 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .solana-btn-secondary:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .solana-network-bar {
@@ -3724,6 +3755,7 @@ button:hover .k95-kinetic-char .char-bot {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   flex-wrap: wrap;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 .solana-net-item {
@@ -3737,7 +3769,7 @@ button:hover .k95-kinetic-char .char-bot {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .solana-net-val {
@@ -3747,7 +3779,7 @@ button:hover .k95-kinetic-char .char-bot {
   color: var(--solana-lime);
 }
 
-/* Signals / Metrics Grid */
+/* SIGNALS GRID */
 .solana-signals-section {
   padding-block: 40px;
 }
@@ -3766,6 +3798,7 @@ button:hover .k95-kinetic-char .char-bot {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: all 0.25s ease;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 .solana-signal-card:hover {
@@ -3792,7 +3825,7 @@ button:hover .k95-kinetic-char .char-bot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .solana-signal-title {
@@ -3808,7 +3841,7 @@ button:hover .k95-kinetic-char .char-bot {
   color: var(--solana-text-muted);
 }
 
-/* General Solana Section Styling */
+/* SECTIONS */
 .solana-section {
   padding-block: clamp(60px, 10vh, 100px);
 }
@@ -3823,7 +3856,7 @@ button:hover .k95-kinetic-char .char-bot {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--solana-cyan);
+  color: var(--solana-lime);
   text-transform: uppercase;
   margin-bottom: 12px;
 }
@@ -3835,16 +3868,17 @@ button:hover .k95-kinetic-char .char-bot {
   letter-spacing: -0.04em;
   color: #ffffff;
   margin-bottom: 14px;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
 }
 
 .solana-section-desc {
   font-size: 16px;
   line-height: 1.6;
   color: var(--solana-text-muted);
-  max-width: 620px;
+  max-width: 640px;
 }
 
-/* Grids */
+/* GRIDS */
 .solana-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -3857,7 +3891,7 @@ button:hover .k95-kinetic-char .char-bot {
   gap: 20px;
 }
 
-/* Cards */
+/* CARDS */
 .solana-card {
   padding: 32px 28px;
   border-radius: 20px;
@@ -3868,13 +3902,14 @@ button:hover .k95-kinetic-char .char-bot {
   transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
 }
 
 .solana-card:hover {
   border-color: var(--solana-border-hover);
   background: var(--solana-surface-hover);
   transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55);
 }
 
 .solana-card-badge {
@@ -3890,7 +3925,7 @@ button:hover .k95-kinetic-char .char-bot {
   align-self: flex-start;
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   font-family: var(--font-geist-mono), monospace;
   font-size: 10px;
   font-weight: 700;
@@ -3955,7 +3990,7 @@ button:hover .k95-kinetic-char .char-bot {
   color: #ffffff;
 }
 
-/* 5-Step Flow List */
+/* FLOW LIST */
 .solana-flow-list {
   display: flex;
   flex-direction: column;
@@ -3974,6 +4009,7 @@ button:hover .k95-kinetic-char .char-bot {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: all 0.25s ease;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 .solana-flow-item:hover {
@@ -3986,8 +4022,8 @@ button:hover .k95-kinetic-char .char-bot {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  border: 1px solid rgba(20, 241, 149, 0.35);
-  background: rgba(20, 241, 149, 0.08);
+  border: 1px solid rgba(20, 241, 149, 0.4);
+  background: rgba(20, 241, 149, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4016,10 +4052,10 @@ button:hover .k95-kinetic-char .char-bot {
   color: var(--solana-lime);
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(199, 251, 91, 0.1);
+  background: rgba(199, 251, 91, 0.14);
 }
 
-/* Pilot Section */
+/* PILOT SECTION */
 .solana-pilot-section {
   padding-block: 60px 100px;
 }
@@ -4030,11 +4066,12 @@ button:hover .k95-kinetic-char .char-bot {
   justify-content: space-between;
   padding: 56px 48px;
   border-radius: 28px;
-  border: 1px solid rgba(153, 69, 255, 0.4);
-  background: linear-gradient(135deg, rgba(153, 69, 255, 0.15) 0%, rgba(20, 241, 149, 0.1) 100%), var(--solana-surface);
+  border: 1px solid rgba(199, 251, 91, 0.4);
+  background: linear-gradient(135deg, rgba(21, 0, 225, 0.35) 0%, rgba(10, 0, 104, 0.6) 100%), var(--solana-surface);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   gap: 36px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
 .solana-pilot-left {
@@ -4056,55 +4093,93 @@ button:hover .k95-kinetic-char .char-bot {
   color: var(--solana-text-muted);
 }
 
-/* Footer */
+/* RESTORED FULL FOOTER */
 .solana-footer {
   border-top: 1px solid var(--solana-border);
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(20px);
-  padding-block: 40px;
+  background: rgba(4, 0, 32, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding-block: 48px 36px;
 }
 
-.solana-footer-inner {
+.solana-footer-top {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 36px;
+  flex-wrap: wrap;
+}
+
+.solana-footer-brand-col {
+  max-width: 420px;
+}
+
+.solana-footer-tagline {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--solana-text-muted);
+}
+
+.solana-footer-links-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.solana-footer-heading {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--solana-lime);
+  text-transform: uppercase;
+}
+
+.solana-footer-links-grid {
+  display: flex;
   gap: 20px;
   flex-wrap: wrap;
 }
 
-.solana-footer-brand strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #ffffff;
-}
-
-.solana-footer-brand small {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.solana-footer-meta {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 11px;
-  color: var(--solana-text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .solana-footer-link {
-  color: var(--solana-cyan);
+  color: var(--solana-text-silver);
+  font-size: 13px;
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.solana-footer-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.solana-footer-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-block: 32px 24px;
+}
+
+.solana-footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.solana-footer-audience {
+  color: var(--solana-text-silver);
 }
 
 .solana-footer-copy {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.45);
 }
 
-/* Responsive Media Queries */
+/* RESPONSIVE BREAKPOINTS (DESKTOP & MOBILE) */
 @media (max-width: 1024px) {
   .solana-signal-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -4115,11 +4190,19 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 @media (max-width: 768px) {
-  .solana-desktop-nav {
+  .solana-desktop-nav,
+  .solana-header-3d-switch {
     display: none;
   }
   .solana-mobile-menu-btn {
     display: block;
+  }
+  .solana-hero {
+    padding-top: 100px;
+  }
+  .solana-hero-title {
+    font-size: clamp(34px, 9vw, 52px);
+    line-height: 1.05;
   }
   .solana-signal-grid,
   .solana-grid-3,
@@ -4139,9 +4222,12 @@ button:hover .k95-kinetic-char .char-bot {
     align-items: flex-start;
     padding: 32px 24px;
   }
-  .solana-footer-inner {
+  .solana-footer-top {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .solana-footer-bottom {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
   }
 }

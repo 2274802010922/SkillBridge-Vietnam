@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ORBIT_NODES, type OrbitNodeItem } from "./orbit-card-data";
 import { ProjectLabelPill } from "./project-label-pill";
-import { K95LayoutSwitch, type LayoutMode } from "../ui/k95-layout-switch";
+import type { LayoutMode } from "../ui/k95-layout-switch";
 
 interface K95StageCanvasProps {
   isEn?: boolean;
+  layoutMode?: LayoutMode;
 }
 
 // Generate high-resolution crisp 2D canvas texture for each node card
@@ -96,20 +97,14 @@ function createCardTexture(node: OrbitNodeItem, isEn: boolean): THREE.CanvasText
   return texture;
 }
 
-export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
+export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95StageCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>("spiral");
   const [hoveredNode, setHoveredNode] = useState<OrbitNodeItem | null>(null);
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
   const [showPill, setShowPill] = useState(false);
 
-  const modeRef = useRef<LayoutMode>("spiral");
+  const modeRef = useRef<LayoutMode>(layoutMode);
   modeRef.current = layoutMode;
-
-  const handleLayoutChange = useCallback((mode: LayoutMode) => {
-    setLayoutMode(mode);
-    modeRef.current = mode;
-  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -117,7 +112,6 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
 
     // --- THREE.JS SCENE SETUP ---
     const scene = new THREE.Scene();
-    // Gentle linear fog for deep atmospheric feel without turning cards pitch black
     scene.fog = new THREE.Fog(0x07060b, 18, 55);
 
     const camera = new THREE.PerspectiveCamera(
@@ -150,7 +144,6 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
     const coreGroup = new THREE.Group();
     coreGroup.position.set(0, 0, -3);
 
-    // Subtle luminous outer ring
     const ringGeo1 = new THREE.TorusGeometry(2.4, 0.04, 16, 64);
     const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x1500e1, transparent: true, opacity: 0.6 });
     const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
@@ -235,10 +228,10 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
       const ringY = isInner ? 1.0 : -1.2;
 
       // Spiral Mode: elegant vertical spiral wrapping around the scroll space
-      const spiralT = i / (ORBIT_NODES.length - 1); // 0 to 1
+      const spiralT = i / (ORBIT_NODES.length - 1);
       const spiralAngle = spiralT * Math.PI * 2.8;
       const spiralRadius = 5.2 + (i % 2 === 0 ? 0.8 : -0.4);
-      const spiralBaseY = (0.5 - spiralT) * 12; // spans from +6 to -6
+      const spiralBaseY = (0.5 - spiralT) * 12;
 
       mesh.position.set(
         Math.cos(spiralAngle) * spiralRadius,
@@ -331,7 +324,6 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
     window.addEventListener("touchmove", onPointerMove, { passive: true });
     window.addEventListener("touchend", onPointerUp);
 
-    // Resize Handler
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -350,7 +342,7 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
       // Smooth scroll interpolation
       currentScrollProgress += (targetScrollProgress - currentScrollProgress) * 0.07;
 
-      // Inertia & gentle ambient auto-spin
+      // Inertia & auto-spin
       if (!isDragging) {
         targetRotationY += 0.001;
         velX *= 0.94;
@@ -359,22 +351,18 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
         targetRotationX += velY;
       }
 
-      // Constrain vertical pitch
       targetRotationX = Math.max(-0.25, Math.min(0.25, targetRotationX));
 
       currentRotationY += (targetRotationY - currentRotationY) * 0.08;
       currentRotationX += (targetRotationX - currentRotationX) * 0.08;
 
-      // Gyroscope core motion
       coreGroup.rotation.y = elapsedTime * 0.25;
       coreGroup.rotation.x = Math.sin(elapsedTime * 0.3) * 0.2;
       ringMesh1.rotation.z = -elapsedTime * 0.4;
       ringMesh2.rotation.y = elapsedTime * 0.5;
 
-      // Particles subtle drift
       particleSystem.rotation.y = elapsedTime * 0.02;
 
-      // 3D group position and rotation linked directly to scroll progress
       const currentMode = modeRef.current;
       const scrollYOffset = (currentScrollProgress - 0.2) * 14;
       const scrollYRotation = currentScrollProgress * Math.PI * 2.0;
@@ -413,11 +401,8 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
         }
 
         state.mesh.position.lerp(targetPos, 0.07);
-
-        // BILLBOARD: Cards always face camera directly, never reversed!
         state.mesh.quaternion.copy(camera.quaternion);
 
-        // Hover scale
         const isHovered = currentHovered?.id === state.node.id;
         const targetScale = isHovered ? 1.15 : 1.0;
         state.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
@@ -449,11 +434,6 @@ export function K95StageCanvas({ isEn = false }: K95StageCanvasProps) {
     <>
       {/* Full-Page Persistent 3D WebGL Canvas */}
       <div className="k95-persistent-canvas" ref={containerRef} aria-hidden="true" />
-
-      {/* Floating 3D Mode Controller */}
-      <div className="k95-floating-controls">
-        <K95LayoutSwitch mode={layoutMode} onChange={handleLayoutChange} isEn={isEn} />
-      </div>
 
       {/* Tooltip Pill: ONLY displayed when user hovers on a 3D card */}
       <ProjectLabelPill

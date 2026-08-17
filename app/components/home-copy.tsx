@@ -4,6 +4,7 @@ import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { LanguageSwitcher, useLanguage } from "./i18n";
 import { K95StageCanvas } from "./3d/k95-stage-canvas";
+import { K95LayoutSwitch, type LayoutMode } from "./ui/k95-layout-switch";
 import { K95Cursor } from "./ui/k95-cursor";
 import { K95BootLoader } from "./ui/k95-boot-loader";
 import { useSmoothScroll } from "./ui/use-smooth-scroll";
@@ -47,9 +48,18 @@ export function HomeCopy() {
   const isEn = locale === "en";
   const landingRef = useRef<HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("spiral");
 
   useScrollReveal(landingRef);
   useSmoothScroll();
+
+  const outlookMailtoUrl = `mailto:tri.2274802010922@vanlanguni.vn?subject=${encodeURIComponent(
+    isEn ? "Design Partner Program Application - SkillBridge Vietnam" : "Đăng ký Đối tác Thiết kế - SkillBridge Vietnam"
+  )}&body=${encodeURIComponent(
+    isEn
+      ? "Dear SkillBridge Vietnam Team,\n\nI am interested in becoming a Design Partner with SkillBridge Vietnam.\n\nContact Information:\n- Full Name:\n- Organization / University:\n- Phone Number:\n- Message / Goals:\n"
+      : "Kính gửi Ban Phát triển SkillBridge Vietnam,\n\nTôi quan tâm đến chương trình Đối tác Thiết kế và muốn tìm hiểu chi tiết về cơ hội hợp tác.\n\nThông tin liên hệ:\n- Họ và tên:\n- Đơn vị / Trường:\n- Số điện thoại:\n- Nội dung trao đổi:\n"
+  )}`;
 
   return (
     <>
@@ -57,14 +67,14 @@ export function HomeCopy() {
       <K95Cursor />
 
       {/* K95 PERSISTENT 3D CANVAS BACKGROUND — RUNS CONTINUOUSLY ACROSS ENTIRE PAGE */}
-      <K95StageCanvas isEn={isEn} />
+      <K95StageCanvas isEn={isEn} layoutMode={layoutMode} />
 
       <main className="solana-landing" id="top" ref={landingRef}>
         <a className="landing-skip-link" href="#landing-content">
           {t("home.skipContent")}
         </a>
 
-        {/* SOLANA-INSPIRED CLEAN HEADER */}
+        {/* FIXED STICKY HEADER WITH EMBEDDED 3D SWITCH */}
         <header className="solana-header page-shell">
           <div className="solana-header-inner">
             <Link className="solana-wordmark" href="#top" aria-label="SkillBridge Vietnam" data-hover>
@@ -89,7 +99,13 @@ export function HomeCopy() {
             </nav>
 
             <div className="solana-header-actions">
+              {/* 3D Mode Controller embedded cleanly right inside the header */}
+              <div className="solana-header-3d-switch">
+                <K95LayoutSwitch mode={layoutMode} onChange={setLayoutMode} isEn={isEn} />
+              </div>
+
               <LanguageSwitcher />
+
               <Link className="solana-btn-pill-primary" href="/auth" data-hover>
                 <span>{t("home.login")}</span>
                 <span className="solana-pill-icon" aria-hidden="true">↗</span>
@@ -109,10 +125,13 @@ export function HomeCopy() {
           </div>
         </header>
 
-        {/* MOBILE MENU OVERLAY */}
+        {/* MOBILE MENU FULLSCREEN DRAWER */}
         {mobileMenuOpen && (
           <div className="solana-mobile-overlay" onClick={() => setMobileMenuOpen(false)}>
             <nav className="solana-mobile-nav" onClick={(e) => e.stopPropagation()}>
+              <div className="solana-mobile-3d-row">
+                <K95LayoutSwitch mode={layoutMode} onChange={setLayoutMode} isEn={isEn} />
+              </div>
               <a href="#product" className="solana-mobile-link" onClick={() => setMobileMenuOpen(false)}>
                 {t("home.navProduct")}
               </a>
@@ -181,8 +200,8 @@ export function HomeCopy() {
                 <span className="solana-net-val">Proof-to-Payout</span>
               </div>
               <div className="solana-net-item">
-                <span className="solana-net-label">VERIFIED NODES</span>
-                <span className="solana-net-val">07 Live Organizations</span>
+                <span className="solana-net-label">ARCHITECTURE</span>
+                <span className="solana-net-val">AI + Human Review</span>
               </div>
             </div>
           </div>
@@ -358,7 +377,7 @@ export function HomeCopy() {
           </div>
         </section>
 
-        {/* SECTION 7: PILOT CALLOUT BANNER */}
+        {/* SECTION 7: PILOT CALLOUT BANNER (OUTLOOK MAIL INTEGRATION) */}
         <section className="solana-pilot-section page-shell" id="pilot">
           <div className="solana-pilot-card" data-reveal="card">
             <div className="solana-pilot-left">
@@ -367,7 +386,7 @@ export function HomeCopy() {
               <p className="solana-pilot-desc">{t("home.pilotDescription")}</p>
             </div>
             <div className="solana-pilot-right">
-              <a className="solana-btn-main" href="mailto:pilot@skillbridge.vn" data-hover>
+              <a className="solana-btn-main" href={outlookMailtoUrl} data-hover>
                 <span>{t("home.designPartner")}</span>
                 <span className="solana-btn-arrow">→</span>
               </a>
@@ -375,21 +394,34 @@ export function HomeCopy() {
           </div>
         </section>
 
-        {/* FOOTER */}
+        {/* FULL ORIGINAL RESTORED FOOTER */}
         <footer className="solana-footer page-shell">
-          <div className="solana-footer-inner">
-            <div className="solana-footer-brand">
-              <strong>SKILLBRIDGE VIETNAM</strong>
-              <small>Solana Proof-of-Skill & Assessment Infrastructure</small>
+          <div className="solana-footer-top">
+            <div className="solana-footer-brand-col">
+              <Link className="solana-wordmark" href="#top" aria-label="SkillBridge Vietnam">
+                <span className="solana-logo-badge">SB</span>
+                <span className="solana-brand-name">SkillBridge</span>
+                <span className="solana-tag">SOLANA</span>
+              </Link>
+              <p className="solana-footer-tagline">{t("home.footerTagline")}</p>
             </div>
-            <div className="solana-footer-meta">
-              <span>07 LIVE VERIFIED NODES</span>
-              <span>·</span>
-              <Link href="/workspace" className="solana-footer-link" data-hover>Workspace ↗</Link>
+
+            <div className="solana-footer-links-col">
+              <span className="solana-footer-heading">{isEn ? "LEGAL & POLICIES" : "CHÍNH SÁCH & ĐIỀU KHOẢN"}</span>
+              <div className="solana-footer-links-grid">
+                <Link href="/privacy" className="solana-footer-link" data-hover>{t("home.data")}</Link>
+                <Link href="/terms" className="solana-footer-link" data-hover>{t("home.terms")}</Link>
+                <Link href="/risk" className="solana-footer-link" data-hover>{t("home.risk")}</Link>
+                <Link href="/auth" className="solana-footer-link" data-hover>{t("home.login")}</Link>
+              </div>
             </div>
-            <div className="solana-footer-copy">
-              <span>© 2026 SkillBridge. All rights reserved.</span>
-            </div>
+          </div>
+
+          <div className="solana-footer-divider" />
+
+          <div className="solana-footer-bottom">
+            <span className="solana-footer-audience">{t("home.builtFor")}</span>
+            <span className="solana-footer-copy">© 2026 SkillBridge Vietnam. Built on Solana Devnet.</span>
           </div>
         </footer>
       </main>
