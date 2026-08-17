@@ -86,6 +86,90 @@ function createCardTexture(node: OrbitNodeItem, isEn: boolean): THREE.CanvasText
   return texture;
 }
 
+// Build the iconic K95 3D Pixel Chrome Rose Geometry
+function createPixelRoseGroup(): THREE.Group {
+  const roseGroup = new THREE.Group();
+
+  const chromeMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    metalness: 0.96,
+    roughness: 0.1,
+    emissive: 0x1a1a2e,
+    emissiveIntensity: 0.35,
+  });
+
+  const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+    depth: 0.45,
+    bevelEnabled: true,
+    bevelSegments: 4,
+    steps: 1,
+    bevelSize: 0.055,
+    bevelThickness: 0.065,
+  };
+
+  const pw = 0.28; // pixel width unit
+
+  // Helper to add extruded stepped pixel ribbons
+  const addPixelPath = (points: [number, number][]) => {
+    const shape = new THREE.Shape();
+    shape.moveTo(points[0][0] * pw, points[0][1] * pw);
+    for (let i = 1; i < points.length; i++) {
+      shape.lineTo(points[i][0] * pw, points[i][1] * pw);
+    }
+    shape.closePath();
+
+    const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    geo.center();
+    const mesh = new THREE.Mesh(geo, chromeMaterial);
+    roseGroup.add(mesh);
+  };
+
+  // 1. Outer Rose Petal Contour (Stepped Pixel Rose Outline)
+  addPixelPath([
+    [-5, 7], [-3, 9], [3, 9], [5, 7], [7, 4], [7, 1], [5, -1], [3, -3],
+    [0, -4], [-3, -3], [-5, -1], [-7, 1], [-7, 4], [-5, 7],
+    [-4, 6], [-6, 3.5], [-6, 1.5], [-4.5, 0], [-2.5, -2], [0, -3], [2.5, -2],
+    [4.5, 0], [6, 1.5], [6, 3.5], [4, 6], [2.5, 7.8], [-2.5, 7.8], [-4, 6]
+  ]);
+
+  // 2. Middle Petal Ribbon (Inner Stepped Ring 1)
+  addPixelPath([
+    [-3.5, 6], [0, 7], [3.5, 6], [4.5, 3.5], [3, 1], [0, 0], [-3, 1], [-4.5, 3.5], [-3.5, 6],
+    [-2.5, 5], [-3.5, 3.5], [-2, 1.8], [0, 1], [2, 1.8], [3.5, 3.5], [2.5, 5], [0, 5.8], [-2.5, 5]
+  ]);
+
+  // 3. Inner Core Petal Spiral (Inner Stepped Ring 2)
+  addPixelPath([
+    [-1.8, 4.2], [0, 4.8], [1.8, 4.2], [2.2, 2.8], [0.8, 2], [-1.2, 2.2], [-1.8, 4.2],
+    [-1, 3.5], [0, 4], [1, 3.5], [1.2, 2.8], [0.4, 2.6], [-0.6, 2.8], [-1, 3.5]
+  ]);
+
+  // 4. Rose Stem (Stepped Vertical Column)
+  addPixelPath([
+    [-0.5, -3.8], [0.5, -3.8], [0.5, -10], [-0.5, -10], [-0.5, -3.8]
+  ]);
+
+  // 5. Right Leaf (Stepped Pixel Leaf)
+  addPixelPath([
+    [0.5, -5.5], [2.5, -4.5], [5, -4.5], [6.5, -6], [4.5, -7.5], [2, -7.5], [0.5, -6.5],
+    [0.5, -5.5],
+    [1.5, -6], [2.5, -5.3], [4.5, -5.3], [5.5, -6.2], [4, -6.8], [2, -6.8], [1.5, -6]
+  ]);
+
+  // 6. Left Leaf (Stepped Pixel Leaf)
+  addPixelPath([
+    [-0.5, -6.8], [-2.5, -5.8], [-5, -5.8], [-6.5, -7.3], [-4.5, -8.8], [-2, -8.8], [-0.5, -7.8],
+    [-0.5, -6.8],
+    [-1.5, -7.3], [-2.5, -6.6], [-4.5, -6.6], [-5.5, -7.5], [-4, -8.1], [-2, -8.1], [-1.5, -7.3]
+  ]);
+
+  // Scale up by ~38% as requested for prominent, bold presentation
+  roseGroup.scale.set(1.38, 1.38, 1.38);
+  roseGroup.position.set(0, 0.5, -1.8);
+
+  return roseGroup;
+}
+
 export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95StageCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredNode, setHoveredNode] = useState<OrbitNodeItem | null>(null);
@@ -110,7 +194,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       0.1,
       100
     );
-    camera.position.set(0, 0, 13);
+    camera.position.set(0, 0, 13.5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -119,10 +203,10 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     container.appendChild(renderer.domElement);
 
     // --- K95 3D CURVED PERSPECTIVE WIREFRAME GRID (CARO GRID DOME) ---
-    const gridRadius = 14.5;
-    const gridHeight = 38;
+    const gridRadius = 15.5;
+    const gridHeight = 42;
     const gridSegmentsRadial = 32;
-    const gridSegmentsHeight = 22;
+    const gridSegmentsHeight = 24;
     const gridCylinderGeo = new THREE.CylinderGeometry(
       gridRadius,
       gridRadius,
@@ -141,122 +225,31 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     const gridMesh = new THREE.LineSegments(wireframeGeo, gridLineMat);
     scene.add(gridMesh);
 
-    // Dynamic Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 2.6);
+    // --- STUDIO LIGHTING SYSTEM FOR LIQUID CHROME REFLECTIONS ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.8);
     scene.add(ambientLight);
 
-    const pointLightCobalt = new THREE.PointLight(0x1500e1, 7, 50);
-    pointLightCobalt.position.set(8, 6, 8);
-    scene.add(pointLightCobalt);
+    // Key Light (Intense Chrome Rim Shine)
+    const keyLightWhite = new THREE.PointLight(0xffffff, 8.5, 50);
+    keyLightWhite.position.set(6, 8, 10);
+    scene.add(keyLightWhite);
 
-    const pointLightPurple = new THREE.PointLight(0x7b2cbf, 4, 50);
-    pointLightPurple.position.set(-8, -6, 6);
-    scene.add(pointLightPurple);
+    // Fill Light (Cobalt Blue Ambient Fill)
+    const fillLightCobalt = new THREE.PointLight(0x1500e1, 7, 50);
+    fillLightCobalt.position.set(-8, -6, 6);
+    scene.add(fillLightCobalt);
 
-    const pointLightLime = new THREE.PointLight(0xc7fb5b, 3, 30);
-    pointLightLime.position.set(0, 0, 4);
-    scene.add(pointLightLime);
+    // Accent Light (Electric Lime Specular Highlight)
+    const accentLightLime = new THREE.PointLight(0xc7fb5b, 3.5, 35);
+    accentLightLime.position.set(0, -4, 6);
+    scene.add(accentLightLime);
 
-    // --- K95 3D KINETIC PARAMETRIC BLOOMING FLOWER ---
-    const flowerGroup = new THREE.Group();
-    flowerGroup.position.set(0, 0, -2.5);
-
-    // 1. Center Pistil (Glowing Crystal Sphere)
-    const pistilGeo = new THREE.SphereGeometry(0.55, 32, 32);
-    const pistilMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      emissive: 0xc7fb5b,
-      emissiveIntensity: 0.85,
-      roughness: 0.15,
-      metalness: 0.9,
-    });
-    const pistilMesh = new THREE.Mesh(pistilGeo, pistilMat);
-    flowerGroup.add(pistilMesh);
-
-    // 2. Outer Layer Petals (8 Symmetrical Blooming Petals - Chrome White & Electric Lime)
-    const outerPetalCount = 8;
-    const outerPetalRadius = 2.6;
-
-    for (let i = 0; i < outerPetalCount; i++) {
-      const angle = (i / outerPetalCount) * Math.PI * 2;
-      const isLime = i % 2 === 0;
-
-      // Parametric curve defining the 3D loop of the petal
-      const pStart = new THREE.Vector3(0, 0, 0.1);
-      const pMid1 = new THREE.Vector3(
-        Math.cos(angle - 0.22) * (outerPetalRadius * 0.55),
-        Math.sin(angle - 0.22) * (outerPetalRadius * 0.55),
-        0.45
-      );
-      const pTip = new THREE.Vector3(
-        Math.cos(angle) * outerPetalRadius,
-        Math.sin(angle) * outerPetalRadius,
-        0.1
-      );
-      const pMid2 = new THREE.Vector3(
-        Math.cos(angle + 0.22) * (outerPetalRadius * 0.55),
-        Math.sin(angle + 0.22) * (outerPetalRadius * 0.55),
-        -0.35
-      );
-
-      const petalCurve = new THREE.CatmullRomCurve3([pStart, pMid1, pTip, pMid2, pStart]);
-      const petalTubeGeo = new THREE.TubeGeometry(petalCurve, 36, 0.04, 8, true);
-
-      const petalMat = new THREE.MeshStandardMaterial({
-        color: isLime ? 0xc7fb5b : 0xffffff,
-        emissive: isLime ? 0x82b814 : 0x555555,
-        emissiveIntensity: 0.85,
-        roughness: 0.2,
-        metalness: 0.8,
-      });
-
-      const petalMesh = new THREE.Mesh(petalTubeGeo, petalMat);
-      flowerGroup.add(petalMesh);
-    }
-
-    // 3. Inner Layer Petals (6 Offset Petals - Neon Purple #9945FF)
-    const innerPetalCount = 6;
-    const innerPetalRadius = 1.75;
-
-    for (let j = 0; j < innerPetalCount; j++) {
-      const angle = (j / innerPetalCount) * Math.PI * 2 + Math.PI / 6;
-
-      const pStart = new THREE.Vector3(0, 0, 0.15);
-      const pMid1 = new THREE.Vector3(
-        Math.cos(angle - 0.25) * (innerPetalRadius * 0.5),
-        Math.sin(angle - 0.25) * (innerPetalRadius * 0.5),
-        0.35
-      );
-      const pTip = new THREE.Vector3(
-        Math.cos(angle) * innerPetalRadius,
-        Math.sin(angle) * innerPetalRadius,
-        0.2
-      );
-      const pMid2 = new THREE.Vector3(
-        Math.cos(angle + 0.25) * (innerPetalRadius * 0.5),
-        Math.sin(angle + 0.25) * (innerPetalRadius * 0.5),
-        -0.2
-      );
-
-      const innerCurve = new THREE.CatmullRomCurve3([pStart, pMid1, pTip, pMid2, pStart]);
-      const innerTubeGeo = new THREE.TubeGeometry(innerCurve, 28, 0.035, 8, true);
-
-      const innerMat = new THREE.MeshStandardMaterial({
-        color: 0x9945ff,
-        emissive: 0x721ae6,
-        emissiveIntensity: 0.9,
-        roughness: 0.2,
-        metalness: 0.8,
-      });
-
-      const innerPetalMesh = new THREE.Mesh(innerTubeGeo, innerMat);
-      flowerGroup.add(innerPetalMesh);
-    }
-
-    scene.add(flowerGroup);
+    // --- K95 3D PIXEL CHROME ROSE ---
+    const pixelRose = createPixelRoseGroup();
+    scene.add(pixelRose);
 
     // Ambient Stardust Particles
-    const particleCount = 180;
+    const particleCount = 160;
     const particleGeo = new THREE.BufferGeometry();
     const particlePositions = new Float32Array(particleCount * 3);
     for (let p = 0; p < particleCount * 3; p += 3) {
@@ -274,7 +267,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     const particleSystem = new THREE.Points(particleGeo, particleMat);
     scene.add(particleSystem);
 
-    // --- 3D ORBIT CARDS ---
+    // --- 3D ORBIT CARDS (EXPANDED ORBITS FRAMING THE ROSE) ---
     const main3DGroup = new THREE.Group();
     scene.add(main3DGroup);
 
@@ -307,19 +300,19 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       const mesh = new THREE.Mesh(cardGeometry, material);
       mesh.userData = { node };
 
-      // Rings Mode: 2 concentric orbiting rings
+      // Rings Mode: Expanded concentric orbiting rings (Inner R=5.4, Outer R=8.2)
       const isInner = i < 3;
-      const ringRadius = isInner ? 4.8 : 7.6;
+      const ringRadius = isInner ? 5.4 : 8.2;
       const countInRing = isInner ? 3 : 4;
       const idxInRing = isInner ? i : i - 3;
       const ringAngle = (idxInRing / countInRing) * Math.PI * 2 + (isInner ? 0 : 0.6);
-      const ringY = isInner ? 1.0 : -1.2;
+      const ringY = isInner ? 1.2 : -1.4;
 
       // Spiral Mode: vertical spiral wrapping around the scroll space
       const spiralT = i / (ORBIT_NODES.length - 1);
       const spiralAngle = spiralT * Math.PI * 2.8;
-      const spiralRadius = 5.2 + (i % 2 === 0 ? 0.8 : -0.4);
-      const spiralBaseY = (0.5 - spiralT) * 12;
+      const spiralRadius = 5.8 + (i % 2 === 0 ? 1.0 : -0.5);
+      const spiralBaseY = (0.5 - spiralT) * 13;
 
       mesh.position.set(
         Math.cos(spiralAngle) * spiralRadius,
@@ -432,7 +425,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
 
       // Inertia & ambient auto-spin
       if (!isDragging) {
-        targetRotationY += 0.001;
+        targetRotationY += 0.0012;
         velX *= 0.94;
         velY *= 0.94;
         targetRotationY += velX;
@@ -449,14 +442,10 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       gridMesh.rotation.x = currentRotationX * 0.3;
       gridMesh.position.y = (currentScrollProgress - 0.2) * 6;
 
-      // K95 3D KINETIC FLOWER BLOOMING & ROTATION
-      flowerGroup.rotation.z = -elapsedTime * 0.25;
-      flowerGroup.rotation.y = Math.sin(elapsedTime * 0.35) * 0.4 + currentRotationY * 0.5;
-      flowerGroup.rotation.x = Math.cos(elapsedTime * 0.25) * 0.2 + currentRotationX * 0.5;
-
-      // Breathing kinetic pulse (Bloom cycle)
-      const bloomScale = 1.0 + Math.sin(elapsedTime * 1.5) * 0.08;
-      flowerGroup.scale.set(bloomScale, bloomScale, bloomScale);
+      // K95 3D PIXEL CHROME ROSE ROTATION & INERTIA
+      pixelRose.rotation.y = elapsedTime * 0.28 + currentRotationY * 0.45;
+      pixelRose.rotation.x = Math.sin(elapsedTime * 0.35) * 0.18 + currentRotationX * 0.4;
+      pixelRose.rotation.z = Math.cos(elapsedTime * 0.25) * 0.08;
 
       // Particles drift
       particleSystem.rotation.y = elapsedTime * 0.02;
