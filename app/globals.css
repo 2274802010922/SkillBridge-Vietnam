@@ -3415,17 +3415,18 @@ button:hover .k95-kinetic-char .char-bot {
    ========================================================================== */
 
 :root {
+  --k95-royal-blue: #0a00d8;
   --solana-purple: #9945ff;
   --solana-cyan: #14f195;
   --solana-lime: #c7fb5b;
-  --solana-bg: #000000;
-  --solana-surface: rgba(16, 16, 24, 0.65);
-  --solana-surface-hover: rgba(28, 24, 44, 0.85);
-  --solana-border: rgba(255, 255, 255, 0.12);
-  --solana-border-hover: rgba(255, 255, 255, 0.28);
+  --solana-bg: #0a00d8;
+  --solana-surface: rgba(6, 2, 38, 0.78);
+  --solana-surface-hover: rgba(14, 6, 64, 0.9);
+  --solana-border: rgba(255, 255, 255, 0.18);
+  --solana-border-hover: rgba(199, 251, 91, 0.45);
   --solana-text: #ffffff;
   --solana-text-silver: #e2e8f0;
-  --solana-text-muted: rgba(255, 255, 255, 0.72);
+  --solana-text-muted: rgba(255, 255, 255, 0.82);
 }
 
 .solana-landing {

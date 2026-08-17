@@ -19,17 +19,17 @@ function createCardTexture(node: OrbitNodeItem, isEn: boolean): THREE.CanvasText
   const ctx = canvas.getContext("2d");
 
   if (ctx) {
-    // Background with sleek studio dark glass styling
+    // Background with sleek midnight glass styling
     const grad = ctx.createLinearGradient(0, 0, 600, 380);
-    grad.addColorStop(0, "rgba(22, 16, 48, 0.95)");
-    grad.addColorStop(1, "rgba(10, 8, 22, 0.98)");
+    grad.addColorStop(0, "rgba(10, 4, 48, 0.96)");
+    grad.addColorStop(1, "rgba(4, 2, 28, 0.98)");
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.roundRect(0, 0, 600, 380, 24);
     ctx.fill();
 
     // Vibrant Glowing Border
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
     ctx.lineWidth = 3;
     ctx.stroke();
 
@@ -38,7 +38,7 @@ function createCardTexture(node: OrbitNodeItem, isEn: boolean): THREE.CanvasText
     ctx.fillRect(32, 24, 80, 5);
 
     // Index & Category
-    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
     ctx.font = "bold 20px monospace";
     ctx.fillText(`[${node.index}]`, 32, 68);
 
@@ -52,7 +52,7 @@ function createCardTexture(node: OrbitNodeItem, isEn: boolean): THREE.CanvasText
     ctx.fillText(node.name, 32, 130);
 
     // Subtitle (Wrapped & Legible)
-    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.fillStyle = "#E2E8F0";
     ctx.font = "20px sans-serif";
     const subText = isEn ? node.subtitleEn : node.subtitleVi;
     const words = subText.split(" ");
@@ -99,9 +99,10 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     const container = containerRef.current;
     if (!container) return;
 
-    // --- THREE.JS SCENE SETUP ---
+    // --- THREE.JS SCENE SETUP (K95 ROYAL COBALT BLUE THEME) ---
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x07060b, 18, 55);
+    scene.background = new THREE.Color(0x0a00d8);
+    scene.fog = new THREE.Fog(0x0a00d8, 20, 62);
 
     const camera = new THREE.PerspectiveCamera(
       45,
@@ -117,13 +118,36 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(renderer.domElement);
 
+    // --- K95 3D CURVED PERSPECTIVE WIREFRAME GRID (CARO GRID DOME) ---
+    const gridRadius = 14.5;
+    const gridHeight = 38;
+    const gridSegmentsRadial = 32;
+    const gridSegmentsHeight = 22;
+    const gridCylinderGeo = new THREE.CylinderGeometry(
+      gridRadius,
+      gridRadius,
+      gridHeight,
+      gridSegmentsRadial,
+      gridSegmentsHeight,
+      true // open ended curved cylinder
+    );
+    const wireframeGeo = new THREE.WireframeGeometry(gridCylinderGeo);
+    const gridLineMat = new THREE.LineBasicMaterial({
+      color: 0x000078, // Deep blue wireframe line matching K95
+      transparent: true,
+      opacity: 0.55,
+      linewidth: 1,
+    });
+    const gridMesh = new THREE.LineSegments(wireframeGeo, gridLineMat);
+    scene.add(gridMesh);
+
     // Dynamic Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.6);
     scene.add(ambientLight);
 
-    const pointLightBlue = new THREE.PointLight(0x1500e1, 6, 50);
-    pointLightBlue.position.set(8, 6, 8);
-    scene.add(pointLightBlue);
+    const pointLightCobalt = new THREE.PointLight(0x1500e1, 7, 50);
+    pointLightCobalt.position.set(8, 6, 8);
+    scene.add(pointLightCobalt);
 
     const pointLightPurple = new THREE.PointLight(0x7b2cbf, 4, 50);
     pointLightPurple.position.set(-8, -6, 6);
@@ -134,12 +158,12 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     coreGroup.position.set(0, 0, -3);
 
     const ringGeo1 = new THREE.TorusGeometry(2.4, 0.04, 16, 64);
-    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x1500e1, transparent: true, opacity: 0.6 });
+    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x1500e1, transparent: true, opacity: 0.65 });
     const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
     coreGroup.add(ringMesh1);
 
     const ringGeo2 = new THREE.TorusGeometry(1.6, 0.03, 16, 64);
-    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xc7fb5b, transparent: true, opacity: 0.7 });
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xc7fb5b, transparent: true, opacity: 0.75 });
     const ringMesh2 = new THREE.Mesh(ringGeo2, ringMat2);
     ringMesh2.rotation.x = Math.PI / 3;
     coreGroup.add(ringMesh2);
@@ -148,7 +172,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     const sphereCoreMat = new THREE.MeshStandardMaterial({
       color: 0x1500e1,
       emissive: 0x2412b8,
-      emissiveIntensity: 0.9,
+      emissiveIntensity: 0.95,
       roughness: 0.2,
       metalness: 0.8,
     });
@@ -156,7 +180,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
     coreGroup.add(sphereCore);
     scene.add(coreGroup);
 
-    // Ambient Stardust Particles in background
+    // Ambient Stardust Particles
     const particleCount = 180;
     const particleGeo = new THREE.BufferGeometry();
     const particlePositions = new Float32Array(particleCount * 3);
@@ -216,7 +240,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       const ringAngle = (idxInRing / countInRing) * Math.PI * 2 + (isInner ? 0 : 0.6);
       const ringY = isInner ? 1.0 : -1.2;
 
-      // Spiral Mode: elegant vertical spiral wrapping around the scroll space
+      // Spiral Mode: vertical spiral wrapping around the scroll space
       const spiralT = i / (ORBIT_NODES.length - 1);
       const spiralAngle = spiralT * Math.PI * 2.8;
       const spiralRadius = 5.2 + (i % 2 === 0 ? 0.8 : -0.4);
@@ -241,7 +265,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       });
     });
 
-    // --- INTERACTION & SCROLL-LINKED ENGINE ---
+    // --- INTERACTION & SCROLL PHYSICS ENGINE ---
     let isDragging = false;
     let previousPointerX = 0;
     let previousPointerY = 0;
@@ -331,7 +355,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       // Smooth scroll interpolation
       currentScrollProgress += (targetScrollProgress - currentScrollProgress) * 0.07;
 
-      // Inertia & auto-spin
+      // Inertia & ambient auto-spin
       if (!isDragging) {
         targetRotationY += 0.001;
         velX *= 0.94;
@@ -345,13 +369,21 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       currentRotationY += (targetRotationY - currentRotationY) * 0.08;
       currentRotationX += (targetRotationX - currentRotationX) * 0.08;
 
+      // K95 3D Grid rotation & perspective tilt
+      gridMesh.rotation.y = elapsedTime * 0.03 + currentRotationY * 0.35;
+      gridMesh.rotation.x = currentRotationX * 0.3;
+      gridMesh.position.y = (currentScrollProgress - 0.2) * 6;
+
+      // Gyroscope core motion
       coreGroup.rotation.y = elapsedTime * 0.25;
       coreGroup.rotation.x = Math.sin(elapsedTime * 0.3) * 0.2;
       ringMesh1.rotation.z = -elapsedTime * 0.4;
       ringMesh2.rotation.y = elapsedTime * 0.5;
 
+      // Particles drift
       particleSystem.rotation.y = elapsedTime * 0.02;
 
+      // 3D group position and rotation linked directly to scroll progress
       const currentMode = modeRef.current;
       const scrollYOffset = (currentScrollProgress - 0.2) * 14;
       const scrollYRotation = currentScrollProgress * Math.PI * 2.0;
@@ -373,7 +405,7 @@ export function K95StageCanvas({ isEn = false, layoutMode = "spiral" }: K95Stage
       }
       setHoveredNode(currentHovered);
 
-      // Lerp card positions & apply 100% BILLBOARD ORIENTATION
+      // Lerp card positions & apply 100% AUTO-BILLBOARD
       cardStates.forEach((state) => {
         let targetPos: THREE.Vector3;
 
