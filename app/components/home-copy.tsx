@@ -108,7 +108,6 @@ export function HomeCopy() {
 
               <Link className="solana-btn-pill-primary" href="/auth" data-hover>
                 <span>{t("home.login")}</span>
-                <span className="solana-pill-icon" aria-hidden="true">↗</span>
               </Link>
 
               {/* Mobile Menu Trigger */}
@@ -145,7 +144,7 @@ export function HomeCopy() {
                 {t("home.navHow")}
               </a>
               <Link href="/auth" className="solana-mobile-link solana-mobile-cta" onClick={() => setMobileMenuOpen(false)}>
-                {t("home.login")} ↗
+                {t("home.login")}
               </Link>
             </nav>
           </div>
@@ -181,11 +180,9 @@ export function HomeCopy() {
             <div className="solana-hero-cta-row" data-reveal="hero-actions">
               <Link className="solana-btn-main" href="/auth" data-hover>
                 <span>{t("home.start")}</span>
-                <span className="solana-btn-arrow">→</span>
               </Link>
               <a className="solana-btn-secondary" href="#flow" data-hover>
                 <span>{t("home.navFlow")}</span>
-                <span aria-hidden="true">↓</span>
               </a>
             </div>
 
@@ -270,7 +267,7 @@ export function HomeCopy() {
                   <h3 className="solana-flow-title">{t(titleKey)}</h3>
                   <p className="solana-flow-desc">{t(detailKey)}</p>
                 </div>
-                <span className="solana-flow-status">✓ VERIFIED</span>
+                <span className="solana-flow-status">VERIFIED</span>
               </div>
             ))}
           </div>
@@ -328,7 +325,6 @@ export function HomeCopy() {
                 <div className="solana-card-bottom">
                   <Link href={href} className="solana-link-cta" data-hover>
                     <span>{t(actionKey)}</span>
-                    <span aria-hidden="true">↗</span>
                   </Link>
                 </div>
               </article>
@@ -388,13 +384,12 @@ export function HomeCopy() {
             <div className="solana-pilot-right">
               <a className="solana-btn-main" href={outlookMailtoUrl} data-hover>
                 <span>{t("home.designPartner")}</span>
-                <span className="solana-btn-arrow">→</span>
               </a>
             </div>
           </div>
         </section>
 
-        {/* FULL ORIGINAL RESTORED FOOTER */}
+        {/* FULL ORIGINAL RESTORED FOOTER — BALANCED & EVEN ALIGNMENT */}
         <footer className="solana-footer page-shell">
           <div className="solana-footer-top">
             <div className="solana-footer-brand-col">

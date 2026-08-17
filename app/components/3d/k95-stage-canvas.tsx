@@ -78,18 +78,7 @@ function createCardTexture(node: OrbitNodeItem, isEn: boolean): THREE.CanvasText
     ctx.fill();
     ctx.fillStyle = "#C7FB5B";
     ctx.font = "bold 16px monospace";
-    ctx.fillText(`✓ VERIFIED DEVNET`, 48, 334);
-
-    // Arrow icon top right
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(535, 58);
-    ctx.lineTo(555, 38);
-    ctx.moveTo(535, 38);
-    ctx.lineTo(555, 38);
-    ctx.lineTo(555, 58);
-    ctx.stroke();
+    ctx.fillText(`VERIFIED DEVNET`, 48, 334);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
