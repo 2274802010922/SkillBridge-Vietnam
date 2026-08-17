@@ -4092,13 +4092,21 @@ button:hover .k95-kinetic-char .char-bot {
   color: var(--solana-text-muted);
 }
 
-/* RESTORED FULL FOOTER — BALANCED & EVEN */
+/* RESTORED FULL FOOTER — FULL BLEED EDGE-TO-EDGE */
 .solana-footer {
+  width: 100%;
   border-top: 1px solid var(--solana-border);
-  background: rgba(4, 0, 32, 0.92);
+  background: rgba(4, 0, 32, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  padding-block: 48px 36px;
+  padding-block: 56px 40px;
+  padding-inline: clamp(24px, 5vw, 80px);
+}
+
+.solana-footer-inner {
+  width: 100%;
+  max-width: 1560px;
+  margin-inline: auto;
 }
 
 .solana-footer-top {
@@ -4109,7 +4117,7 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .solana-footer-brand-col {
-  max-width: 480px;
+  max-width: 520px;
 }
 
 .solana-footer-tagline {
@@ -4138,7 +4146,7 @@ button:hover .k95-kinetic-char .char-bot {
 .solana-footer-links-grid {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
   flex-wrap: wrap;
 }
 

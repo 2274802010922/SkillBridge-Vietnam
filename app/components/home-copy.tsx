@@ -389,34 +389,36 @@ export function HomeCopy() {
           </div>
         </section>
 
-        {/* FULL ORIGINAL RESTORED FOOTER — BALANCED & EVEN ALIGNMENT */}
-        <footer className="solana-footer page-shell">
-          <div className="solana-footer-top">
-            <div className="solana-footer-brand-col">
-              <Link className="solana-wordmark" href="#top" aria-label="SkillBridge Vietnam">
-                <span className="solana-logo-badge">SB</span>
-                <span className="solana-brand-name">SkillBridge</span>
-                <span className="solana-tag">SOLANA</span>
-              </Link>
-              <p className="solana-footer-tagline">{t("home.footerTagline")}</p>
-            </div>
+        {/* FULL ORIGINAL RESTORED FOOTER — FULL BLEED EDGE-TO-EDGE */}
+        <footer className="solana-footer">
+          <div className="solana-footer-inner">
+            <div className="solana-footer-top">
+              <div className="solana-footer-brand-col">
+                <Link className="solana-wordmark" href="#top" aria-label="SkillBridge Vietnam">
+                  <span className="solana-logo-badge">SB</span>
+                  <span className="solana-brand-name">SkillBridge</span>
+                  <span className="solana-tag">SOLANA</span>
+                </Link>
+                <p className="solana-footer-tagline">{t("home.footerTagline")}</p>
+              </div>
 
-            <div className="solana-footer-links-col">
-              <span className="solana-footer-heading">{isEn ? "LEGAL & POLICIES" : "CHÍNH SÁCH & ĐIỀU KHOẢN"}</span>
-              <div className="solana-footer-links-grid">
-                <Link href="/privacy" className="solana-footer-link" data-hover>{t("home.data")}</Link>
-                <Link href="/terms" className="solana-footer-link" data-hover>{t("home.terms")}</Link>
-                <Link href="/risk" className="solana-footer-link" data-hover>{t("home.risk")}</Link>
-                <Link href="/auth" className="solana-footer-link" data-hover>{t("home.login")}</Link>
+              <div className="solana-footer-links-col">
+                <span className="solana-footer-heading">{isEn ? "LEGAL & POLICIES" : "CHÍNH SÁCH & ĐIỀU KHOẢN"}</span>
+                <div className="solana-footer-links-grid">
+                  <Link href="/privacy" className="solana-footer-link" data-hover>{t("home.data")}</Link>
+                  <Link href="/terms" className="solana-footer-link" data-hover>{t("home.terms")}</Link>
+                  <Link href="/risk" className="solana-footer-link" data-hover>{t("home.risk")}</Link>
+                  <Link href="/auth" className="solana-footer-link" data-hover>{t("home.login")}</Link>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="solana-footer-divider" />
+            <div className="solana-footer-divider" />
 
-          <div className="solana-footer-bottom">
-            <span className="solana-footer-audience">{t("home.builtFor")}</span>
-            <span className="solana-footer-copy">© 2026 SkillBridge Vietnam. Built on Solana Devnet.</span>
+            <div className="solana-footer-bottom">
+              <span className="solana-footer-audience">{t("home.builtFor")}</span>
+              <span className="solana-footer-copy">© 2026 SkillBridge Vietnam. Built on Solana Devnet.</span>
+            </div>
           </div>
         </footer>
       </main>
