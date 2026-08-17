@@ -1508,6 +1508,91 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .landing-footer { padding-block: 32px; }
 }
 
+/* Landing v4 — immersive K95-inspired hero. The proof scene is a full-bleed
+   background; product information sits above it as lightweight metadata. */
+.landing-hero-wrap { position: relative; overflow: clip; background: #1500e1; color: #fff; }
+.landing-hero-wrap .landing-header { position: sticky; top: 0; z-index: 20; width: min(1280px, calc(100% - 48px)); min-height: 78px; margin: 0 auto; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .24); border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.landing-hero-wrap .landing-header .wordmark { color: #fff; }
+.landing-hero-wrap .landing-header .wordmark-mark { background: #fff; color: #1500e1; }
+.landing-hero-wrap .landing-header nav, .landing-hero-wrap .landing-header nav a { color: rgba(255, 255, 255, .86); }
+.landing-hero-wrap .landing-header nav a::after { background: #c7fb5b; }
+.landing-hero-wrap .landing-header .header-cta { border-color: #0c0a0c; background: #c7fb5b; color: #0c0a0c; box-shadow: 3px 3px 0 #0c0a0c; }
+.landing-hero-wrap .landing-header .header-cta:hover { background: #fff; color: #0c0a0c; }
+.landing-hero-wrap .landing-header .language-switcher { border-color: rgba(255, 255, 255, .55); background: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .8); box-shadow: none; }
+.landing-hero-wrap .landing-header .language-switcher button.active { background: #fff; color: #0c0a0c; }
+.landing-hero-immersive { position: relative; width: 100%; min-height: calc(100svh - 78px); display: block; padding: 0; overflow: hidden; background: #1500e1; color: #fff; }
+.landing-hero-scene { position: absolute; inset: 0; z-index: 0; }
+.landing-hero-scene::after { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(21, 0, 225, .98) 0%, rgba(21, 0, 225, .82) 23%, rgba(21, 0, 225, .16) 58%, transparent 80%), linear-gradient(0deg, rgba(12, 10, 12, .35), transparent 28%); content: ""; pointer-events: none; }
+.landing-hero-scene .proof-constellation { width: 100%; min-height: 100%; height: 100%; border: 0; background: #1500e1; }
+.landing-hero-scene .constellation-orbit, .landing-hero-scene .constellation-crosshair { left: 66%; }
+.landing-hero-scene .constellation-center { top: 49%; left: 66%; width: clamp(190px, 19vw, 290px); height: clamp(190px, 19vw, 290px); }
+.landing-hero-scene .constellation-node { width: 178px; }
+.landing-hero-scene .node-solana { top: 10%; left: 45%; }
+.landing-hero-scene .node-vlu { top: 9%; right: 7%; }
+.landing-hero-scene .node-hackfest { right: 1%; bottom: 20%; }
+.landing-hero-scene .node-corelia { top: 48%; left: 38%; }
+.landing-hero-scene .node-usdc { bottom: 9%; left: 47%; }
+.landing-hero-scene .node-phantom { top: 48%; right: 4%; }
+.landing-hero-scene .node-solflare { right: 28%; bottom: 6%; }
+.landing-hero-inner { position: relative; z-index: 3; min-height: calc(100svh - 78px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .48fr); grid-template-rows: 1fr auto; align-items: end; gap: 34px clamp(38px, 8vw, 140px); padding-block: clamp(70px, 12vh, 130px) 28px; }
+.landing-hero-inner .landing-hero-copy { max-width: 650px; align-self: end; color: #fff; }
+.landing-hero-inner .landing-hero-copy .eyebrow { color: rgba(255, 255, 255, .82); }
+.landing-hero-inner .landing-hero-copy h1 { max-width: 680px; margin: 22px 0 28px; font-size: clamp(60px, 8.1vw, 126px); line-height: .86; letter-spacing: -.09em; text-shadow: 0 3px 30px rgba(12, 10, 12, .12); }
+.landing-hero-inner .landing-hero-copy > p { max-width: 600px; color: rgba(255, 255, 255, .86); }
+.landing-hero-inner .landing-hero-actions .text-link { border-color: #fff; color: #fff; }
+.landing-hero-inner .landing-network-note { color: rgba(255, 255, 255, .72) !important; }
+.landing-hero-proof-panel { width: min(100%, 390px); justify-self: end; align-self: end; padding: 22px; border: 1px solid rgba(255, 255, 255, .58); background: rgba(12, 10, 12, .74); box-shadow: 7px 7px 0 rgba(199, 251, 91, .9); backdrop-filter: blur(12px); }
+.landing-hero-proof-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: rgba(255, 255, 255, .68); font: 700 9px/1.2 var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
+.landing-hero-proof-header strong { color: #c7fb5b; }
+.landing-hero-proof-panel h2 { margin: 30px 0 9px; color: #fff; font-size: 30px; line-height: .98; letter-spacing: -.06em; }
+.landing-hero-proof-panel p { margin: 0; color: rgba(255, 255, 255, .7); font-size: 12px; line-height: 1.55; }
+.landing-hero-proof-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.landing-hero-proof-tags small { padding: 6px 8px; border: 1px solid rgba(255, 255, 255, .26); color: rgba(255, 255, 255, .8); font: 650 8px/1 var(--font-geist-mono); }
+.landing-hero-proof-panel .landing-stage-checks { margin-top: 18px; padding-top: 13px; border-color: rgba(255, 255, 255, .22); }
+.landing-hero-meta { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .26); color: rgba(255, 255, 255, .7); font: 700 9px/1 var(--font-geist-mono); letter-spacing: .1em; }
+.landing-hero-meta span:last-child { color: #c7fb5b; text-align: right; }
+
+@media (max-width: 1080px) {
+  .landing-hero-scene .constellation-orbit, .landing-hero-scene .constellation-crosshair, .landing-hero-scene .constellation-center { left: 61%; }
+  .landing-hero-inner { grid-template-columns: minmax(0, 1fr) minmax(260px, .44fr); gap: 30px; }
+  .landing-hero-inner .landing-hero-copy h1 { font-size: clamp(58px, 8.8vw, 94px); }
+}
+
+@media (max-width: 820px) {
+  .landing-hero-wrap .landing-header { width: min(100% - 28px, 1280px); }
+  .landing-hero-immersive { min-height: 920px; }
+  .landing-hero-scene .constellation-orbit, .landing-hero-scene .constellation-crosshair, .landing-hero-scene .constellation-center { left: 50%; }
+  .landing-hero-scene::after { background: linear-gradient(180deg, rgba(21, 0, 225, .93), rgba(21, 0, 225, .22) 57%, rgba(12, 10, 12, .44)); }
+  .landing-hero-inner { min-height: 920px; grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; align-content: end; gap: 24px; padding-block: 70px 22px; }
+  .landing-hero-inner .landing-hero-copy { max-width: 680px; }
+  .landing-hero-inner .landing-hero-copy h1 { font-size: clamp(58px, 12vw, 92px); }
+  .landing-hero-proof-panel { justify-self: start; width: min(100%, 430px); }
+  .landing-hero-meta { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .landing-hero-meta span:last-child { text-align: left; }
+  .landing-hero-scene .constellation-center { width: 190px; height: 190px; }
+  .landing-hero-scene .constellation-node { width: 148px; }
+}
+
+@media (max-width: 560px) {
+  .landing-hero-wrap .landing-header { min-height: 63px; }
+  .landing-hero-immersive, .landing-hero-inner { min-height: 900px; }
+  .landing-hero-inner { padding-block: 50px 18px; }
+  .landing-hero-inner .landing-hero-copy h1 { font-size: clamp(53px, 15.5vw, 76px); }
+  .landing-hero-inner .landing-hero-copy > p { font-size: 15px; line-height: 1.55; }
+  .landing-hero-proof-panel { padding: 18px; box-shadow: 5px 5px 0 rgba(199, 251, 91, .9); }
+  .landing-hero-proof-panel h2 { margin-top: 23px; font-size: 25px; }
+  .landing-hero-scene .proof-constellation { min-height: 100%; }
+  .landing-hero-scene .constellation-center { width: 150px; height: 150px; }
+  .landing-hero-scene .constellation-node { width: 122px; padding: 6px; }
+  .landing-hero-scene .node-solana { top: 10%; left: 4%; }
+  .landing-hero-scene .node-vlu { top: 10%; right: 4%; }
+  .landing-hero-scene .node-hackfest { right: 0; bottom: 23%; }
+  .landing-hero-scene .node-corelia { top: 43%; left: -2%; }
+  .landing-hero-scene .node-usdc { bottom: 10%; left: 2%; }
+  .landing-hero-scene .node-phantom { top: 43%; right: -2%; }
+  .landing-hero-scene .node-solflare { right: 24%; bottom: 4%; }
+}
+
 @media (max-width: 400px) {
   .landing-header .wordmark > span:not(.wordmark-mark),
   .landing-header .wordmark > small { display: none; }

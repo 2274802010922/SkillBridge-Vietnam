@@ -44,6 +44,7 @@ export function HomeCopy() {
       <a className="landing-skip-link" href="#landing-content">
         {t("home.skipContent")}
       </a>
+      <div className="landing-hero-wrap">
       <header className="site-header landing-header page-shell">
         <a className="wordmark" href="#top" aria-label="SkillBridge Vietnam">
           <span className="wordmark-mark" aria-hidden="true">S</span>
@@ -62,42 +63,32 @@ export function HomeCopy() {
         </div>
       </header>
 
-      <section className="landing-hero page-shell" id="landing-content" tabIndex={-1}>
-        <div className="landing-hero-copy">
-          <div className="eyebrow"><span /> {t("home.eyebrow")}</div>
-          <h1>{t("home.heroTitle")}</h1>
-          <p>{t("home.heroDescription")}</p>
-          <div className="landing-hero-actions">
-            <a className="button button-primary" href="/auth">{t("home.start")}</a>
-            <a className="text-link" href="#flow">{t("home.navFlow")} <span aria-hidden="true">↓</span></a>
-          </div>
-          <p className="landing-network-note"><span aria-hidden="true" /> {t("home.networkLive")}</p>
-        </div>
-
-        <div className="landing-proof-stage">
-          <div className="landing-stage-toolbar">
-            <span><i aria-hidden="true" /> {t("home.networkLive")}</span>
-            <code>PROOF ROUTE / 01</code>
-          </div>
-          <div className="landing-stage-content landing-stage-visual">
-            <ProofConstellation />
-            <div className="landing-stage-visual-footer">
-              <div className="landing-stage-brief">
-                <span>01 / {t("home.featureChallenges")}</span>
-                <h2>{t("home.featuresTitle")}</h2>
-                <p>{t("home.featureChallengesDescription")}</p>
-                <div><small>{t("status.public")}</small><small>{t("status.inviteOnly")}</small><small>{t("challenge.rewardUsdc")}</small><small>{t("challenge.rewardBadge")}</small></div>
-              </div>
-              <div className="landing-stage-card">
-                <div><span>{t("home.cardProof")}</span><strong>{t("home.cardVerified")}</strong></div>
-                <h3>{t("home.cardScore")}</h3>
-                <p>{t("home.cardChallenge")}</p>
-                <div className="landing-stage-checks"><span>{t("home.humanApproved")}</span><span>{t("home.evidenceLinked")}</span></div>
-              </div>
+      <section className="landing-hero landing-hero-immersive" id="landing-content" tabIndex={-1}>
+        <div className="landing-hero-scene" aria-hidden="true"><ProofConstellation /></div>
+        <div className="page-shell landing-hero-inner">
+          <div className="landing-hero-copy">
+            <div className="eyebrow"><span /> {t("home.eyebrow")}</div>
+            <h1>{t("home.heroTitle")}</h1>
+            <p>{t("home.heroDescription")}</p>
+            <div className="landing-hero-actions">
+              <a className="button button-primary" href="/auth">{t("home.start")}</a>
+              <a className="text-link" href="#flow">{t("home.navFlow")} <span aria-hidden="true">↓</span></a>
             </div>
+            <p className="landing-network-note"><span aria-hidden="true" /> {t("home.networkLive")}</p>
+          </div>
+          <div className="landing-hero-proof-panel">
+            <div className="landing-hero-proof-header"><span>01 / {t("home.featureChallenges")}</span><strong>{t("home.cardVerified")}</strong></div>
+            <h2>{t("home.featuresTitle")}</h2>
+            <p>{t("home.featureChallengesDescription")}</p>
+            <div className="landing-hero-proof-tags"><small>{t("status.public")}</small><small>{t("status.inviteOnly")}</small><small>{t("challenge.rewardUsdc")}</small><small>{t("challenge.rewardBadge")}</small></div>
+            <div className="landing-stage-checks"><span>{t("home.humanApproved")}</span><span>{t("home.evidenceLinked")}</span></div>
+          </div>
+          <div className="landing-hero-meta" aria-hidden="true">
+            <span>SKILLBRIDGE / VIETNAM</span><span>SOLANA DEVNET</span><span>PROOF-TO-PAYOUT</span><span>SCROLL ↓</span>
           </div>
         </div>
       </section>
+      </div>
 
       <section className="landing-signal-band" aria-label={t("home.trustArchitecture")}>
         <div className="page-shell landing-signal-grid">
