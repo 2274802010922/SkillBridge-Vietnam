@@ -8,7 +8,7 @@ interface KineticTextProps {
   staggerMs?: number;
 }
 
-export function KineticText({ text, className = "", staggerMs = 30 }: KineticTextProps) {
+export function KineticText({ text, className = "", staggerMs = 28 }: KineticTextProps) {
   const chars = Array.from(text);
 
   return (

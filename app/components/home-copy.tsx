@@ -57,131 +57,127 @@ export function HomeCopy() {
       <K95BootLoader />
       <K95Cursor />
 
+      {/* FULL-PAGE PERSISTENT 3D WEBGL BACKGROUND (Runs from top to bottom) */}
+      <K95StageCanvas isEn={isEn} />
+
       <main className="landing-home k95-landing" id="top" ref={landingRef}>
         <a className="landing-skip-link" href="#landing-content">
           {t("home.skipContent")}
         </a>
 
         {/* K95 TOPBAR / NAVBAR */}
-        <div className="landing-hero-wrap">
-          <header className="site-header landing-header page-shell k95-header">
-            <Link className="wordmark k95-wordmark" href="#top" aria-label="SkillBridge Vietnam" data-hover>
-              <span className="wordmark-mark k95-logo-badge" aria-hidden="true">SB</span>
-              <span className="k95-brand-title">SkillBridge</span>
-              <small className="k95-brand-sub">VIETNAM</small>
+        <header className="site-header landing-header page-shell k95-header">
+          <Link className="wordmark k95-wordmark" href="#top" aria-label="SkillBridge Vietnam" data-hover>
+            <span className="wordmark-mark k95-logo-badge" aria-hidden="true">SB</span>
+            <span className="k95-brand-title">SkillBridge</span>
+            <small className="k95-brand-sub">VIETNAM</small>
+          </Link>
+
+          <nav className="k95-desktop-nav" aria-label={t("home.navHow")}>
+            <a href="#product" className="k95-nav-link" data-hover>
+              <KineticText text={t("home.navProduct")} />
+            </a>
+            <a href="#flow" className="k95-nav-link" data-hover>
+              <KineticText text={t("home.navFlow")} />
+            </a>
+            <a href="#roles" className="k95-nav-link" data-hover>
+              <KineticText text={t("home.navRoles")} />
+            </a>
+            <a href="#trust" className="k95-nav-link" data-hover>
+              <KineticText text={t("home.navHow")} />
+            </a>
+          </nav>
+
+          <div className="topbar-actions k95-actions">
+            <Link className="header-cta k95-pill-cta" href="/auth" data-hover>
+              <KineticText text={t("home.login")} />
             </Link>
+            <LanguageSwitcher />
 
-            <nav className="k95-desktop-nav" aria-label={t("home.navHow")}>
-              <a href="#product" className="k95-nav-link" data-hover>
-                <KineticText text={t("home.navProduct")} />
-              </a>
-              <a href="#flow" className="k95-nav-link" data-hover>
-                <KineticText text={t("home.navFlow")} />
-              </a>
-              <a href="#roles" className="k95-nav-link" data-hover>
-                <KineticText text={t("home.navRoles")} />
-              </a>
-              <a href="#trust" className="k95-nav-link" data-hover>
-                <KineticText text={t("home.navHow")} />
-              </a>
-            </nav>
+            {/* Mobile Menu Trigger */}
+            <button
+              type="button"
+              className={`k95-mobile-menu-btn ${mobileMenuOpen ? "is-open" : ""}`}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation"
+              data-hover
+            >
+              <span className="k95-menu-icon" aria-hidden="true" />
+              <span>{mobileMenuOpen ? (isEn ? "CLOSE" : "ĐÓNG") : "MENU"}</span>
+            </button>
+          </div>
+        </header>
 
-            <div className="topbar-actions k95-actions">
-              <Link className="header-cta k95-pill-cta" href="/auth" data-hover>
-                <KineticText text={t("home.login")} />
+        {/* FULLSCREEN FROSTED MOBILE MENU */}
+        {mobileMenuOpen && (
+          <div className="k95-mobile-overlay" onClick={() => setMobileMenuOpen(false)}>
+            <nav className="k95-mobile-nav" onClick={(e) => e.stopPropagation()}>
+              <a href="#product" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                {t("home.navProduct")}
+              </a>
+              <a href="#flow" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                {t("home.navFlow")}
+              </a>
+              <a href="#roles" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                {t("home.navRoles")}
+              </a>
+              <a href="#trust" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
+                {t("home.navHow")}
+              </a>
+              <Link href="/auth" className="k95-mobile-link k95-mobile-cta" onClick={() => setMobileMenuOpen(false)}>
+                {t("home.login")} ↗
               </Link>
-              <LanguageSwitcher />
+            </nav>
+          </div>
+        )}
 
-              {/* Mobile Menu Trigger */}
-              <button
-                type="button"
-                className={`k95-mobile-menu-btn ${mobileMenuOpen ? "is-open" : ""}`}
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle navigation"
-                data-hover
-              >
-                <span className="k95-menu-icon" aria-hidden="true" />
-                <span>{mobileMenuOpen ? (isEn ? "CLOSE" : "ĐÓNG") : "MENU"}</span>
-              </button>
-            </div>
-          </header>
+        {/* K95 HERO SECTION */}
+        <section className="landing-hero landing-hero-immersive k95-hero page-shell" id="landing-content" tabIndex={-1}>
+          <div className="k95-hero-inner">
+            <div className="landing-hero-copy k95-hero-copy" data-reveal="hero-copy">
+              <div className="eyebrow k95-eyebrow">
+                <span className="k95-pulse-dot" /> {t("home.eyebrow")}
+              </div>
+              <h1 className="k95-hero-heading" data-reveal-title>
+                {t("home.heroTitle")}
+              </h1>
+              <p className="k95-hero-lead">{t("home.heroDescription")}</p>
 
-          {/* FULLSCREEN FROSTED MOBILE MENU */}
-          {mobileMenuOpen && (
-            <div className="k95-mobile-overlay" onClick={() => setMobileMenuOpen(false)}>
-              <nav className="k95-mobile-nav" onClick={(e) => e.stopPropagation()}>
-                <a href="#product" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
-                  {t("home.navProduct")}
-                </a>
-                <a href="#flow" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
-                  {t("home.navFlow")}
-                </a>
-                <a href="#roles" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
-                  {t("home.navRoles")}
-                </a>
-                <a href="#trust" className="k95-mobile-link" onClick={() => setMobileMenuOpen(false)}>
-                  {t("home.navHow")}
-                </a>
-                <Link href="/auth" className="k95-mobile-link k95-mobile-cta" onClick={() => setMobileMenuOpen(false)}>
-                  {t("home.login")} ↗
+              <div className="landing-hero-actions k95-hero-actions">
+                <Link className="button button-primary k95-btn-primary" href="/auth" data-hover>
+                  <KineticText text={t("home.start")} />
                 </Link>
-              </nav>
-            </div>
-          )}
-
-          {/* K95 HERO SECTION WITH 3D WEBGL STAGE */}
-          <section className="landing-hero landing-hero-immersive k95-hero" id="landing-content" tabIndex={-1}>
-            {/* 3D WebGL Orbit Canvas */}
-            <div className="landing-hero-scene k95-hero-scene">
-              <K95StageCanvas isEn={isEn} />
-            </div>
-
-            <div className="page-shell landing-hero-inner k95-hero-inner">
-              <div className="landing-hero-copy k95-hero-copy" data-reveal="hero-copy">
-                <div className="eyebrow k95-eyebrow">
-                  <span className="k95-pulse-dot" /> {t("home.eyebrow")}
-                </div>
-                <h1 className="k95-hero-heading" data-reveal-title>
-                  {t("home.heroTitle")}
-                </h1>
-                <p className="k95-hero-lead">{t("home.heroDescription")}</p>
-
-                <div className="landing-hero-actions k95-hero-actions">
-                  <Link className="button button-primary k95-btn-primary" href="/auth" data-hover>
-                    <KineticText text={t("home.start")} />
-                  </Link>
-                  <a className="text-link k95-link-secondary" href="#flow" data-hover>
-                    <span>{t("home.navFlow")}</span> <span aria-hidden="true">↓</span>
-                  </a>
-                </div>
-
-                <p className="landing-network-note k95-network-live">
-                  <span className="k95-live-indicator" aria-hidden="true" />
-                  {t("home.networkLive")}
-                </p>
+                <a className="text-link k95-link-secondary" href="#flow" data-hover>
+                  <span>{t("home.navFlow")}</span> <span aria-hidden="true">↓</span>
+                </a>
               </div>
 
-              <div className="landing-hero-proof-note k95-proof-badge" data-reveal="hero-note" data-reveal-delay="140">
-                <span>{t("home.cardProof")}</span>
-                <strong>{t("home.cardVerified")}</strong>
-                <small>{t("home.humanApproved")} · {t("home.evidenceLinked")}</small>
-              </div>
-
-              <div className="landing-hero-meta k95-meta-bar" data-reveal="meta" data-reveal-delay="260" aria-hidden="true">
-                <span>SKILLBRIDGE / VIETNAM</span>
-                <span>SOLANA DEVNET</span>
-                <span>PROOF-TO-PAYOUT</span>
-                <span>DRAG & SCROLL 3D ↓</span>
-              </div>
+              <p className="landing-network-note k95-network-live">
+                <span className="k95-live-indicator" aria-hidden="true" />
+                {t("home.networkLive")}
+              </p>
             </div>
-          </section>
-        </div>
+
+            <div className="landing-hero-proof-note k95-proof-badge" data-reveal="hero-note" data-reveal-delay="140">
+              <span>{t("home.cardProof")}</span>
+              <strong>{t("home.cardVerified")}</strong>
+              <small>{t("home.humanApproved")} · {t("home.evidenceLinked")}</small>
+            </div>
+
+            <div className="landing-hero-meta k95-meta-bar" data-reveal="meta" data-reveal-delay="260" aria-hidden="true">
+              <span>SKILLBRIDGE / VIETNAM</span>
+              <span>SOLANA DEVNET</span>
+              <span>PROOF-TO-PAYOUT</span>
+              <span>CUỘN TRANG ĐỂ DU HÀNH 3D ↓</span>
+            </div>
+          </div>
+        </section>
 
         {/* K95 SIGNAL BAND MARQUEE */}
         <section className="landing-signal-band k95-signal-band" aria-label={t("home.trustArchitecture")}>
           <div className="page-shell landing-signal-grid k95-signal-grid">
             {proofSignals.map(([number, titleKey, detailKey]) => (
-              <div className="landing-signal k95-signal-card" data-reveal="signal" data-reveal-delay={`${Number(number) * 55}`} key={number} data-hover>
+              <div className="landing-signal k95-signal-card" data-reveal="signal" data-reveal-delay={`${Number(number) * 60}`} key={number} data-hover>
                 <span className="k95-signal-index">[{number}]</span>
                 <div>
                   <strong>{t(titleKey)}</strong>
@@ -217,7 +213,7 @@ export function HomeCopy() {
 
           <div className="landing-problem-list k95-problem-grid">
             {problems.map(([number, roleKey, problemKey]) => (
-              <article className="k95-card" data-reveal="card" data-reveal-delay={`${Number(number) * 70}`} key={number} data-hover>
+              <article className="k95-card" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
                 <span className="k95-card-num">[{number}]</span>
                 <h3>{t(roleKey)}</h3>
                 <p>{t(problemKey)}</p>
@@ -241,7 +237,7 @@ export function HomeCopy() {
 
             <ol className="landing-flow-rail k95-flow-rail">
               {flowNodes.map(([number, titleKey, detailKey]) => (
-                <li className="k95-flow-step" data-reveal="flow" data-reveal-delay={`${Number(number) * 70}`} key={number} data-hover>
+                <li className="k95-flow-step" data-reveal="flow" data-reveal-delay={`${Number(number) * 75}`} key={number} data-hover>
                   <span className="k95-flow-index">[{number}]</span>
                   <div className="k95-flow-info">
                     <strong>{t(titleKey)}</strong>
@@ -265,7 +261,7 @@ export function HomeCopy() {
 
           <div className="landing-capability-grid k95-capability-grid" data-reveal-panel>
             {capabilityGroups.map(([number, titleKey, descriptionKey, supportingTitleKey, supportingDescriptionKey]) => (
-              <article className="k95-capability-card" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
+              <article className="k95-capability-card" data-reveal="card" data-reveal-delay={`${Number(number) * 85}`} key={number} data-hover>
                 <span className="landing-capability-index k95-cap-index">[{number}]</span>
                 <div className="landing-capability-primary">
                   <h3>{t(titleKey)}</h3>
@@ -289,7 +285,7 @@ export function HomeCopy() {
 
           <div className="landing-role-list k95-role-grid">
             {roles.map(([number, titleKey, descriptionKey, actionKey, href]) => (
-              <article className="k95-role-card" data-reveal="card" data-reveal-delay={`${Number(number) * 75}`} key={number} data-hover>
+              <article className="k95-role-card" data-reveal="card" data-reveal-delay={`${Number(number) * 80}`} key={number} data-hover>
                 <span className="k95-role-num">[{number}]</span>
                 <div className="k95-role-content">
                   <h3>{t(titleKey)}</h3>

@@ -2097,40 +2097,63 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 }
 
 /* ==========================================================================
-   STUDIO K95 CREATIVE DESIGN SYSTEM — SKILLBRIDGE VIETNAM
+   STUDIO K95 CREATIVE DESIGN SYSTEM — SKILLBRIDGE VIETNAM (v2 UPGRADE)
    ========================================================================== */
 
 :root {
   --k95-bg: #1500E1;
-  --k95-noir: #0C0A0C;
+  --k95-noir: #07060B;
+  --k95-noir-subtle: #0D0A18;
   --k95-white: #FFFFFF;
   --k95-lime: #C7FB5B;
   --k95-violet: #7B2CBF;
-  --k95-glass: hsla(0, 0%, 100%, 0.08);
-  --k95-glass-border: hsla(0, 0%, 100%, 0.18);
-  --k95-card-bg: rgba(255, 255, 255, 0.035);
+  --k95-glass: rgba(255, 255, 255, 0.08);
+  --k95-glass-border: rgba(255, 255, 255, 0.16);
+  --k95-card-bg: rgba(13, 10, 24, 0.72);
   --k95-card-border: rgba(255, 255, 255, 0.12);
-  --k95-card-hover: rgba(255, 255, 255, 0.07);
-  --k95-margin: clamp(20px, 4vw, 48px);
+  --k95-card-hover: rgba(25, 20, 48, 0.85);
+  --k95-margin: clamp(20px, 4vw, 56px);
 }
 
-/* Base K95 Dark Theme Overrides for Landing */
+/* Full-Page Persistent 3D Canvas Layer */
+.k95-persistent-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 18%, rgba(21, 0, 225, 0.26) 0%, rgba(13, 10, 26, 0.65) 50%, #07060B 95%);
+}
+
+/* Floating 3D Mode Controller */
+.k95-floating-controls {
+  position: fixed;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+/* Base Landing Page Layout */
 .k95-landing {
-  background-color: var(--k95-noir);
+  background: transparent;
   color: var(--k95-white);
   min-height: 100vh;
   position: relative;
+  z-index: 1;
   overflow-x: hidden;
-  font-feature-settings: "ss01", "cv01";
 }
 
-/* Custom Difference Cursor */
+/* Custom Difference Blend Cursor */
 .k95-custom-cursor {
   position: fixed;
   left: 0;
   top: 0;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   background-color: var(--k95-white);
   border-radius: 50%;
   pointer-events: none;
@@ -2145,8 +2168,8 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 }
 
 .k95-custom-cursor.is-hovering {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   background-color: transparent;
   border: 1.5px solid var(--k95-white);
 }
@@ -2183,18 +2206,18 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 }
 
 .k95-boot-loader__layer {
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   background: var(--k95-bg);
-  border-radius: 28px;
+  border-radius: 26px;
   display: grid;
   place-items: center;
-  box-shadow: 0 20px 40px rgba(21, 0, 225, 0.3);
+  box-shadow: 0 20px 40px rgba(21, 0, 225, 0.35);
 }
 
 .k95-boot-loader__logo {
   color: var(--k95-white);
-  font-size: 38px;
+  font-size: 36px;
   font-weight: 900;
   letter-spacing: -0.05em;
   font-family: var(--font-geist-mono), monospace;
@@ -2213,25 +2236,26 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   letter-spacing: 0.08em;
 }
 
-/* Kinetic Typography */
+/* Kinetic Typography with Safe Vietnamese Diacritic Spacing */
 .k95-kinetic-text {
   display: inline-flex;
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .k95-kinetic-char {
   display: inline-block;
-  height: 1.15em;
-  line-height: 1.15;
+  height: 1.35em;
+  line-height: 1.35;
   overflow: hidden;
   position: relative;
+  padding-top: 1px;
 }
 
 .k95-kinetic-char .char-top,
 .k95-kinetic-char .char-bot {
   display: block;
-  transition: transform 0.36s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   transition-delay: var(--stagger, 0ms);
 }
 
@@ -2256,9 +2280,9 @@ button:hover .k95-kinetic-char .char-bot {
 
 /* K95 Header */
 .k95-header {
-  background: rgba(12, 10, 12, 0.75);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: rgba(7, 6, 11, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--k95-glass-border);
   position: sticky;
   top: 0;
@@ -2278,11 +2302,12 @@ button:hover .k95-kinetic-char .char-bot {
   background: var(--k95-bg) !important;
   color: var(--k95-lime) !important;
   font-weight: 900;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-content: center;
+  font-size: 16px;
 }
 
 .k95-brand-title {
@@ -2307,9 +2332,9 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .k95-nav-link {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   text-decoration: none;
@@ -2325,18 +2350,19 @@ button:hover .k95-kinetic-char .char-bot {
   color: var(--k95-white) !important;
   border: 1px solid var(--k95-glass-border) !important;
   border-radius: 999px !important;
-  padding: 10px 22px !important;
+  padding: 10px 24px !important;
   font-size: 12px !important;
-  font-weight: 700 !important;
+  font-weight: 750 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase;
-  box-shadow: 0 4px 20px rgba(21, 0, 225, 0.4);
+  box-shadow: 0 4px 20px rgba(21, 0, 225, 0.45);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
 
 .k95-pill-cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 26px rgba(21, 0, 225, 0.6);
+  box-shadow: 0 6px 26px rgba(21, 0, 225, 0.7);
 }
 
 /* Mobile Menu Button & Overlay */
@@ -2359,9 +2385,9 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-mobile-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(12, 10, 12, 0.94);
-  backdrop-filter: blur(35px);
-  -webkit-backdrop-filter: blur(35px);
+  background: rgba(7, 6, 11, 0.96);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -2413,43 +2439,19 @@ button:hover .k95-kinetic-char .char-bot {
   .k95-mobile-menu-btn { display: inline-flex; }
 }
 
-/* 3D Stage & Canvas Layout */
-.k95-stage-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 520px;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-}
-
-.k95-stage-wrapper:active {
-  cursor: grabbing;
-}
-
-.k95-stage-controls {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 40;
-  pointer-events: auto;
-}
-
 /* Layout Switch Pill */
 .k95-layout-switch {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--k95-glass);
+  background: rgba(13, 10, 24, 0.85);
   border: 1px solid var(--k95-glass-border);
   border-radius: 999px;
   padding: 5px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   position: relative;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
 .k95-layout-switch__pill {
@@ -2458,7 +2460,7 @@ button:hover .k95-kinetic-char .char-bot {
   bottom: 5px;
   left: 5px;
   width: calc(50% - 6px);
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.24);
   border-radius: 999px;
   transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
@@ -2472,13 +2474,13 @@ button:hover .k95-kinetic-char .char-bot {
   background: transparent;
   border: 0;
   border-radius: 999px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.68);
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 10px 18px;
+  padding: 10px 20px;
   position: relative;
   z-index: 2;
   transition: color 0.2s ease;
@@ -2502,15 +2504,15 @@ button:hover .k95-kinetic-char .char-bot {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background: rgba(12, 10, 12, 0.85);
+  background: rgba(10, 8, 18, 0.92);
   border: 1px solid var(--k95-glass-border);
   border-radius: 100px;
-  padding: 10px 18px;
+  padding: 12px 20px;
   color: var(--k95-white);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
-  max-width: 320px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  max-width: 340px;
 }
 
 .k95-label-arrow {
@@ -2525,7 +2527,7 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .k95-label-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
@@ -2540,46 +2542,44 @@ button:hover .k95-kinetic-char .char-bot {
 
 .k95-label-sub {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.25;
 }
 
 .k95-label-cue {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85);
   font-family: var(--font-geist-mono), monospace;
 }
 
 /* K95 Hero Layout */
 .k95-hero {
-  min-height: 85vh;
+  min-height: 90vh;
   position: relative;
   display: flex;
   align-items: center;
-  padding: 40px 0 80px;
-}
-
-.k95-hero-scene {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: auto;
+  padding: 80px 0 100px;
 }
 
 .k95-hero-inner {
   position: relative;
   z-index: 10;
-  pointer-events: none;
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1.25fr 0.75fr;
   align-items: center;
-  gap: 40px;
+  gap: 48px;
 }
 
 .k95-hero-copy {
-  pointer-events: auto;
+  background: rgba(8, 6, 16, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  padding: 48px 44px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
 }
 
 .k95-eyebrow {
@@ -2600,7 +2600,7 @@ button:hover .k95-kinetic-char .char-bot {
   height: 8px;
   background: var(--k95-lime);
   border-radius: 50%;
-  box-shadow: 0 0 12px var(--k95-lime);
+  box-shadow: 0 0 14px var(--k95-lime);
   animation: k95Pulse 2s infinite;
 }
 
@@ -2610,9 +2610,9 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .k95-hero-heading {
-  font-size: clamp(42px, 5.5vw, 84px);
+  font-size: clamp(44px, 5.8vw, 86px);
   font-weight: 900;
-  line-height: 0.96;
+  line-height: 0.98;
   letter-spacing: -0.045em;
   color: var(--k95-white);
   margin: 0 0 24px;
@@ -2620,8 +2620,8 @@ button:hover .k95-kinetic-char .char-bot {
 
 .k95-hero-lead {
   font-size: clamp(16px, 1.8vw, 20px);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.85);
   max-width: 580px;
   margin: 0 0 32px;
 }
@@ -2636,29 +2636,30 @@ button:hover .k95-kinetic-char .char-bot {
   background: var(--k95-bg) !important;
   color: var(--k95-white) !important;
   border: 1px solid var(--k95-glass-border) !important;
-  padding: 14px 28px !important;
+  padding: 15px 30px !important;
   border-radius: 999px !important;
   font-weight: 800 !important;
   font-size: 14px !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase;
-  box-shadow: 0 8px 30px rgba(21, 0, 225, 0.5);
+  box-shadow: 0 8px 30px rgba(21, 0, 225, 0.55);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
 
 .k95-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 38px rgba(21, 0, 225, 0.7);
+  box-shadow: 0 12px 38px rgba(21, 0, 225, 0.75);
 }
 
 .k95-link-secondary {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  padding-bottom: 3px;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -2672,7 +2673,7 @@ button:hover .k95-kinetic-char .char-bot {
   align-items: center;
   gap: 8px;
   margin-top: 24px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.65);
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -2686,34 +2687,35 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .k95-proof-badge {
-  background: rgba(21, 0, 225, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(14px);
-  padding: 20px 24px;
-  border-radius: 16px;
+  background: rgba(21, 0, 225, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  backdrop-filter: blur(18px);
+  padding: 24px 28px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   width: fit-content;
   justify-self: end;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .k95-proof-badge span {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--k95-lime);
   letter-spacing: 0.12em;
 }
 
 .k95-proof-badge strong {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 900;
   color: var(--k95-white);
 }
 
 .k95-proof-badge small {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .k95-meta-bar {
@@ -2721,8 +2723,8 @@ button:hover .k95-kinetic-char .char-bot {
   display: flex;
   justify-content: space-between;
   border-top: 1px solid var(--k95-card-border);
-  padding-top: 18px;
-  color: rgba(255, 255, 255, 0.45);
+  padding-top: 20px;
+  color: rgba(255, 255, 255, 0.55);
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -2731,7 +2733,10 @@ button:hover .k95-kinetic-char .char-bot {
 @media (max-width: 960px) {
   .k95-hero-inner {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 28px;
+  }
+  .k95-hero-copy {
+    padding: 32px 24px;
   }
   .k95-proof-badge {
     justify-self: start;
@@ -2742,46 +2747,83 @@ button:hover .k95-kinetic-char .char-bot {
   }
 }
 
+/* ==========================================================================
+   SCROLL REVEAL ANIMATIONS (CHỮ XUẤT HIỆN KHI CUỘN TRANG)
+   ========================================================================== */
+
+.landing-reveal-observed {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+.landing-reveal-visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+[data-reveal-title].landing-reveal-observed {
+  clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  transition: clip-path 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.85s ease;
+}
+
+[data-reveal-title].landing-reveal-visible {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%) !important;
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+}
+
 /* K95 Signal Band Marquee */
 .k95-signal-band {
-  background: #000000;
+  background: rgba(7, 6, 11, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--k95-card-border);
   border-bottom: 1px solid var(--k95-card-border);
-  padding: 28px 0;
+  padding: 36px 0;
+  margin-block: 40px;
 }
 
 .k95-signal-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .k95-signal-card {
   background: var(--k95-card-bg);
   border: 1px solid var(--k95-card-border);
-  padding: 18px 20px;
-  border-radius: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 22px 24px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .k95-signal-card:hover {
   background: var(--k95-card-hover);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
 }
 
 .k95-signal-index {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--k95-lime);
 }
 
 .k95-signal-card strong {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--k95-white);
   letter-spacing: -0.01em;
@@ -2789,33 +2831,34 @@ button:hover .k95-kinetic-char .char-bot {
 
 .k95-signal-card small {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .k95-marquee {
   overflow: hidden;
   white-space: nowrap;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
 }
 
 .k95-marquee-content {
   display: inline-block;
   animation: k95Marquee 28s linear infinite;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.12em;
+  font-size: 13px;
+  letter-spacing: 0.14em;
 }
 
 .k95-marquee-content span {
-  margin-right: 18px;
+  margin-right: 20px;
 }
 
 .k95-marquee-content i {
   color: var(--k95-lime);
-  margin-right: 18px;
+  margin-right: 20px;
   font-style: normal;
+  font-weight: 700;
 }
 
 @keyframes k95Marquee {
@@ -2838,10 +2881,16 @@ button:hover .k95-kinetic-char .char-bot {
 /* Sections & Brutalist Cards */
 .k95-section-heading {
   margin-bottom: 48px;
+  background: rgba(8, 6, 16, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 36px 40px;
 }
 
 .k95-section-title {
-  font-size: clamp(32px, 4.2vw, 56px);
+  font-size: clamp(34px, 4.4vw, 58px);
   font-weight: 900;
   line-height: 1.04;
   letter-spacing: -0.04em;
@@ -2851,8 +2900,8 @@ button:hover .k95-kinetic-char .char-bot {
 
 .k95-section-desc {
   font-size: clamp(15px, 1.4vw, 18px);
-  color: rgba(255, 255, 255, 0.65);
-  max-width: 680px;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 720px;
   line-height: 1.6;
 }
 
@@ -2866,16 +2915,19 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-card {
   background: var(--k95-card-bg);
   border: 1px solid var(--k95-card-border);
-  padding: 36px 30px;
-  border-radius: 16px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 40px 34px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 .k95-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   background: var(--k95-card-hover);
   border-color: rgba(255, 255, 255, 0.35);
 }
@@ -2883,20 +2935,20 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-card-num {
   font-family: var(--font-geist-mono), monospace;
   color: var(--k95-lime);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .k95-card h3 {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 850;
   color: var(--k95-white);
   margin: 0;
 }
 
 .k95-card p {
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
   line-height: 1.6;
   margin: 0;
 }
@@ -2925,7 +2977,7 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-guardrails span {
   background: var(--k95-glass);
   border: 1px solid var(--k95-glass-border);
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
   font-size: 11px;
   font-family: var(--font-geist-mono), monospace;
@@ -2944,44 +2996,47 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-flow-step {
   background: var(--k95-card-bg);
   border: 1px solid var(--k95-card-border);
-  border-radius: 14px;
-  padding: 20px 24px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 16px;
+  padding: 22px 28px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
   transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 .k95-flow-step:hover {
-  transform: translateX(6px);
+  transform: translateX(8px);
   background: var(--k95-card-hover);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .k95-flow-index {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--k95-lime);
 }
 
 .k95-flow-info strong {
   display: block;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   color: var(--k95-white);
   margin-bottom: 2px;
 }
 
 .k95-flow-info small {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
 }
 
 @media (max-width: 860px) {
   .k95-flow-layout {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 36px;
   }
 }
 
@@ -2995,55 +3050,58 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-capability-card {
   background: var(--k95-card-bg);
   border: 1px solid var(--k95-card-border);
-  border-radius: 16px;
-  padding: 32px 28px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 20px;
+  padding: 36px 30px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   transition: background 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 .k95-capability-card:hover {
   background: var(--k95-card-hover);
-  transform: translateY(-4px);
+  transform: translateY(-6px);
 }
 
 .k95-cap-index {
   font-family: var(--font-geist-mono), monospace;
   color: var(--k95-lime);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .k95-capability-primary h3 {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 850;
   color: var(--k95-white);
   margin: 0 0 8px;
 }
 
 .k95-capability-primary p {
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
-  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 14px;
+  line-height: 1.55;
   margin: 0;
 }
 
 .k95-cap-support {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 18px;
 }
 
 .k95-cap-support strong {
   display: block;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--k95-lime);
   margin-bottom: 4px;
 }
 
 .k95-cap-support p {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
   margin: 0;
 }
 
@@ -3063,39 +3121,42 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-role-card {
   background: var(--k95-card-bg);
   border: 1px solid var(--k95-card-border);
-  border-radius: 16px;
-  padding: 32px 28px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 20px;
+  padding: 36px 30px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: start;
-  gap: 16px;
+  gap: 18px;
   transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 .k95-role-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   background: var(--k95-card-hover);
 }
 
 .k95-role-num {
   font-family: var(--font-geist-mono), monospace;
   color: var(--k95-lime);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .k95-role-content h3 {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 850;
   color: var(--k95-white);
   margin: 0 0 6px;
 }
 
 .k95-role-content p {
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .k95-role-arrow {
@@ -3106,8 +3167,8 @@ button:hover .k95-kinetic-char .char-bot {
   background: var(--k95-glass);
   border: 1px solid var(--k95-glass-border);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-content: center;
   transition: background 0.2s ease, transform 0.2s ease;
@@ -3128,22 +3189,25 @@ button:hover .k95-kinetic-char .char-bot {
 .k95-trust-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: 24px;
 }
 
 .k95-trust-card {
   background: var(--k95-card-bg);
   border: 1px solid var(--k95-card-border);
-  border-radius: 16px;
-  padding: 28px 24px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 20px;
+  padding: 32px 26px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 .k95-trust-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   background: var(--k95-card-hover);
 }
 
@@ -3152,31 +3216,31 @@ button:hover .k95-kinetic-char .char-bot {
   color: var(--k95-lime);
   font-family: var(--font-geist-mono), monospace;
   font-weight: 800;
-  font-size: 12px;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  font-size: 13px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: grid;
   place-content: center;
 }
 
 .k95-trust-card h3 {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 850;
   color: var(--k95-white);
   margin: 0;
 }
 
 .k95-trust-card p {
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
-  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.55;
   margin: 0;
 }
 
 .k95-trust-card small {
   color: var(--k95-lime);
-  font-size: 11px;
+  font-size: 12px;
   font-family: var(--font-geist-mono), monospace;
   margin-top: auto;
 }
@@ -3195,15 +3259,18 @@ button:hover .k95-kinetic-char .char-bot {
 
 /* Pilot Section */
 .k95-pilot {
-  background: var(--k95-bg);
-  border-radius: 24px;
-  padding: 56px 48px;
-  margin-block: 60px;
+  background: linear-gradient(135deg, rgba(21, 0, 225, 0.9) 0%, rgba(13, 8, 48, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 28px;
+  padding: 64px 56px;
+  margin-block: 80px;
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
-  gap: 40px;
+  gap: 48px;
   align-items: center;
-  box-shadow: 0 20px 60px rgba(21, 0, 225, 0.4);
+  box-shadow: 0 24px 80px rgba(21, 0, 225, 0.45);
 }
 
 .k95-pilot .k95-eyebrow {
@@ -3211,7 +3278,7 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .k95-pilot-title {
-  font-size: clamp(32px, 4vw, 52px);
+  font-size: clamp(34px, 4.2vw, 54px);
   font-weight: 900;
   color: var(--k95-white);
   line-height: 1.05;
@@ -3219,44 +3286,48 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .k95-pilot-body p {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 16px;
   line-height: 1.6;
-  margin: 0 0 24px;
+  margin: 0 0 28px;
 }
 
 .k95-btn-dark {
-  background: #000000 !important;
+  background: #07060B !important;
   color: var(--k95-white) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  padding: 14px 28px !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  padding: 16px 32px !important;
   border-radius: 999px !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   font-weight: 800 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .k95-btn-dark:hover {
-  background: #121212 !important;
+  background: #14121F !important;
   transform: translateY(-2px);
 }
 
 @media (max-width: 860px) {
   .k95-pilot {
     grid-template-columns: 1fr;
-    padding: 36px 24px;
+    padding: 40px 28px;
   }
 }
 
 /* K95 Footer Bar */
 .k95-footer {
   border-top: 1px solid var(--k95-card-border);
-  padding: 32px 0 48px;
+  background: rgba(7, 6, 11, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 36px 0 54px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
   font-family: var(--font-geist-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.08em;
@@ -3267,7 +3338,7 @@ button:hover .k95-kinetic-char .char-bot {
 }
 
 .k95-dim {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .k95-footer-link {
@@ -3279,7 +3350,7 @@ button:hover .k95-kinetic-char .char-bot {
 @media (max-width: 768px) {
   .k95-footer {
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
     text-align: center;
   }
 }

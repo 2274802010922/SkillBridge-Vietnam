@@ -6,12 +6,12 @@ import { LanguageProvider } from "./components/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
 });
 
 const title = "Bài làm tốt không nên biến mất.";
