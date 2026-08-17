@@ -1,14 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { useLanguage } from "./i18n";
 
 const orbitItems = [
-  { className: "node-solana", label: "SOLANA", detailKey: "home.visualOrbitSolana", media: "solana" },
-  { className: "node-vlu", label: "VLU", detailKey: "home.visualOrbitVlu", media: "vlu" },
-  { className: "node-hackfest", label: "UNIHACKFEST", detailKey: "home.visualOrbitHackfest", media: "hackfest" },
-  { className: "node-evidence", label: "EVIDENCE", detailKey: "home.visualOrbitEvidence", media: "evidence" },
-  { className: "node-credential", label: "CREDENTIAL", detailKey: "home.visualOrbitCredential", media: "credential" },
-  { className: "node-usdc", label: "USDC", detailKey: "home.visualOrbitUsdc", media: "usdc" },
+  { className: "node-solana", label: "SOLANA", detailKey: "home.visualOrbitSolana", media: "solana", asset: "/brands/solana-wordmark.png", fit: "contain" },
+  { className: "node-vlu", label: "VLU", detailKey: "home.visualOrbitVlu", media: "vlu", asset: "/brands/vlu-wordmark.jpg", fit: "contain" },
+  { className: "node-hackfest", label: "UNIHACKFEST", detailKey: "home.visualOrbitHackfest", media: "hackfest", asset: "/brands/unihackfest-wordmark.png", fit: "contain" },
+  { className: "node-corelia", label: "CORELIA", detailKey: "home.visualOrbitCorelia", media: "corelia", asset: "/brands/corelia-academy.png", fit: "cover" },
+  { className: "node-usdc", label: "USDC", detailKey: "home.visualOrbitUsdc", media: "usdc", asset: "/brands/usdc-symbol.png", fit: "contain" },
+  { className: "node-phantom", label: "PHANTOM", detailKey: "home.visualOrbitPhantom", media: "phantom", asset: "/brands/phantom.svg", fit: "contain" },
+  { className: "node-solflare", label: "SOLFLARE", detailKey: "home.visualOrbitSolflare", media: "solflare", asset: "/brands/solflare.svg", fit: "contain" },
 ] as const;
 
 export function ProofConstellation() {
@@ -45,7 +47,7 @@ export function ProofConstellation() {
       {orbitItems.map((item) => (
         <div className={`constellation-node ${item.className}`} key={item.label}>
           <div className={`constellation-node-media media-${item.media}`} aria-hidden="true">
-            <span>{item.media === "solana" ? "≋" : item.media === "vlu" ? "V" : item.media === "hackfest" ? "01" : item.media === "evidence" ? "⌁" : item.media === "credential" ? "✓" : "$"}</span>
+            <Image src={item.asset} alt="" fill sizes="48px" className={`constellation-node-image image-${item.fit}`} />
           </div>
           <div>
             <strong>{item.label}</strong>

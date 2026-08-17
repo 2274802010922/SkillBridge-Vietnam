@@ -1302,24 +1302,29 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
 .constellation-center strong { z-index: 1; margin-top: -2px; color: var(--landing-lime); font: 800 20px/1 var(--font-geist-mono); letter-spacing: -.08em; }
 .constellation-node { position: absolute; z-index: 3; display: flex; align-items: center; gap: 9px; width: 154px; padding: 8px 9px 8px 8px; border: 1px solid rgba(255, 255, 255, .42); background: rgba(12, 10, 12, .76); box-shadow: 4px 4px 0 rgba(12, 10, 12, .22); backdrop-filter: blur(9px); transition: transform .22s ease, background .22s ease; }
 .constellation-node:hover { background: #ffffff; color: var(--landing-ink); transform: translateY(-4px) rotate(-1deg); }
-.constellation-node-media { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .56); background: rgba(255, 255, 255, .1); color: white; font: 800 12px/1 var(--font-geist-mono); }
+.constellation-node-media { position: relative; width: 34px; height: 34px; flex: 0 0 auto; overflow: hidden; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .56); background: rgba(255, 255, 255, .1); color: white; font: 800 12px/1 var(--font-geist-mono); }
+.constellation-node-image { padding: 4px; }
+.constellation-node-image.image-contain { object-fit: contain; }
+.constellation-node-image.image-cover { object-fit: cover; }
 .constellation-node:hover .constellation-node-media { border-color: var(--landing-ink); color: var(--landing-ink); }
 .constellation-node strong, .constellation-node small { display: block; }
 .constellation-node strong { font: 800 8px/1.1 var(--font-geist-mono); letter-spacing: .08em; }
 .constellation-node small { max-width: 96px; margin-top: 5px; color: rgba(255, 255, 255, .7); font-size: 9px; line-height: 1.2; }
 .constellation-node:hover small { color: var(--landing-muted); }
-.media-solana { background: linear-gradient(135deg, #9945ff, #14f195); }
-.media-vlu { background: var(--landing-lime); color: var(--landing-ink); }
-.media-hackfest { background: var(--landing-coral); }
-.media-evidence { background: #ffffff; color: var(--landing-violet); }
-.media-credential { background: #b7b1ff; color: var(--landing-ink); }
+.media-solana { background: #ffffff; }
+.media-vlu { background: #ffffff; }
+.media-hackfest { background: #ffffff; }
+.media-corelia { width: 40px; height: 40px; border-color: rgba(255, 255, 255, .74); background: #111321; }
 .media-usdc { background: #2775ca; }
+.media-phantom { background: #ab9ff2; }
+.media-solflare { background: #ffef46; }
 .node-solana { top: 10%; left: 10%; transform: rotate(-5deg); }
 .node-vlu { top: 8%; right: 9%; transform: rotate(4deg); }
 .node-hackfest { right: 2%; bottom: 18%; transform: rotate(-3deg); }
-.node-evidence { bottom: 7%; left: 11%; transform: rotate(3deg); }
-.node-credential { top: 47%; left: 1%; transform: translateY(-50%) rotate(-4deg); }
-.node-usdc { top: 48%; right: 1%; transform: translateY(-50%) rotate(4deg); }
+.node-corelia { top: 47%; left: 1%; transform: translateY(-50%) rotate(-4deg); }
+.node-usdc { bottom: 7%; left: 11%; transform: rotate(3deg); }
+.node-phantom { top: 48%; right: 1%; transform: translateY(-50%) rotate(4deg); }
+.node-solflare { right: 30%; bottom: 6%; transform: rotate(-3deg); }
 .constellation-coordinate { position: absolute; z-index: 2; color: rgba(255, 255, 255, .58); font: 700 8px/1 var(--font-geist-mono); letter-spacing: .1em; }
 .coordinate-top { top: 16px; left: 18px; }
 .coordinate-bottom { right: 18px; bottom: 16px; }
@@ -1466,9 +1471,10 @@ body { background: radial-gradient(circle at 92% 1%, rgba(146, 119, 255, .15), t
   .node-solana { top: 8%; left: 3%; }
   .node-vlu { top: 8%; right: 3%; }
   .node-hackfest { right: 1%; bottom: 15%; }
-  .node-evidence { bottom: 5%; left: 3%; }
-  .node-credential { top: 48%; left: -2%; }
-  .node-usdc { top: 48%; right: -2%; }
+  .node-corelia { top: 48%; left: -2%; }
+  .node-usdc { bottom: 5%; left: 3%; }
+  .node-phantom { top: 48%; right: -2%; }
+  .node-solflare { right: 26%; bottom: 4%; }
   .constellation-center { width: 145px; height: 145px; }
   .constellation-center span { margin-top: 72px; font-size: 6px; }
   .constellation-center strong { font-size: 17px; }
