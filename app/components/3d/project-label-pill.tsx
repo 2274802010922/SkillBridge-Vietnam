@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import type { OrbitNodeItem } from "./orbit-card-data";
 
 interface ProjectLabelPillProps {

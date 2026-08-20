@@ -15,9 +15,11 @@ export function K95BootLoader({ onComplete }: BootLoaderProps) {
     // Check if user already visited or prefers reduced motion
     const hasBooted = sessionStorage.getItem("skillbridge_booted");
     if (hasBooted) {
-      setIsDone(true);
-      onComplete?.();
-      return;
+      const completionTimer = window.setTimeout(() => {
+        setIsDone(true);
+        onComplete?.();
+      }, 0);
+      return () => window.clearTimeout(completionTimer);
     }
 
     let progress = 0;

@@ -48,12 +48,12 @@ test("server-renders the SkillBridge product page", async () => {
   const html = await response.text();
   assert.match(html, /SkillBridge Vietnam/i);
   assert.match(html, /Bài làm tốt/i);
-  assert.match(html, /LUỒNG PROOF-TO-PAYOUT/i);
+  assert.match(html, /solana-hero-title/i);
+  assert.match(html, /solana-flow-list/i);
   assert.match(html, /AI tùy chọn/i);
-  assert.match(html, /AI chỉ là trợ lý tùy chọn theo rubric/i);
-  assert.match(html, /landing-capabilities/i);
+  assert.match(html, /k95-persistent-canvas/i);
+  assert.match(html, /solana-mobile-menu-btn/i);
   assert.match(html, /data-reveal-title/i);
-  assert.match(html, /data-reveal-panel/i);
   assert.doesNotMatch(html, /data-reveal="(?:title|panel)"/i);
   assert.doesNotMatch(html, /Luồng tương tác mẫu|Interactive vertical slice|demo-section/i);
   assert.match(html, /language-switcher/i);

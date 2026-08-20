@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 export type LayoutMode = "rings" | "spiral";
 
 interface LayoutSwitchProps {

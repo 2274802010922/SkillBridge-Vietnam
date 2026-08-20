@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ORBIT_NODES, type OrbitNodeItem } from "./orbit-card-data";
 import { ProjectLabelPill } from "./project-label-pill";
@@ -93,7 +93,10 @@ export function K95StageCanvas({ isEn = false, layoutMode = "rings" }: K95StageC
   const [showPill, setShowPill] = useState(false);
 
   const modeRef = useRef<LayoutMode>(layoutMode);
-  modeRef.current = layoutMode;
+
+  useEffect(() => {
+    modeRef.current = layoutMode;
+  }, [layoutMode]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -113,8 +116,9 @@ export function K95StageCanvas({ isEn = false, layoutMode = "rings" }: K95StageC
     camera.position.set(0, 0, 13.5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    const pixelRatio = () => Math.min(window.devicePixelRatio, window.matchMedia("(max-width: 768px)").matches ? 1.5 : 2);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(pixelRatio());
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(renderer.domElement);
 
@@ -386,17 +390,18 @@ export function K95StageCanvas({ isEn = false, layoutMode = "rings" }: K95StageC
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(pixelRatio());
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
     window.addEventListener("resize", handleResize);
 
     // --- ANIMATION LOOP (K95 PERFECT CAROUSEL RING) ---
     let animId: number;
-    let clock = new THREE.Clock();
+    const animationStart = performance.now();
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      const elapsedTime = (performance.now() - animationStart) / 1000;
 
       // Smooth scroll interpolation
       currentScrollProgress += (targetScrollProgress - currentScrollProgress) * 0.07;

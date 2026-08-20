@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { LanguageSwitcher, useLanguage } from "./i18n";
 import { K95StageCanvas } from "./3d/k95-stage-canvas";
@@ -104,30 +104,43 @@ export function HomeCopy() {
                 <K95LayoutSwitch mode={layoutMode} onChange={setLayoutMode} isEn={isEn} />
               </div>
 
-              <LanguageSwitcher />
-
               <Link className="solana-btn-pill-primary" href="/auth" data-hover>
                 <span>{t("home.login")}</span>
               </Link>
 
-              {/* Mobile Menu Trigger */}
               <button
                 type="button"
                 className={`solana-mobile-menu-btn ${mobileMenuOpen ? "is-open" : ""}`}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle navigation"
+                aria-label={t(mobileMenuOpen ? "home.menuClose" : "home.menuOpen")}
+                aria-controls="solana-mobile-navigation"
+                aria-expanded={mobileMenuOpen}
                 data-hover
               >
-                <span>{mobileMenuOpen ? "✕" : "☰"}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  {mobileMenuOpen ? (
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  ) : (
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                  )}
+                </svg>
               </button>
+
+              <LanguageSwitcher />
             </div>
           </div>
         </header>
 
         {/* MOBILE MENU FULLSCREEN DRAWER */}
         {mobileMenuOpen && (
-          <div className="solana-mobile-overlay" onClick={() => setMobileMenuOpen(false)}>
-            <nav className="solana-mobile-nav" onClick={(e) => e.stopPropagation()}>
+          <div className="solana-mobile-overlay" role="dialog" aria-modal="true" aria-label={t("home.mobileNavigation")}>
+            <button
+              type="button"
+              className="solana-mobile-overlay__backdrop"
+              aria-label={t("home.menuClose")}
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <nav className="solana-mobile-nav" id="solana-mobile-navigation" aria-label={t("home.mobileNavigation")}>
               <div className="solana-mobile-3d-row">
                 <K95LayoutSwitch mode={layoutMode} onChange={setLayoutMode} isEn={isEn} />
               </div>
