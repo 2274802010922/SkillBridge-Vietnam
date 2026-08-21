@@ -15,6 +15,7 @@ import {
 import { ensureCoreSchema } from "../../../../lib/core-schema";
 import { auditStatement } from "../../../../lib/audit";
 import { consumeRateLimit, requestClientIdentity } from "../../../../lib/rate-limit";
+import { createAuthenticationSignInInput } from "../../../../lib/siws";
 
 type NonceRow = {
   id: string;
@@ -22,7 +23,6 @@ type NonceRow = {
   wallet_address: string;
   domain: string;
   uri: string;
-  chain_id: string;
   statement: string;
   request_id: string;
   issued_at: string;
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     const nonce = await env.DB.prepare(`
-      SELECT id, nonce, wallet_address, domain, uri, chain_id, statement,
+      SELECT id, nonce, wallet_address, domain, uri, statement,
         request_id, issued_at, expires_at, used_at
       FROM auth_nonces WHERE id = ?
     `).bind(challengeId).first<NonceRow>();
@@ -60,19 +60,17 @@ export async function POST(request: Request) {
     }
 
     const publicKey = bs58.decode(address);
-    const input: SolanaSignInInput = {
+    const input: SolanaSignInInput = createAuthenticationSignInInput({
       domain: nonce.domain,
       address,
       statement: nonce.statement,
       uri: nonce.uri,
-      version: "1",
-      chainId: nonce.chain_id,
       nonce: nonce.nonce,
       issuedAt: nonce.issued_at,
       expirationTime: nonce.expires_at,
       requestId: nonce.request_id,
       resources: [`${nonce.uri}/terms`, `${nonce.uri}/privacy`],
-    };
+    });
     const output: SolanaSignInOutput = {
       account: {
         address,

@@ -3,6 +3,7 @@ import { ensureCoreSchema } from "../../../../lib/core-schema";
 import { assertSameOrigin, jsonError, validSolanaAddress } from "../../../../lib/auth";
 import { randomAlphanumericToken } from "../../../../lib/random-token";
 import { consumeRateLimit, requestClientIdentity } from "../../../../lib/rate-limit";
+import { createAuthenticationSignInInput, PRODUCT_CHAIN } from "../../../../lib/siws";
 
 // Phantom validates this field against the SIWS ABNF, which permits URI-safe ASCII only.
 const STATEMENT = "Sign in to SkillBridge Vietnam to manage challenges, skill evidence, and credentials.";
@@ -22,19 +23,17 @@ export async function POST(request: Request) {
     const issuedAt = new Date();
     const expirationTime = new Date(issuedAt.getTime() + 5 * 60 * 1000);
     const id = crypto.randomUUID();
-    const input = {
+    const input = createAuthenticationSignInInput({
       domain: url.host,
       address,
       statement: STATEMENT,
       uri: url.origin,
-      version: "1",
-      chainId: "solana:devnet",
       nonce: randomAlphanumericToken(24),
       issuedAt: issuedAt.toISOString(),
       expirationTime: expirationTime.toISOString(),
       requestId: id,
       resources: [`${url.origin}/terms`, `${url.origin}/privacy`],
-    } as const;
+    });
 
     await env.DB.batch([
       env.DB.prepare(`
@@ -47,7 +46,7 @@ export async function POST(request: Request) {
         input.address,
         input.domain,
         input.uri,
-        input.chainId,
+        PRODUCT_CHAIN,
         input.statement,
         input.requestId,
         input.issuedAt,
