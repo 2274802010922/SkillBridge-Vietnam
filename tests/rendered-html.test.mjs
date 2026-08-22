@@ -69,6 +69,22 @@ test("server-renders the three-role end-to-end sandbox", async () => {
   assert.match(html, /role-workspace/i);
 });
 
+test("keeps the authenticated workspace responsive without removing language access", async () => {
+  const [header, styles] = await Promise.all([
+    readFile(new URL("../app/components/app-header.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(header, /mobile-workspace-navigation/);
+  assert.match(header, /aria-expanded=\{workspaceMenuOpen\}/);
+  assert.match(header, /LanguageSwitcher/);
+  assert.match(styles, /@media \(max-width: 1023px\)/);
+  assert.match(styles, /\.app-sidebar\s*\{\s*display: none;/);
+  assert.match(styles, /\.challenge-builder,/);
+  assert.match(styles, /@media \(max-width: 767px\)/);
+  assert.match(styles, /\.mobile-workspace-navigation\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/);
+});
+
 test("removes temporary starter metadata and dependencies", async () => {
   const [page, layout, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

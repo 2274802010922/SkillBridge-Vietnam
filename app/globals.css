@@ -4347,3 +4347,306 @@ button:hover .k95-kinetic-char .char-bot {
     display: none;
   }
 }
+
+/* Responsive workspace: the product app uses a compact drawer below desktop,
+   while the landing page keeps its independent responsive system above. */
+.mobile-workspace-trigger,
+.mobile-workspace-navigation {
+  display: none;
+}
+
+.app-layout > *,
+.workspace-product-content,
+.app-content,
+.app-panel,
+.challenge-builder > *,
+.opportunity-builder > *,
+.invoice-builder > *,
+.submission-layout > *,
+.review-layout > * {
+  min-width: 0;
+}
+
+.app-welcome p,
+.app-panel p,
+.review-brief,
+.challenge-card p,
+.opportunity-list p,
+.passport-card p,
+.invoice-card h2,
+.payout-card h2,
+.audit-list strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1023px) {
+  .app-topbar {
+    position: relative;
+  }
+
+  .app-layout {
+    display: block;
+    padding-top: 30px;
+  }
+
+  .app-sidebar {
+    display: none;
+  }
+
+  .mobile-workspace-trigger {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 11px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .78);
+    color: var(--ink);
+    cursor: pointer;
+    font: 700 10px/1 var(--font-geist-mono);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    touch-action: manipulation;
+    transition: border-color .18s ease, background .18s ease, transform .18s ease;
+  }
+
+  .mobile-workspace-trigger:hover,
+  .mobile-workspace-trigger[aria-expanded="true"] {
+    border-color: var(--ink);
+    background: white;
+    transform: translateY(-1px);
+  }
+
+  .mobile-workspace-trigger svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+  }
+
+  .mobile-workspace-trigger:focus-visible,
+  .mobile-workspace-navigation a:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+  }
+
+  .mobile-workspace-navigation {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    left: 0;
+    z-index: 100;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid rgba(8, 17, 31, .18);
+    border-radius: 18px;
+    background: rgba(255, 254, 250, .98);
+    box-shadow: var(--shadow-float);
+    backdrop-filter: blur(18px);
+  }
+
+  .mobile-workspace-navigation a {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    padding: 11px 13px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+    transition: border-color .18s ease, background .18s ease, color .18s ease;
+  }
+
+  .mobile-workspace-navigation a:hover,
+  .mobile-workspace-navigation a.active {
+    border-color: var(--ink);
+    background: white;
+    color: var(--ink);
+    box-shadow: 2px 2px 0 var(--lime);
+  }
+
+  .app-welcome,
+  .onboarding-panel,
+  .invitation-panel,
+  .challenge-builder,
+  .submission-layout,
+  .review-layout,
+  .opportunity-builder,
+  .invoice-builder,
+  .review-assessment-columns,
+  .review-path-choice {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-welcome {
+    gap: 22px;
+  }
+
+  .identity-card {
+    max-width: none;
+  }
+
+  .submission-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .submission-list button {
+    min-width: 0;
+  }
+
+  .invoice-list,
+  .payout-list,
+  .challenge-list,
+  .opportunity-list,
+  .passport-grid,
+  .talent-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .app-topbar {
+    min-height: 68px;
+    padding-inline: 10px;
+  }
+
+  .app-topbar .wordmark > span:not(.wordmark-mark),
+  .app-topbar .wordmark small {
+    display: none;
+  }
+
+  .app-topbar .wordmark {
+    gap: 0;
+  }
+
+  .topbar-actions {
+    gap: 7px;
+  }
+
+  .mobile-workspace-trigger {
+    width: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .mobile-workspace-trigger span {
+    display: none;
+  }
+
+  .mobile-workspace-navigation {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: min(70dvh, 560px);
+    overflow-y: auto;
+  }
+
+  .app-layout {
+    width: min(100% - 28px, 1240px);
+    padding-block: 24px 60px;
+  }
+
+  .app-panel,
+  .invoice-card,
+  .payout-card,
+  .challenge-card,
+  .opportunity-list > article,
+  .passport-card {
+    padding: 22px 18px;
+  }
+
+  .dashboard-grid,
+  .challenge-list,
+  .opportunity-list,
+  .passport-grid,
+  .invoice-list,
+  .payout-list,
+  .talent-grid,
+  .submission-list,
+  .invoice-form-grid,
+  .evidence-input {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inline-form,
+  .invoice-toolbar,
+  .invoice-verify,
+  .payout-verify,
+  .file-list article,
+  .submission-actions,
+  .review-decisions,
+  .chain-actions,
+  .passport-links {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .file-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .file-actions > a,
+  .file-actions > button,
+  .submission-actions > .button,
+  .review-decisions > button,
+  .chain-actions > a,
+  .passport-links > a {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .assessment-summary,
+  .invoice-card dl,
+  .payout-card dl,
+  .opportunity-list dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .review-rubric > article > div,
+  .entity-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .file-preview iframe {
+    height: min(62dvh, 440px);
+  }
+}
+
+@media (max-width: 480px) {
+  .wallet-address {
+    display: none;
+  }
+
+  .wallet-pill {
+    gap: 7px;
+    padding-left: 10px;
+  }
+
+  .wallet-pill button {
+    min-height: 38px;
+    padding-inline: 9px;
+  }
+
+  .language-switcher button {
+    min-width: 25px;
+    padding-inline: 6px;
+  }
+
+  .app-welcome h1 {
+    font-size: clamp(36px, 11vw, 48px);
+  }
+
+  .metric-number,
+  .invoice-amount strong,
+  .payout-amount strong {
+    font-size: 40px;
+  }
+}
