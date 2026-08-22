@@ -16,7 +16,12 @@ export function InvoicePayment({ invoice, mint }: { invoice: Invoice; mint: stri
   async function confirmPayment(signature: string) {
     const response = await fetch(`/api/invoices/${invoice.id}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signature }) });
     const data = await response.json() as { error?: string };
-    setNotice(response.ok ? t("invoice.verified") : data.error ?? t("invoice.error"));
+    if (!response.ok) {
+      const message = data.error ?? t("invoice.error");
+      setNotice(message);
+      throw new Error(message);
+    }
+    setNotice(t("invoice.verified"));
   }
   return <main className="invoice-public-page"><header className="auth-header page-shell"><Link className="wordmark" href="/"><span className="wordmark-mark">S</span><span>SkillBridge</span><small>VIETNAM</small></Link><div className="topbar-actions"><LanguageSwitcher /><Link className="text-link" href="/">{t("common.home")}</Link></div></header><section className="invoice-public-shell page-shell"><div className="invoice-public-copy"><span className="eyebrow"><span />{t("invoice.kicker")}</span><h1>{t("invoice.publicTitle")}</h1><p>{t("invoice.publicDescription")}</p><div className="invoice-devnet-notice">{t("invoice.devnetNotice")}</div></div><article className="invoice-public-card"><div className="entity-top"><span>{invoice.client_name}</span><b>{invoice.status === "paid" ? t("invoice.paid") : t("invoice.sent")}</b></div><h2>{invoice.description}</h2><div className="invoice-public-amount"><strong>{invoice.amount_usdc}</strong><span>USDC</span><small>≈ {invoice.fiat_amount} {invoice.fiat_currency}</small></div><dl><div><dt>{t("invoice.reference")}</dt><dd>{invoice.payment_reference}</dd></div><div><dt>{t("invoice.recipient")}</dt><dd><code>{invoice.recipient_wallet}</code></dd></div></dl><div className="invoice-public-actions"><WalletPaymentButton invoiceId={invoice.id} onSubmitted={confirmPayment} label={t("invoice.payInPage")} /><a className="button button-secondary" href={payUri}>{t("invoice.openWallet")}</a><button className="button button-dark" onClick={() => void copy(invoice.recipient_wallet)}>{t("invoice.copyRecipient")}</button><button className="button button-secondary" onClick={() => void copy(payUri)}>{t("invoice.copyUri")}</button></div><p className="invoice-public-footnote">{t("invoice.publicFootnote")}</p></article></section>{notice && <p className="app-notice invoice-public-notice" role="status">{notice}</p>}</main>;
 }

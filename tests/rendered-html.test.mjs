@@ -100,6 +100,22 @@ test("keeps the product navigation role-first and exposes a unified payment hub"
   assert.match(payments, /payments\.challengeTitle/);
 });
 
+test("supports Wallet Standard sign-and-send and sign-only Devnet payment flows", async () => {
+  const [paymentButton, relayRoute, invoiceRoute] = await Promise.all([
+    readFile(new URL("../app/components/wallet-payment-button.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/solana/send/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/invoices/[id]/route.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(paymentButton, /SolanaSignAndSendTransaction/);
+  assert.match(paymentButton, /SolanaSignTransaction/);
+  assert.match(paymentButton, /solana:devnet/);
+  assert.match(paymentButton, /\/api\/solana\/send/);
+  assert.match(relayRoute, /method: "sendTransaction"/);
+  assert.match(relayRoute, /preflightCommitment: "confirmed"/);
+  assert.match(invoiceRoute, /getSessionUser/);
+  assert.match(invoiceRoute, /publicPayer/);
+});
+
 test("removes temporary starter metadata and dependencies", async () => {
   const [page, layout, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

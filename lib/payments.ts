@@ -72,15 +72,25 @@ export async function verifyUsdcPayment(input: {
   if (!/^[1-9A-HJ-NP-Za-km-z]{32,100}$/.test(input.signature)) throw new Error("Transaction signature không hợp lệ.");
   if (!validSolanaAddress(input.recipientWallet)) throw new Error("Ví nhận không hợp lệ.");
   const expected = BigInt(input.expectedAtomic);
-  const response = await fetch(input.rpcUrl || "https://api.devnet.solana.com", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getTransaction", params: [input.signature, { commitment: "confirmed", encoding: "jsonParsed", maxSupportedTransactionVersion: 0 }] }),
-  });
-  if (!response.ok) throw new Error("Solana RPC không phản hồi.");
-  const payload = await response.json() as { result?: RpcTransaction | null; error?: { message?: string } };
-  if (payload.error) throw new Error(payload.error.message ?? "Không thể đọc giao dịch trên Solana.");
-  const transaction = payload.result;
+  let transaction: RpcTransaction | null = null;
+  let lastRpcError: string | null = null;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const response = await fetch(input.rpcUrl || "https://api.devnet.solana.com", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getTransaction", params: [input.signature, { commitment: "confirmed", encoding: "jsonParsed", maxSupportedTransactionVersion: 0 }] }),
+    });
+    if (!response.ok) throw new Error("Solana RPC không phản hồi.");
+    const payload = await response.json() as { result?: RpcTransaction | null; error?: { message?: string } };
+    if (payload.error) {
+      lastRpcError = payload.error.message ?? "Không thể đọc giao dịch trên Solana.";
+    } else if (payload.result) {
+      transaction = payload.result;
+      break;
+    }
+    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
+  }
+  if (lastRpcError && !transaction) throw new Error(lastRpcError);
   if (!transaction?.meta || transaction.meta.err) throw new Error("Giao dịch chưa thành công hoặc chưa được xác nhận.");
   const mint = input.mint || DEFAULT_USDC_DEVNET_MINT;
   if (input.expectedReference) {

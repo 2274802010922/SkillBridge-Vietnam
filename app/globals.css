@@ -158,6 +158,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .next-action strong { max-width: 420px; margin-top: 6px; color: var(--ink-soft); font-size: 10px; line-height: 1.45; }
 .revoked-action small { color: #b33939; }
 .demo-error { margin: 12px 0 0; color: #a12828; font-size: 11px; }
+.wallet-payment-status { margin: 10px 0 0; color: var(--muted); font: 600 10px/1.45 var(--font-geist-mono); }
+.wallet-payment-control select { width: 100%; margin-bottom: 9px; }
 
 .proof-panel { padding: 25px; background: #eef0f3; }
 .proof-panel-label { margin-bottom: 13px; color: var(--muted); font: 650 9px/1 var(--font-geist-mono); letter-spacing: .1em; }

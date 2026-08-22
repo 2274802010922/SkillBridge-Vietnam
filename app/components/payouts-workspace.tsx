@@ -22,7 +22,14 @@ export function PayoutsWorkspace() {
   }
   async function payInPage(item: Payout, signature: string) {
     const response = await fetch("/api/payouts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ submissionId: item.submission_id, signature }) });
-    const data = await response.json() as { error?: string }; setNotice(response.ok ? t("payout.verified") : data.error ?? t("invoice.error")); if (response.ok) await load();
+    const data = await response.json() as { error?: string };
+    if (!response.ok) {
+      const message = data.error ?? t("invoice.error");
+      setNotice(message);
+      throw new Error(message);
+    }
+    setNotice(t("payout.verified"));
+    await load();
   }
   const paidCount = useMemo(() => items.filter((item) => item.payout_status === "paid").length, [items]);
   return <div className="workspace-product-content">
