@@ -14,6 +14,9 @@ export type RuntimeEnvironment = Cloudflare.Env & {
   AI_CHUNK_OVERLAP_TOKENS?: string;
   AI_DAILY_LIMIT_PER_REVIEWER?: string;
   SOLANA_USDC_MINT: string;
+  SOLANA_REWARD_VAULT_SECRET?: string;
+  CHALLENGE_BADGE_BOND_SOL?: string;
+  CASHOUT_SANDBOX_VND_RATE?: string;
 };
 
 export const env = {
@@ -36,5 +39,8 @@ export const env = {
   get SOLANA_FEE_PAYER_SECRET() { return process.env.SOLANA_FEE_PAYER_SECRET; },
   get SOLANA_ISSUER_SECRET() { return process.env.SOLANA_ISSUER_SECRET; },
   get SOLANA_AUTHORIZED_SIGNER_SECRET() { return process.env.SOLANA_AUTHORIZED_SIGNER_SECRET; },
+  get SOLANA_REWARD_VAULT_SECRET() { return process.env.SOLANA_REWARD_VAULT_SECRET; },
+  get CHALLENGE_BADGE_BOND_SOL() { return process.env.CHALLENGE_BADGE_BOND_SOL; },
+  get CASHOUT_SANDBOX_VND_RATE() { return process.env.CASHOUT_SANDBOX_VND_RATE; },
   get SOLANA_USDC_MINT() { return process.env.SOLANA_USDC_MINT || "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"; },
 } as RuntimeEnvironment;

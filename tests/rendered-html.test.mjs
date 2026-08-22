@@ -51,13 +51,24 @@ test("server-renders the SkillBridge product page", async () => {
   assert.match(html, /solana-hero-title/i);
   assert.match(html, /solana-flow-list/i);
   assert.match(html, /AI tùy chọn/i);
-  assert.match(html, /k95-persistent-canvas/i);
   assert.match(html, /solana-mobile-menu-btn/i);
-  assert.match(html, /data-reveal-title/i);
+  assert.match(html, /solana-hero-proof/i);
+  assert.doesNotMatch(html, /k95-persistent-canvas|3D View Mode/i);
   assert.doesNotMatch(html, /data-reveal="(?:title|panel)"/i);
   assert.doesNotMatch(html, /Luồng tương tác mẫu|Interactive vertical slice|demo-section/i);
   assert.match(html, /language-switcher/i);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|SkeletonPreview/i);
+});
+
+test("keeps the public landing static and free of the retired animation runtime", async () => {
+  const [homeCopy, packageJson] = await Promise.all([
+    readFile(new URL("../app/components/home-copy.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+  ]);
+
+  assert.doesNotMatch(homeCopy, /K95StageCanvas|K95BootLoader|K95Cursor|K95LayoutSwitch|useSmoothScroll|useScrollReveal/);
+  assert.match(homeCopy, /solana-hero-proof/);
+  assert.doesNotMatch(packageJson, /"three"|"lenis"|"@types\/three"/);
 });
 
 test("server-renders the three-role end-to-end sandbox", async () => {
@@ -114,6 +125,24 @@ test("supports Wallet Standard sign-and-send and sign-only Devnet payment flows"
   assert.match(relayRoute, /preflightCommitment: "confirmed"/);
   assert.match(invoiceRoute, /getSessionUser/);
   assert.match(invoiceRoute, /publicPayer/);
+});
+
+test("includes an on-chain reward-vault gate and a clearly isolated cash-out sandbox", async () => {
+  const [challengeRoute, fundingRoute, payoutRoute, cashoutRoute, cashoutUi, walletAssets] = await Promise.all([
+    readFile(new URL("../app/api/challenges/[id]/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/challenges/[id]/funding/verify/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/payouts/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/cashout/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/cashout-workspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/wallet/assets/route.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(challengeRoute, /funding_status !== "funded"/);
+  assert.match(fundingRoute, /verifySolPayment/);
+  assert.match(fundingRoute, /verifyUsdcPayment/);
+  assert.match(payoutRoute, /sendRewardVaultTransfer/);
+  assert.match(cashoutRoute, /No bank transfer or on-chain transfer is performed/);
+  assert.match(cashoutUi, /No real bank transfer was made/);
+  assert.match(walletAssets, /getTokenAccountsByOwner/);
 });
 
 test("removes temporary starter metadata and dependencies", async () => {

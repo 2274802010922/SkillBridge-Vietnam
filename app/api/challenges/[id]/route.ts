@@ -26,16 +26,23 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const user = await requireSessionUser(request);
     const { id } = await params;
     const challenge = await requireChallengeManager(user.id, id);
-    const challengeConfig = await env.DB.prepare("SELECT reward_type, reward_amount_atomic, reward_metadata_json FROM challenges WHERE id = ?").bind(id).first<{ reward_type?: string; reward_amount_atomic?: string | null; reward_metadata_json?: string }>();
+    const challengeConfig = await env.DB.prepare(`
+      SELECT c.reward_type, c.reward_amount_atomic, c.reward_metadata_json, c.funding_status,
+        f.status AS fund_status
+      FROM challenges c LEFT JOIN challenge_funds f ON f.challenge_id = c.id WHERE c.id = ?
+    `).bind(id).first<{ reward_type?: string; reward_amount_atomic?: string | null; reward_metadata_json?: string; funding_status?: string; fund_status?: string | null }>();
     const body = (await request.json()) as { action?: "publish" | "close" | "set_access"; accessType?: ChallengeAccessType };
     if (body.action === "publish") {
       const rewardType = String(challengeConfig?.reward_type ?? (challengeConfig?.reward_amount_atomic ? "usdc" : "badge"));
-      if (rewardType === "usdc" && !challengeConfig?.reward_amount_atomic) return Response.json({ error: "Challenge USDC cần số tiền thưởng trước khi công bố." }, { status: 400 });
+      if ((rewardType === "usdc" || rewardType === "sol") && !challengeConfig?.reward_amount_atomic) return Response.json({ error: `Challenge ${rewardType === "sol" ? "SOL" : "USDC"} cần số tiền thưởng trước khi công bố.` }, { status: 400 });
       if (rewardType === "badge") {
         try {
           const metadata = JSON.parse(String(challengeConfig?.reward_metadata_json ?? "{}")) as { name?: string };
           if (!metadata.name?.trim()) return Response.json({ error: "Challenge huy hiệu cần tên huy hiệu trước khi công bố." }, { status: 400 });
         } catch { return Response.json({ error: "Cấu hình huy hiệu không hợp lệ." }, { status: 400 }); }
+      }
+      if (challengeConfig?.funding_status !== "funded" || challengeConfig.fund_status !== "funded") {
+        return Response.json({ error: "Hãy nạp và xác minh quỹ thưởng Devnet trước khi công bố challenge." }, { status: 409 });
       }
       const result = await env.DB.prepare(`
         UPDATE challenges SET status = 'published', published_at = CURRENT_TIMESTAMP,

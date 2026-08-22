@@ -132,6 +132,13 @@ export const challenges = sqliteTable(
     rewardAmountUsdc: text("reward_amount_usdc"),
     rewardAmountAtomic: text("reward_amount_atomic"),
     rewardMint: text("reward_mint"),
+    rewardAsset: text("reward_asset"),
+    fundingStatus: text("funding_status").notNull().default("not_required"),
+    fundingAsset: text("funding_asset"),
+    fundingAmountDisplay: text("funding_amount_display"),
+    fundingAmountAtomic: text("funding_amount_atomic"),
+    fundingVaultWallet: text("funding_vault_wallet"),
+    fundedAt: text("funded_at"),
     accessType: text("access_type").notNull().default("invite_only"),
     status: text("status").notNull().default("draft"),
     version: text("version").notNull().default("1"),
@@ -368,6 +375,7 @@ export const invoices = sqliteTable(
     description: text("description").notNull(),
     amountUsdc: text("amount_usdc").notNull(),
     amountAtomic: text("amount_atomic").notNull(),
+    asset: text("asset").notNull().default("usdc"),
     fiatCurrency: text("fiat_currency").notNull().default("USD"),
     fiatAmount: text("fiat_amount").notNull(),
     fxRateVnd: text("fx_rate_vnd"),
@@ -387,6 +395,86 @@ export const invoices = sqliteTable(
     index("idx_invoices_creator_status").on(table.creatorUserId, table.status),
     uniqueIndex("idx_invoices_payment_reference").on(table.paymentReference),
   ],
+);
+
+export const challengeFunds = sqliteTable(
+  "challenge_funds",
+  {
+    id: text("id").primaryKey(),
+    challengeId: text("challenge_id").notNull().unique().references(() => challenges.id, { onDelete: "cascade" }),
+    asset: text("asset").notNull(),
+    requiredDisplay: text("required_display").notNull(),
+    requiredAtomic: text("required_atomic").notNull(),
+    fundedAtomic: text("funded_atomic").notNull().default("0"),
+    disbursedAtomic: text("disbursed_atomic").notNull().default("0"),
+    refundedAtomic: text("refunded_atomic").notNull().default("0"),
+    vaultWallet: text("vault_wallet").notNull(),
+    referenceKey: text("reference_key").notNull().unique(),
+    senderWallet: text("sender_wallet"),
+    status: text("status").notNull().default("awaiting_payment"),
+    fundingTx: text("funding_tx").unique(),
+    fundedAt: text("funded_at"),
+    createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("idx_challenge_funds_challenge_status").on(table.challengeId, table.status)],
+);
+
+export const challengeFundingEvents = sqliteTable(
+  "challenge_funding_events",
+  {
+    id: text("id").primaryKey(),
+    challengeFundId: text("challenge_fund_id").notNull().references(() => challengeFunds.id, { onDelete: "cascade" }),
+    signature: text("signature").notNull().unique(),
+    senderWallet: text("sender_wallet"),
+    recipientWallet: text("recipient_wallet").notNull(),
+    amountAtomic: text("amount_atomic").notNull(),
+    asset: text("asset").notNull(),
+    observedAt: text("observed_at").notNull(),
+    rawJson: text("raw_json").notNull().default("{}"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("idx_challenge_funding_events_fund_created").on(table.challengeFundId, table.createdAt)],
+);
+
+export const challengeRefunds = sqliteTable(
+  "challenge_refunds",
+  {
+    id: text("id").primaryKey(),
+    challengeId: text("challenge_id").notNull().unique().references(() => challenges.id, { onDelete: "cascade" }),
+    challengeFundId: text("challenge_fund_id").notNull().references(() => challengeFunds.id, { onDelete: "cascade" }),
+    recipientWallet: text("recipient_wallet").notNull(),
+    asset: text("asset").notNull(),
+    amountAtomic: text("amount_atomic").notNull(),
+    status: text("status").notNull().default("pending"),
+    paymentTx: text("payment_tx").unique(),
+    requestedByUserId: text("requested_by_user_id").notNull().references(() => users.id),
+    refundedAt: text("refunded_at"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("idx_challenge_refunds_challenge_status").on(table.challengeId, table.status)],
+);
+
+export const cashoutSessions = sqliteTable(
+  "cashout_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    walletAddress: text("wallet_address").notNull(),
+    amountUsdc: text("amount_usdc").notNull(),
+    amountAtomic: text("amount_atomic").notNull(),
+    estimatedVnd: text("estimated_vnd").notNull(),
+    feeVnd: text("fee_vnd").notNull(),
+    netVnd: text("net_vnd").notNull(),
+    provider: text("provider").notNull().default("skillbridge_sandbox"),
+    status: text("status").notNull().default("quote_ready"),
+    providerReference: text("provider_reference").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("idx_cashout_sessions_user_created").on(table.userId, table.createdAt)],
 );
 
 export const paymentEvents = sqliteTable(
@@ -419,6 +507,7 @@ export const challengePayouts = sqliteTable(
     recipientWallet: text("recipient_wallet").notNull(),
     amountUsdc: text("amount_usdc").notNull(),
     amountAtomic: text("amount_atomic").notNull(),
+    asset: text("asset").notNull().default("usdc"),
     status: text("status").notNull().default("pending"),
     paymentTx: text("payment_tx"),
     paidAt: text("paid_at"),

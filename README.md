@@ -13,13 +13,16 @@ The current MVP demonstrates one complete golden path:
 6. The credential unlocks an opportunity.
 7. Revocation removes access.
 
-The authenticated product also includes a non-custodial USDC Devnet payment
-surface: freelancers create invoice links, clients pay directly to the
-recipient wallet, and the freelancer verifies the transaction signature to
-create a receipt and CSV reconciliation report. Challenge managers can attach
-an optional USDC bounty and verify a direct payout to an approved student's
-wallet from the Payouts workspace. SkillBridge never holds the funds or signs
-the transfer.
+The authenticated product includes two intentionally distinct payment paths.
+Freelancers can create non-custodial USDC Devnet invoice links: clients pay
+directly to the recipient wallet, then the freelancer verifies the signature
+for a receipt and CSV reconciliation report. Challenges use a separate Reward
+Vault: the business funds the full reward amount (or a refundable SOL badge
+bond) on Devnet before the challenge can publish. A human business reviewer
+then explicitly approves every payout; the Reward Vault signs that Devnet
+transaction and it is linked to Solana Explorer. The product also contains a
+clearly labelled USDC-to-VND Cash-out sandbox: it computes a simulated quote
+only and never collects banking data, sends USDC, or contacts an off-ramp.
 
 The `/workspace` route is an isolated role simulator for judges and product
 walkthroughs. The authenticated `/app` routes are the production pilot surface:
@@ -86,7 +89,10 @@ to the Vercel project:
    `AI_PROVIDER=gemini` to force Gemini, `AI_PROVIDER=tokenrouter` to force
    TokenRouter, or leave `auto` to prefer Gemini when it is configured. For a
    newly created Gemini AI Studio key, use `GEMINI_MODEL=gemini-flash-latest`
-   without a `models/` prefix or `:generateContent` suffix.
+   without a `models/` prefix or `:generateContent` suffix. For the Reward
+   Vault, configure a separate `SOLANA_REWARD_VAULT_SECRET` keypair and fund
+   that Devnet wallet with enough SOL for payout fees. Its public address is
+   derived server-side; never expose the secret to the browser.
 4. Deploy a Preview, test every wallet role, AI assessment, human approval,
    Devnet issuance/revocation, and opportunity verification, then promote that
    exact deployment to Production.

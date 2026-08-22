@@ -85,6 +85,13 @@ const statements = [
     reward_amount_usdc TEXT,
     reward_amount_atomic TEXT,
     reward_mint TEXT,
+    reward_asset TEXT,
+    funding_status TEXT NOT NULL DEFAULT 'not_required',
+    funding_asset TEXT,
+    funding_amount_display TEXT,
+    funding_amount_atomic TEXT,
+    funding_vault_wallet TEXT,
+    funded_at TEXT,
     access_type TEXT NOT NULL DEFAULT 'invite_only',
     status TEXT NOT NULL DEFAULT 'draft',
     version TEXT NOT NULL DEFAULT '1',
@@ -275,10 +282,71 @@ const statements = [
     recipient_wallet TEXT NOT NULL,
     amount_usdc TEXT NOT NULL,
     amount_atomic TEXT NOT NULL,
+    asset TEXT NOT NULL DEFAULT 'usdc',
     status TEXT NOT NULL DEFAULT 'pending',
     payment_tx TEXT,
     paid_at TEXT,
     verified_by_user_id TEXT REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS challenge_funds (
+    id TEXT PRIMARY KEY,
+    challenge_id TEXT NOT NULL UNIQUE REFERENCES challenges(id) ON DELETE CASCADE,
+    asset TEXT NOT NULL,
+    required_display TEXT NOT NULL,
+    required_atomic TEXT NOT NULL,
+    funded_atomic TEXT NOT NULL DEFAULT '0',
+    disbursed_atomic TEXT NOT NULL DEFAULT '0',
+    refunded_atomic TEXT NOT NULL DEFAULT '0',
+    vault_wallet TEXT NOT NULL,
+    reference_key TEXT NOT NULL UNIQUE,
+    sender_wallet TEXT,
+    status TEXT NOT NULL DEFAULT 'awaiting_payment',
+    funding_tx TEXT UNIQUE,
+    funded_at TEXT,
+    created_by_user_id TEXT NOT NULL REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS challenge_funding_events (
+    id TEXT PRIMARY KEY,
+    challenge_fund_id TEXT NOT NULL REFERENCES challenge_funds(id) ON DELETE CASCADE,
+    signature TEXT NOT NULL UNIQUE,
+    sender_wallet TEXT,
+    recipient_wallet TEXT NOT NULL,
+    amount_atomic TEXT NOT NULL,
+    asset TEXT NOT NULL,
+    observed_at TEXT NOT NULL,
+    raw_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS challenge_refunds (
+    id TEXT PRIMARY KEY,
+    challenge_id TEXT NOT NULL UNIQUE REFERENCES challenges(id) ON DELETE CASCADE,
+    challenge_fund_id TEXT NOT NULL REFERENCES challenge_funds(id) ON DELETE CASCADE,
+    recipient_wallet TEXT NOT NULL,
+    asset TEXT NOT NULL,
+    amount_atomic TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    payment_tx TEXT UNIQUE,
+    requested_by_user_id TEXT NOT NULL REFERENCES users(id),
+    refunded_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS cashout_sessions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    wallet_address TEXT NOT NULL,
+    amount_usdc TEXT NOT NULL,
+    amount_atomic TEXT NOT NULL,
+    estimated_vnd TEXT NOT NULL,
+    fee_vnd TEXT NOT NULL,
+    net_vnd TEXT NOT NULL,
+    provider TEXT NOT NULL DEFAULT 'skillbridge_sandbox',
+    status TEXT NOT NULL DEFAULT 'quote_ready',
+    provider_reference TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
@@ -389,6 +457,10 @@ const statements = [
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_payouts_submission ON challenge_payouts(submission_id)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_payouts_tx ON challenge_payouts(payment_tx)`,
   `CREATE INDEX IF NOT EXISTS idx_challenge_payouts_recipient_status ON challenge_payouts(recipient_user_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_challenge_funds_challenge_status ON challenge_funds(challenge_id, status)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_funding_events_signature ON challenge_funding_events(signature)`,
+  `CREATE INDEX IF NOT EXISTS idx_challenge_refunds_challenge_status ON challenge_refunds(challenge_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_cashout_sessions_user_created ON cashout_sessions(user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_talent_profiles_visibility ON talent_profiles(visibility, updated_at)`,
   `CREATE INDEX IF NOT EXISTS idx_external_attestations_recipient ON external_attestations(recipient_user_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_contracts_org_status ON freelance_contracts(organization_id, status)`,
@@ -424,6 +496,13 @@ export async function ensureCoreSchema(db: D1Database) {
     ["reward_metadata_json", "TEXT NOT NULL DEFAULT '{}'"],
     ["reward_slots", "INTEGER NOT NULL DEFAULT 1"],
     ["minimum_score", "TEXT NOT NULL DEFAULT '0'"],
+    ["reward_asset", "TEXT"],
+    ["funding_status", "TEXT NOT NULL DEFAULT 'not_required'"],
+    ["funding_asset", "TEXT"],
+    ["funding_amount_display", "TEXT"],
+    ["funding_amount_atomic", "TEXT"],
+    ["funding_vault_wallet", "TEXT"],
+    ["funded_at", "TEXT"],
   ] as const) {
     if (challengeColumns.results.some((column) => column.name === definition[0])) continue;
     try {
@@ -433,6 +512,12 @@ export async function ensureCoreSchema(db: D1Database) {
     }
   }
   await db.prepare("UPDATE challenges SET reward_type = 'usdc' WHERE reward_type = 'badge' AND reward_amount_atomic IS NOT NULL").run();
+  await db.prepare("UPDATE challenges SET reward_asset = reward_type WHERE reward_asset IS NULL AND reward_type IN ('usdc', 'sol')").run();
+  const payoutColumns = await db.prepare("PRAGMA table_info(challenge_payouts)").all<{ name: string }>();
+  if (!payoutColumns.results.some((column) => column.name === "asset")) {
+    try { await db.prepare("ALTER TABLE challenge_payouts ADD COLUMN asset TEXT NOT NULL DEFAULT 'usdc'").run(); }
+    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+  }
   const assessmentColumns = await db.prepare("PRAGMA table_info(assessments)").all<{ name: string }>();
   const credentialColumns = await db.prepare("PRAGMA table_info(skill_credentials)").all<{ name: string }>();
   if (!credentialColumns.results.some((column) => column.name === "skills_json")) {

@@ -5,18 +5,18 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { LanguageSwitcher, useLanguage, type MessageKey } from "./i18n";
 
-export type WorkspaceId = "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "talent" | "contracts" | "audit" | "payments";
+export type WorkspaceId = "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "talent" | "contracts" | "audit" | "payments" | "cashout";
 type Membership = { role: string; organization_kind: string };
 export type WorkspaceRole = "student" | "business" | "university";
 type NavItem = [WorkspaceId, string, MessageKey];
 
 const primaryNavigation: Record<WorkspaceRole, NavItem[]> = {
-  student: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["talent", "/app/talent", "nav.talent"]],
-  business: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["talent", "/app/talent", "nav.talent"], ["payments", "/app/payments", "nav.payments"], ["contracts", "/app/contracts", "nav.contracts"]],
+  student: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["cashout", "/app/cashout", "nav.cashout"]],
+  business: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"]],
   university: [["overview", "/app", "nav.overview"], ["reviews", "/app/reviews", "nav.reviews"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["audit", "/app/audit", "nav.audit"]],
 };
 
-const allNavigation: NavItem[] = [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["reviews", "/app/reviews", "nav.reviews"], ["opportunities", "/app/opportunities", "nav.opportunities"], ["passport", "/app/passport", "nav.passport"], ["invoices", "/app/invoices", "nav.invoices"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"], ["payments", "/app/payments", "nav.payments"], ["audit", "/app/audit", "nav.audit"]];
+const allNavigation: NavItem[] = [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["reviews", "/app/reviews", "nav.reviews"], ["opportunities", "/app/opportunities", "nav.opportunities"], ["passport", "/app/passport", "nav.passport"], ["invoices", "/app/invoices", "nav.invoices"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"], ["payments", "/app/payments", "nav.payments"], ["cashout", "/app/cashout", "nav.cashout"], ["audit", "/app/audit", "nav.audit"]];
 const roleOrder: WorkspaceRole[] = ["student", "business", "university"];
 const roleLabels: Record<WorkspaceRole, MessageKey> = { student: "role.student", business: "role.business", university: "role.university" };
 
@@ -64,6 +64,26 @@ function NavigationLinks({ items, active, t, onNavigate }: { items: NavItem[]; a
   return <>{items.map(([id, href, key]) => <Link aria-current={active === id ? "page" : undefined} className={active === id ? "active" : ""} href={href} key={id} onClick={onNavigate}>{t(key)}</Link>)}</>;
 }
 
+type WalletAssets = { assets: Array<{ symbol: string; display: string }>; explorerUrl: string };
+
+function WalletSummary({ walletAddress, onLogout }: { walletAddress: string; onLogout: () => void }) {
+  const { t, locale } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const [assets, setAssets] = useState<WalletAssets | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open || assets) return;
+    let active = true;
+    fetch("/api/wallet/assets", { cache: "no-store" }).then(async (response) => {
+      const data = await response.json() as WalletAssets & { error?: string };
+      if (!response.ok) throw new Error(data.error || "Không thể đọc số dư ví.");
+      return data;
+    }).then((data) => { if (active) setAssets(data); }).catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Không thể đọc số dư ví."); });
+    return () => { active = false; };
+  }, [assets, open]);
+  return <div className="wallet-summary"><button type="button" className="wallet-pill wallet-summary-trigger" aria-expanded={open} onClick={() => setOpen((value) => !value)}><span className="wallet-status-dot" /><span className="wallet-address">{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}</span><span aria-hidden="true">⌄</span></button>{open && <div className="wallet-summary-menu"><div><span>{locale === "vi" ? "VÍ ĐANG KẾT NỐI" : "CONNECTED WALLET"}</span><strong>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</strong></div><p>{locale === "vi" ? "Số dư trên Solana Devnet" : "Balances on Solana Devnet"}</p>{assets ? <dl>{assets.assets.map((asset) => <div key={asset.symbol}><dt>{asset.symbol}</dt><dd>{asset.display}</dd></div>)}</dl> : <p className="wallet-summary-loading">{error || t("common.loading")}</p>}{assets && <a className="chain-proof-link" target="_blank" rel="noreferrer" href={assets.explorerUrl}>{locale === "vi" ? "Mở Solana Explorer" : "Open Solana Explorer"}</a>}<button type="button" className="wallet-summary-logout" onClick={onLogout}>{t("common.logout")}</button></div>}</div>;
+}
+
 export function AppHeader({ walletAddress }: { walletAddress: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -103,7 +123,7 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           <span>{t("shell.workspace")}</span>
         </button>
-        <div className="wallet-pill"><span className="wallet-status-dot" /><span className="wallet-address">{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}</span><button onClick={logout}>{t("common.logout")}</button></div>
+        <WalletSummary walletAddress={walletAddress} onLogout={() => void logout()} />
         <LanguageSwitcher />
       </div>
       {workspaceMenuOpen && <nav aria-label={t("shell.workspace")} className="mobile-workspace-navigation" id="mobile-workspace-navigation">

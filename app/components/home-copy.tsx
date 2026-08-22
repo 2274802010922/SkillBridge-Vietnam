@@ -1,14 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { LanguageSwitcher, useLanguage } from "./i18n";
-import { K95StageCanvas } from "./3d/k95-stage-canvas";
-import { K95LayoutSwitch, type LayoutMode } from "./ui/k95-layout-switch";
-import { K95Cursor } from "./ui/k95-cursor";
-import { K95BootLoader } from "./ui/k95-boot-loader";
-import { useSmoothScroll } from "./ui/use-smooth-scroll";
-import { useScrollReveal } from "./scroll-reveal";
 
 const proofSignals = [
   ["01", "home.humanReview", "home.aiOptional"],
@@ -46,12 +40,7 @@ const roles = [
 export function HomeCopy() {
   const { t, locale } = useLanguage();
   const isEn = locale === "en";
-  const landingRef = useRef<HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>("rings");
-
-  useScrollReveal(landingRef);
-  useSmoothScroll();
 
   const outlookMailtoUrl = `mailto:tri.2274802010922@vanlanguni.vn?subject=${encodeURIComponent(
     isEn ? "Design Partner Program Application - SkillBridge Vietnam" : "Đăng ký Đối tác Thiết kế - SkillBridge Vietnam"
@@ -62,19 +51,12 @@ export function HomeCopy() {
   )}`;
 
   return (
-    <>
-      <K95BootLoader />
-      <K95Cursor />
-
-      {/* K95 PERSISTENT 3D CANVAS BACKGROUND — RUNS CONTINUOUSLY ACROSS ENTIRE PAGE */}
-      <K95StageCanvas isEn={isEn} layoutMode={layoutMode} />
-
-      <main className="solana-landing" id="top" ref={landingRef}>
+      <main className="solana-landing" id="top">
         <a className="landing-skip-link" href="#landing-content">
           {t("home.skipContent")}
         </a>
 
-        {/* FIXED STICKY HEADER WITH EMBEDDED 3D SWITCH */}
+        {/* Static, readable landing header */}
         <header className="solana-header page-shell">
           <div className="solana-header-inner">
             <Link className="solana-wordmark" href="#top" aria-label="SkillBridge Vietnam" data-hover>
@@ -99,11 +81,6 @@ export function HomeCopy() {
             </nav>
 
             <div className="solana-header-actions">
-              {/* 3D Mode Controller embedded cleanly right inside the header */}
-              <div className="solana-header-3d-switch">
-                <K95LayoutSwitch mode={layoutMode} onChange={setLayoutMode} isEn={isEn} />
-              </div>
-
               <Link className="solana-btn-pill-primary" href="/auth" data-hover>
                 <span>{t("home.login")}</span>
               </Link>
@@ -131,7 +108,7 @@ export function HomeCopy() {
           </div>
         </header>
 
-        {/* MOBILE MENU FULLSCREEN DRAWER */}
+        {/* Mobile navigation */}
         {mobileMenuOpen && (
           <div className="solana-mobile-overlay" role="dialog" aria-modal="true" aria-label={t("home.mobileNavigation")}>
             <button
@@ -141,9 +118,6 @@ export function HomeCopy() {
               onClick={() => setMobileMenuOpen(false)}
             />
             <nav className="solana-mobile-nav" id="solana-mobile-navigation" aria-label={t("home.mobileNavigation")}>
-              <div className="solana-mobile-3d-row">
-                <K95LayoutSwitch mode={layoutMode} onChange={setLayoutMode} isEn={isEn} />
-              </div>
               <a href="#product" className="solana-mobile-link" onClick={() => setMobileMenuOpen(false)}>
                 {t("home.navProduct")}
               </a>
@@ -166,13 +140,14 @@ export function HomeCopy() {
         {/* SOLANA-INSPIRED HERO SECTION */}
         <section className="solana-hero page-shell" id="landing-content" tabIndex={-1}>
           <div className="solana-hero-container">
-            <div className="solana-hero-badge" data-reveal="hero-badge">
+            <div className="solana-hero-copy">
+            <div className="solana-hero-badge">
               <span className="solana-live-dot" />
               <span>{t("home.eyebrow")}</span>
             </div>
 
             {/* Solana Two-Tone Headline */}
-            <h1 className="solana-hero-title" data-reveal-title>
+            <h1 className="solana-hero-title">
               {isEn ? (
                 <>
                   Proven Student Work. <br />
@@ -186,11 +161,11 @@ export function HomeCopy() {
               )}
             </h1>
 
-            <p className="solana-hero-desc" data-reveal="hero-desc">
+            <p className="solana-hero-desc">
               {t("home.heroDescription")}
             </p>
 
-            <div className="solana-hero-cta-row" data-reveal="hero-actions">
+            <div className="solana-hero-cta-row">
               <Link className="solana-btn-main" href="/auth" data-hover>
                 <span>{t("home.start")}</span>
               </Link>
@@ -200,7 +175,7 @@ export function HomeCopy() {
             </div>
 
             {/* Network Note Bar */}
-            <div className="solana-network-bar" data-reveal="hero-meta">
+            <div className="solana-network-bar">
               <div className="solana-net-item">
                 <span className="solana-net-label">NETWORK</span>
                 <span className="solana-net-val">Solana Devnet</span>
@@ -214,6 +189,20 @@ export function HomeCopy() {
                 <span className="solana-net-val">AI + Human Review</span>
               </div>
             </div>
+            </div>
+
+            <aside className="solana-hero-proof" aria-label={isEn ? "SkillBridge protocol" : "Quy trình SkillBridge"}>
+              <div className="solana-hero-proof-bar">
+                <span>SB://PROTOCOL</span>
+                <span>DEVNET</span>
+              </div>
+              <ol>
+                <li><span>01</span><strong>{isEn ? "Fund the reward vault" : "Nạp quỹ phần thưởng"}</strong></li>
+                <li><span>02</span><strong>{isEn ? "Review work with evidence" : "Duyệt bài dựa trên bằng chứng"}</strong></li>
+                <li><span>03</span><strong>{isEn ? "Confirm payout or credential" : "Xác nhận trả thưởng hoặc huy hiệu"}</strong></li>
+              </ol>
+              <p>{isEn ? "Human approval remains the final decision." : "Con người luôn là người ra quyết định cuối cùng."}</p>
+            </aside>
           </div>
         </section>
 
@@ -439,6 +428,5 @@ export function HomeCopy() {
           </div>
         </footer>
       </main>
-    </>
   );
 }

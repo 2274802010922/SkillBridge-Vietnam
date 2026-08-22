@@ -3,13 +3,35 @@ import { getAssociatedTokenAccountAddress, getTransferTokensInstructions } from 
 import { env } from "@/lib/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../../../lib/auth";
 import { requireOrganizationRole } from "../../../../lib/authorization";
+import { buildRewardFundingTransaction, type RewardAsset } from "../../../../lib/reward-vault";
 
 /** Build an unsigned USDC transfer. The connected wallet signs and sends it in the browser. */
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const body = await request.json() as { invoiceId?: string; payoutSubmissionId?: string; senderWallet?: string };
-    if ((!body.invoiceId && !body.payoutSubmissionId) || !body.senderWallet?.trim()) return Response.json({ error: "Thiếu thông tin giao dịch." }, { status: 400 });
+    const body = await request.json() as { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; senderWallet?: string };
+    if ((!body.invoiceId && !body.payoutSubmissionId && !body.fundingChallengeId) || !body.senderWallet?.trim()) return Response.json({ error: "Thiếu thông tin giao dịch." }, { status: 400 });
+    if (body.fundingChallengeId) {
+      const user = await requireSessionUser(request);
+      if (user.walletAddress !== body.senderWallet.trim()) return Response.json({ error: "Ví nạp quỹ phải là ví đang đăng nhập." }, { status: 403 });
+      const fund = await env.DB.prepare(`
+        SELECT f.id, f.asset, f.required_display, f.required_atomic, f.reference_key, f.vault_wallet,
+          f.status, c.organization_id
+        FROM challenge_funds f JOIN challenges c ON c.id = f.challenge_id
+        WHERE f.challenge_id = ?
+      `).bind(body.fundingChallengeId).first<{ id: string; asset: RewardAsset; required_display: string; required_atomic: string; reference_key: string; vault_wallet: string; status: string; organization_id: string }>();
+      if (!fund) return Response.json({ error: "Không tìm thấy yêu cầu nạp quỹ challenge." }, { status: 404 });
+      await requireOrganizationRole(user.id, fund.organization_id, ["business_admin", "challenge_manager"], "business");
+      if (fund.status !== "awaiting_payment") return Response.json({ error: "Quỹ này đã được nạp hoặc không còn hiệu lực." }, { status: 409 });
+      const funding = await buildRewardFundingTransaction(env, {
+        senderWallet: body.senderWallet.trim(), asset: fund.asset,
+        amount: { display: fund.required_display, atomic: fund.required_atomic }, reference: fund.reference_key,
+      });
+      return Response.json({
+        transaction: funding.transaction, asset: fund.asset, amount: fund.required_display,
+        recipientWallet: funding.vaultWallet, reference: fund.reference_key, purpose: "challenge_funding",
+      });
+    }
     let payment: { id: string; recipient_wallet: string; amount_usdc: string; amount_atomic: string; payment_reference: string; status: string };
     if (body.invoiceId) {
       const invoice = await env.DB.prepare("SELECT id, recipient_wallet, amount_usdc, amount_atomic, payment_reference, status FROM invoices WHERE id = ?").bind(body.invoiceId).first<typeof payment>();
