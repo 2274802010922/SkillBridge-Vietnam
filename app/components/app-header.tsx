@@ -57,7 +57,14 @@ function useWorkspaceNavigation() {
 function RoleSwitcher({ role, roles, setRole }: { role: WorkspaceRole; roles: WorkspaceRole[]; setRole: (role: WorkspaceRole) => void }) {
   const { t } = useLanguage();
   if (roles.length <= 1) return <span className="role-context-badge">{t(roleLabels[role])}</span>;
-  return <label className="role-switcher"><span>{t("shell.viewAs")}</span><select aria-label={t("shell.viewAs")} value={role} onChange={(event) => setRole(event.target.value as WorkspaceRole)}>{roles.map((item) => <option value={item} key={item}>{t(roleLabels[item])}</option>)}</select></label>;
+  return (
+    <label className="role-switcher">
+      <span className="role-switcher-label">{t("shell.viewAs")}</span>
+      <select aria-label={t("shell.viewAs")} value={role} onChange={(event) => setRole(event.target.value as WorkspaceRole)}>
+        {roles.map((item) => <option value={item} key={item}>{t(roleLabels[item])}</option>)}
+      </select>
+    </label>
+  );
 }
 
 function NavigationLinks({ items, active, t, onNavigate }: { items: NavItem[]; active: WorkspaceId; t: (key: MessageKey) => string; onNavigate?: () => void }) {
@@ -137,12 +144,12 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
 
 export function AppSidebar({ active }: { active: WorkspaceId }) {
   const { t } = useLanguage();
-  const { role, roles, setRole } = useWorkspaceNavigation();
+  const { role } = useWorkspaceNavigation();
   const primary = primaryNavigation[role];
   const secondary = allNavigation.filter(([id]) => !primary.some(([primaryId]) => primaryId === id));
   return (
     <aside className="app-sidebar">
-      <div className="sidebar-context"><span className="sidebar-label">{t("shell.workspace")}</span><RoleSwitcher role={role} roles={roles} setRole={setRole} /></div>
+      <div className="sidebar-context"><span className="sidebar-label">{t("shell.workspace")}</span><strong>{t(roleLabels[role])}</strong></div>
       <span className="sidebar-section-label">{t("shell.primaryActions")}</span>
       <NavigationLinks active={active} items={primary} t={t} />
       <details className="sidebar-advanced"><summary>{t("shell.advancedTools")}</summary><NavigationLinks active={active} items={secondary} t={t} /></details>
