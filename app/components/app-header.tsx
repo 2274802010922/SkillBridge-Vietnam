@@ -1,35 +1,77 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LanguageSwitcher, useLanguage } from "./i18n";
+import { LanguageSwitcher, useLanguage, type MessageKey } from "./i18n";
 
-const workspaceLinks = [
-  ["overview", "/app", "nav.overview"],
-  ["challenges", "/app/challenges", "nav.challenges"],
-  ["submissions", "/app/submissions", "nav.submissions"],
-  ["reviews", "/app/reviews", "nav.reviews"],
-  ["opportunities", "/app/opportunities", "nav.opportunities"],
-  ["passport", "/app/passport", "nav.passport"],
-  ["invoices", "/app/invoices", "nav.invoices"],
-  ["payouts", "/app/payouts", "nav.payouts"],
-  ["talent", "/app/talent", "nav.talent"],
-  ["contracts", "/app/contracts", "nav.contracts"],
-  ["audit", "/app/audit", "nav.audit"],
-] as const;
+export type WorkspaceId = "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "talent" | "contracts" | "audit" | "payments";
+type Membership = { role: string; organization_kind: string };
+export type WorkspaceRole = "student" | "business" | "university";
+type NavItem = [WorkspaceId, string, MessageKey];
 
-type WorkspaceId = (typeof workspaceLinks)[number][0];
+const primaryNavigation: Record<WorkspaceRole, NavItem[]> = {
+  student: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["talent", "/app/talent", "nav.talent"]],
+  business: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["talent", "/app/talent", "nav.talent"], ["payments", "/app/payments", "nav.payments"], ["contracts", "/app/contracts", "nav.contracts"]],
+  university: [["overview", "/app", "nav.overview"], ["reviews", "/app/reviews", "nav.reviews"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["audit", "/app/audit", "nav.audit"]],
+};
 
-function isCurrentWorkspacePath(pathname: string, href: string) {
-  return href === "/app" ? pathname === href : pathname.startsWith(href);
+const allNavigation: NavItem[] = [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["reviews", "/app/reviews", "nav.reviews"], ["opportunities", "/app/opportunities", "nav.opportunities"], ["passport", "/app/passport", "nav.passport"], ["invoices", "/app/invoices", "nav.invoices"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"], ["payments", "/app/payments", "nav.payments"], ["audit", "/app/audit", "nav.audit"]];
+const roleOrder: WorkspaceRole[] = ["student", "business", "university"];
+const roleLabels: Record<WorkspaceRole, MessageKey> = { student: "role.student", business: "role.business", university: "role.university" };
+
+function inferRoles(memberships: Membership[]): WorkspaceRole[] {
+  const roles = new Set<WorkspaceRole>(["student"]);
+  if (memberships.some((item) => item.organization_kind === "business" && ["business_admin", "challenge_manager"].includes(item.role))) roles.add("business");
+  if (memberships.some((item) => item.organization_kind === "university" && ["university_admin", "reviewer", "credential_issuer"].includes(item.role))) roles.add("university");
+  return roleOrder.filter((role) => roles.has(role));
+}
+
+function isCurrentWorkspacePath(pathname: string, href: string) { return href === "/app" ? pathname === href : pathname.startsWith(href); }
+
+function useWorkspaceNavigation() {
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [role, setRoleState] = useState<WorkspaceRole>(() => {
+    if (typeof window === "undefined") return "student";
+    const stored = window.localStorage.getItem("skillbridge-role") as WorkspaceRole | null;
+    return stored && roleOrder.includes(stored) ? stored : "student";
+  });
+  useEffect(() => {
+    let active = true;
+    const stored = window.localStorage.getItem("skillbridge-role") as WorkspaceRole | null;
+    fetch("/api/organizations", { cache: "no-store" }).then((response) => response.ok ? response.json() as Promise<{ organizations: Membership[] }> : { organizations: [] }).then((data) => {
+      if (!active) return;
+      setMemberships(data.organizations ?? []);
+      const available = inferRoles(data.organizations ?? []);
+      if (!available.includes(stored ?? "student")) setRoleState(available[0] ?? "student");
+    }).catch(() => { /* Keep the student navigation available during a slow/offline request. */ });
+    const onRoleChange = (event: Event) => { const next = (event as CustomEvent<WorkspaceRole>).detail; if (roleOrder.includes(next)) setRoleState(next); };
+    window.addEventListener("skillbridge-role-change", onRoleChange);
+    return () => { active = false; window.removeEventListener("skillbridge-role-change", onRoleChange); };
+  }, []);
+  const roles = useMemo(() => inferRoles(memberships), [memberships]);
+  function setRole(next: WorkspaceRole) { setRoleState(next); window.localStorage.setItem("skillbridge-role", next); window.dispatchEvent(new CustomEvent<WorkspaceRole>("skillbridge-role-change", { detail: next })); }
+  return { role, roles, setRole };
+}
+
+function RoleSwitcher({ role, roles, setRole }: { role: WorkspaceRole; roles: WorkspaceRole[]; setRole: (role: WorkspaceRole) => void }) {
+  const { t } = useLanguage();
+  if (roles.length <= 1) return <span className="role-context-badge">{t(roleLabels[role])}</span>;
+  return <label className="role-switcher"><span>{t("shell.viewAs")}</span><select aria-label={t("shell.viewAs")} value={role} onChange={(event) => setRole(event.target.value as WorkspaceRole)}>{roles.map((item) => <option value={item} key={item}>{t(roleLabels[item])}</option>)}</select></label>;
+}
+
+function NavigationLinks({ items, active, t, onNavigate }: { items: NavItem[]; active: WorkspaceId; t: (key: MessageKey) => string; onNavigate?: () => void }) {
+  return <>{items.map(([id, href, key]) => <Link aria-current={active === id ? "page" : undefined} className={active === id ? "active" : ""} href={href} key={id} onClick={onNavigate}>{t(key)}</Link>)}</>;
 }
 
 export function AppHeader({ walletAddress }: { walletAddress: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { role, roles, setRole } = useWorkspaceNavigation();
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const primary = primaryNavigation[role];
+  const secondary = allNavigation.filter(([id]) => !primary.some(([primaryId]) => primaryId === id));
 
   useEffect(() => {
     if (!workspaceMenuOpen) return;
@@ -49,6 +91,7 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
     <header className="app-topbar page-shell">
       <Link className="wordmark" href="/"><span className="wordmark-mark">S</span><span>SkillBridge</span><small>VIETNAM</small></Link>
       <div className="topbar-actions">
+        <RoleSwitcher role={role} roles={roles} setRole={setRole} />
         <button
           aria-controls="mobile-workspace-navigation"
           aria-expanded={workspaceMenuOpen}
@@ -64,10 +107,9 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
         <LanguageSwitcher />
       </div>
       {workspaceMenuOpen && <nav aria-label={t("shell.workspace")} className="mobile-workspace-navigation" id="mobile-workspace-navigation">
-        {workspaceLinks.map(([id, href, key]) => {
-          const current = isCurrentWorkspacePath(pathname, href);
-          return <Link aria-current={current ? "page" : undefined} className={current ? "active" : ""} href={href} key={id} onClick={() => setWorkspaceMenuOpen(false)}>{t(key)}</Link>;
-        })}
+        <div className="mobile-nav-heading"><span>{t("shell.primaryActions")}</span><strong>{t(roleLabels[role])}</strong></div>
+        <NavigationLinks active={allNavigation.find(([, href]) => isCurrentWorkspacePath(pathname, href))?.[0] ?? "overview"} items={primary} t={t} onNavigate={() => setWorkspaceMenuOpen(false)} />
+        <details className="mobile-nav-advanced"><summary>{t("shell.advancedTools")}</summary><NavigationLinks active={allNavigation.find(([, href]) => isCurrentWorkspacePath(pathname, href))?.[0] ?? "overview"} items={secondary} t={t} onNavigate={() => setWorkspaceMenuOpen(false)} /></details>
       </nav>}
     </header>
   );
@@ -75,11 +117,16 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
 
 export function AppSidebar({ active }: { active: WorkspaceId }) {
   const { t } = useLanguage();
+  const { role, roles, setRole } = useWorkspaceNavigation();
+  const primary = primaryNavigation[role];
+  const secondary = allNavigation.filter(([id]) => !primary.some(([primaryId]) => primaryId === id));
   return (
     <aside className="app-sidebar">
-      <span className="sidebar-label">{t("shell.workspace")}</span>
-      {workspaceLinks.map(([id, href, key]) => <Link aria-current={active === id ? "page" : undefined} className={active === id ? "active" : ""} href={href} key={id}>{t(key)}</Link>)}
-      <div className="sidebar-foot"><span>{t("shell.network")}</span><strong>{t("shell.devnet")}</strong></div>
+      <div className="sidebar-context"><span className="sidebar-label">{t("shell.workspace")}</span><RoleSwitcher role={role} roles={roles} setRole={setRole} /></div>
+      <span className="sidebar-section-label">{t("shell.primaryActions")}</span>
+      <NavigationLinks active={active} items={primary} t={t} />
+      <details className="sidebar-advanced"><summary>{t("shell.advancedTools")}</summary><NavigationLinks active={active} items={secondary} t={t} /></details>
+      <div className="sidebar-foot"><span>{t("shell.network")}</span><strong>{t("shell.devnet")}</strong><small>{t("shell.devnetHint")}</small></div>
     </aside>
   );
 }

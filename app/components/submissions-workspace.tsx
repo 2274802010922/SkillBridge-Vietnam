@@ -120,6 +120,8 @@ export function SubmissionsWorkspace() {
   const active = items.find((item) => item.id === selected);
   const editable = active?.state === "draft" || active?.state === "changes_requested";
   const fileUrl = (file: FileItem, download = false) => `/api/files/${file.id}${download ? "?download=1" : ""}`;
+  const submissionSteps = ["draft", "submitted", "in_review", "approved"] as const;
+  const currentStep = active ? Math.max(0, submissionSteps.indexOf(active.state as (typeof submissionSteps)[number])) : 0;
 
   return <div className="workspace-product-content">
     <div className="app-welcome"><div><span>{t("submission.kicker")}</span><h1>{t("submission.title")}</h1><p>{t("submission.description")}</p></div><div className="identity-card"><small>{t("submission.count")}</small><strong className="metric-number">{items.length}</strong><b>{items.filter((item) => item.state === "submitted").length} {t("submission.waitingReview")}</b></div></div>
@@ -127,6 +129,7 @@ export function SubmissionsWorkspace() {
       <aside className="submission-list">{items.map((item) => <button className={selected === item.id ? "active" : ""} onClick={() => open(item.id)} key={item.id}><small>{item.organization_name}</small><strong>{item.challenge_title}</strong><span>{translateStatus(t, item.state)} · {item.file_count} {t("submission.fileCount")}</span></button>)}</aside>
       <section className="app-panel submission-editor">
         <div className="entity-top"><span>{active?.challenge_title}</span><b>{translateStatus(t, active?.state)}</b></div>
+        <div className="submission-progress"><span>{t("submission.progressTitle")}</span><ol>{submissionSteps.map((step, index) => <li className={index <= currentStep ? "done" : ""} key={step}><i>{index < currentStep ? "✓" : index + 1}</i><strong>{translateStatus(t, step)}</strong></li>)}</ol></div>
         <label>{t("submission.note")}<textarea disabled={!editable} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("submission.notePlaceholder")} /><small>{t("submission.noteHelp")}</small></label>
         <div className="file-uploader"><div><strong>{t("submission.files")}</strong><small>{t("submission.fileHelp")}</small></div>{editable && <label className="button button-dark">{t("submission.chooseFiles")}<input type="file" multiple hidden onChange={(event) => { void uploadMany(event.target.files); event.currentTarget.value = ""; }} /></label>}</div>
         <div className="file-list">{files.map((file) => <article key={file.id}><div><strong>{file.original_name}</strong><small>{Math.ceil(Number(file.size_bytes) / 1024)} KB · SHA {file.sha256.slice(0, 10)}…</small></div><div className="file-actions"><button onClick={() => setPreview(file)}>{t("submission.view")}</button><a href={fileUrl(file, true)}>{t("submission.download")}</a>{editable && <button onClick={() => removeFile(file.id)}>{t("submission.remove")}</button>}</div></article>)}</div>

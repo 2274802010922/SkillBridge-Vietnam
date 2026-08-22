@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AppHeader, AppSidebar } from "./app-header";
 import { translateStatus, useLanguage, type MessageKey } from "./i18n";
 
@@ -23,6 +24,9 @@ export function AppDashboard({ initialUser, initialMemberships }: { initialUser:
   const [organizationName, setOrganizationName] = useState("");
   const [organizationKind, setOrganizationKind] = useState<"business" | "university">("business");
   const adminMemberships = memberships.filter((item) => item.role === "business_admin" || item.role === "university_admin");
+  const isBusiness = memberships.some((item) => item.organization_kind === "business" && ["business_admin", "challenge_manager"].includes(item.role));
+  const isUniversity = memberships.some((item) => item.organization_kind === "university" && ["university_admin", "reviewer", "credential_issuer"].includes(item.role));
+  const primaryRole = isBusiness ? "business" : isUniversity ? "university" : "student";
   const [inviteOrganizationId, setInviteOrganizationId] = useState(adminMemberships[0]?.organization_id ?? "");
   const [inviteRole, setInviteRole] = useState("challenge_manager");
   const [targetWallet, setTargetWallet] = useState("");
@@ -38,7 +42,7 @@ export function AppDashboard({ initialUser, initialMemberships }: { initialUser:
 
   async function saveProfile() {
     setBusy(true); setNotice(null);
-    const response = await fetch("/api/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ displayName: name, profileKind: "student" }) });
+    const response = await fetch("/api/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ displayName: name, profileKind: primaryRole }) });
     const data = await response.json() as { user?: DashboardUser; error?: string };
     if (response.ok && data.user) { setUser(data.user); setNotice(t("dashboard.savedProfile")); } else setNotice(data.error ?? t("dashboard.saveProfileError"));
     setBusy(false);
@@ -70,15 +74,22 @@ export function AppDashboard({ initialUser, initialMemberships }: { initialUser:
       <div className="app-layout page-shell">
         <AppSidebar active="overview" />
         <section className="app-content">
-          <div className="app-welcome"><div><span>{t("dashboard.welcome")}</span><h1>{user.displayName || t("dashboard.completeIdentity")}</h1><p>{t("dashboard.serverRole")}</p></div><div className="identity-card"><small>{t("dashboard.primaryWallet")}</small><code>{user.walletAddress}</code><b>{t("dashboard.signatureVerified")}</b></div></div>
-          {!user.displayName && <section className="app-panel onboarding-panel"><div><span>{t("dashboard.step1")}</span><h2>{t("dashboard.createProfile")}</h2><p>{t("dashboard.profileDescription")}</p></div><div className="inline-form"><input aria-label={t("dashboard.displayName")} value={name} onChange={(event) => setName(event.target.value)} placeholder={t("dashboard.displayNamePlaceholder")} /><button className="button button-primary" disabled={busy} onClick={saveProfile}>{t("dashboard.saveProfile")}</button></div></section>}
+          <div className="app-welcome"><div><span>{t("dashboard.welcome")}</span><h1>{user.displayName || t("dashboard.completeIdentity")}</h1><p>{t("dashboard.simpleIntro")}</p></div><div className="identity-card"><small>{t("dashboard.primaryWallet")}</small><code>{user.walletAddress}</code><b>{t("dashboard.signatureVerified")}</b></div></div>
+          <section className="next-action-panel">
+            <div className="next-action-copy"><span className="panel-kicker">{t("dashboard.nextActionKicker")}</span><h2>{!user.displayName ? t("dashboard.nextProfileTitle") : isBusiness ? t("dashboard.nextBusinessTitle") : isUniversity ? t("dashboard.nextUniversityTitle") : t("dashboard.nextStudentTitle")}</h2><p>{!user.displayName ? t("dashboard.nextProfileDescription") : isBusiness ? t("dashboard.nextBusinessDescription") : isUniversity ? t("dashboard.nextUniversityDescription") : t("dashboard.nextStudentDescription")}</p></div>
+            <Link className="button button-primary" href={!user.displayName ? "#profile" : isBusiness ? "/app/challenges" : isUniversity ? "/app/reviews" : "/app/challenges"}>{!user.displayName ? t("dashboard.nextProfileCta") : isBusiness ? t("dashboard.nextBusinessCta") : isUniversity ? t("dashboard.nextUniversityCta") : t("dashboard.nextStudentCta")}</Link>
+          </section>
+          <section className="journey-summary" aria-label={t("dashboard.journeyLabel")}>
+            {["dashboard.journeyChallenge", "dashboard.journeySubmit", "dashboard.journeyReview", "dashboard.journeyProof"].map((key, index) => <div className={index === 0 ? "current" : ""} key={key}><span>{index + 1}</span><strong>{t(key as MessageKey)}</strong></div>)}
+          </section>
+          {!user.displayName && <section className="app-panel onboarding-panel" id="profile"><div><span>{t("dashboard.step1")}</span><h2>{t("dashboard.createProfile")}</h2><p>{t("dashboard.profileDescription")}</p></div><div className="inline-form"><input aria-label={t("dashboard.displayName")} value={name} onChange={(event) => setName(event.target.value)} placeholder={t("dashboard.displayNamePlaceholder")} /><button className="button button-primary" disabled={busy || !name.trim()} onClick={saveProfile}>{t("dashboard.saveProfile")}</button></div></section>}
           <div className="dashboard-grid">
             <section className="app-panel"><span className="panel-kicker">{t("dashboard.organizations")}</span><h2>{t("dashboard.yourOrganizations")}</h2>{memberships.length ? <div className="membership-list">{memberships.map((item) => <article key={item.id}><div><strong>{item.organization_name}</strong><small>{kindLabel(item.organization_kind)} · {translateStatus(t, item.verification_status)}</small></div><b>{roleLabel(item.role)}</b></article>)}</div> : <p>{t("dashboard.noOrganization")}</p>}</section>
             <section className="app-panel"><span className="panel-kicker">{t("dashboard.createOrganization")}</span><h2>{t("dashboard.createWorkspace")}</h2><div className="stack-form"><input aria-label={t("dashboard.organizationName")} value={organizationName} onChange={(event) => setOrganizationName(event.target.value)} placeholder={t("dashboard.organizationName")} /><select value={organizationKind} onChange={(event) => setOrganizationKind(event.target.value as "business" | "university")}><option value="business">{t("dashboard.business")}</option><option value="university">{t("dashboard.university")}</option></select><button className="button button-dark" disabled={busy || !organizationName.trim()} onClick={createOrganization}>{t("dashboard.create")}</button></div></section>
           </div>
           {adminMemberships.length > 0 && <section className="app-panel invitation-panel"><div><span className="panel-kicker">{t("dashboard.secureInvitation")}</span><h2>{t("dashboard.inviteMember")}</h2><p>{t("dashboard.inviteDescription")}</p></div><div className="stack-form"><select aria-label={t("dashboard.selectOrganization")} value={inviteOrganizationId} onChange={(event) => { const id = event.target.value; setInviteOrganizationId(id); const organization = adminMemberships.find((item) => item.organization_id === id); setInviteRole(organization?.organization_kind === "university" ? "reviewer" : "challenge_manager"); }}><option value="">{t("dashboard.selectOrganization")}</option>{adminMemberships.map((item) => <option value={item.organization_id} key={item.id}>{item.organization_name}</option>)}</select><select aria-label={t("dashboard.invitedRole")} value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>{adminMemberships.find((item) => item.organization_id === inviteOrganizationId)?.organization_kind === "university" ? <><option value="reviewer">{t("dashboard.role.reviewer")}</option><option value="credential_issuer">{t("dashboard.role.credentialIssuer")}</option><option value="university_admin">{t("dashboard.role.universityAdmin")}</option></> : <><option value="challenge_manager">{t("dashboard.role.challengeManager")}</option><option value="business_admin">{t("dashboard.role.businessAdmin")}</option></>}</select><input aria-label={t("dashboard.targetWallet")} value={targetWallet} onChange={(event) => setTargetWallet(event.target.value)} placeholder={t("dashboard.targetWallet")} /><button className="button button-dark" disabled={busy || !inviteOrganizationId} onClick={createInvitation}>{t("dashboard.createInvite")}</button>{joinUrl && <div className="join-url"><code>{joinUrl}</code><button onClick={() => navigator.clipboard.writeText(joinUrl)}>{t("dashboard.copyInvite")}</button></div>}</div></section>}
           {notice && <p className="app-notice" role="status">{notice}</p>}
-          <section className="app-panel next-build"><span className="panel-kicker">{t("dashboard.productStatus")}</span><h2>{t("dashboard.workflowActive")}</h2><p>{t("dashboard.workflowDescription")}</p></section>
+          <section className="app-panel next-build"><span className="panel-kicker">{t("dashboard.productStatus")}</span><h2>{t("dashboard.workflowActive")}</h2><p>{t("dashboard.workflowDescription")}</p><details className="technical-details"><summary>{t("dashboard.technicalDetails")}</summary><p>{t("dashboard.technicalDetailsDescription")}</p></details></section>
         </section>
       </div>
     </main>

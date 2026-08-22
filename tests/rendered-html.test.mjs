@@ -85,6 +85,21 @@ test("keeps the authenticated workspace responsive without removing language acc
   assert.match(styles, /\.mobile-workspace-navigation\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/);
 });
 
+test("keeps the product navigation role-first and exposes a unified payment hub", async () => {
+  const [header, dashboard, payments] = await Promise.all([
+    readFile(new URL("../app/components/app-header.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/app-dashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/payments-workspace.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(header, /primaryNavigation/);
+  assert.match(header, /sidebar-advanced/);
+  assert.match(header, /role-switcher/);
+  assert.match(dashboard, /next-action-panel/);
+  assert.match(dashboard, /journey-summary/);
+  assert.match(payments, /payment-choice-grid/);
+  assert.match(payments, /payments\.challengeTitle/);
+});
+
 test("removes temporary starter metadata and dependencies", async () => {
   const [page, layout, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

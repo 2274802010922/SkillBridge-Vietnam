@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { translateStatus, useLanguage } from "./i18n";
 
 type Membership = {
@@ -35,6 +36,7 @@ type Challenge = {
 
 export function ChallengesWorkspace({ memberships, universities }: { memberships: Membership[]; universities: University[] }) {
   const { t } = useLanguage();
+  const router = useRouter();
   const businessMemberships = memberships.filter((item) =>
     item.organization_kind === "business" && ["business_admin", "challenge_manager"].includes(item.role));
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -55,6 +57,7 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [formStep, setFormStep] = useState<1 | 2 | 3>(1);
   const managed = useMemo(() => challenges.filter((item) => item.can_manage), [challenges]);
 
   async function load() {
@@ -102,6 +105,19 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
       await load();
     }
     setBusy(false);
+  }
+
+  function nextFormStep() {
+    if (formStep === 1 && (!organizationId || !reviewerOrganizationId)) {
+      setNotice(t("challenge.stepOneRequired"));
+      return;
+    }
+    if (formStep === 2 && (title.trim().length < 5 || brief.trim().length < 40 || !skills.split(",").some((item) => item.trim()))) {
+      setNotice(t("challenge.stepTwoRequired"));
+      return;
+    }
+    setNotice(null);
+    setFormStep((current) => current === 3 ? 3 : (current + 1) as 1 | 2 | 3);
   }
 
   async function publish(id: string) {
@@ -155,7 +171,10 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
     const response = await fetch(`/api/challenges/${id}/join`, { method: "POST" });
     const data = await response.json() as { error?: string };
     setNotice(response.ok ? t("challenge.joined") : data.error ?? t("challenge.actionError"));
-    if (response.ok) await load();
+    if (response.ok) {
+      await load();
+      window.setTimeout(() => router.push("/app/submissions"), 450);
+    }
     setBusy(false);
   }
 
@@ -173,38 +192,35 @@ export function ChallengesWorkspace({ memberships, universities }: { memberships
       </div>
     </div>
 
-    {businessMemberships.length > 0 && <section className="app-panel challenge-builder">
+    {businessMemberships.length > 0 && <section className="app-panel challenge-builder challenge-wizard">
       <div>
         <span className="panel-kicker">{t("challenge.new")}</span>
         <h2>{t("challenge.createBrief")}</h2>
         <p>{t("challenge.createDescription")}</p>
+        <ol className="wizard-steps" aria-label={t("challenge.wizardProgress")}>
+          {[t("challenge.stepBasics"), t("challenge.stepBrief"), t("challenge.stepReward")].map((label, index) => <li className={formStep === index + 1 ? "active" : formStep > index + 1 ? "complete" : ""} key={label}><span>{formStep > index + 1 ? "✓" : index + 1}</span><strong>{label}</strong></li>)}
+        </ol>
+        <p className="wizard-helper">{formStep === 1 ? t("challenge.stepOneHelper") : formStep === 2 ? t("challenge.stepTwoHelper") : t("challenge.stepThreeHelper")}</p>
       </div>
       <div className="stack-form">
-        <select value={organizationId} onChange={(event) => setOrganizationId(event.target.value)}>
-          {businessMemberships.map((item) => <option value={item.organization_id} key={item.id}>{item.organization_name}</option>)}
-        </select>
-        <select value={reviewerOrganizationId} onChange={(event) => setReviewerOrganizationId(event.target.value)}>
-          <option value="">{t("challenge.selectReviewer")}</option>
-          {universities.map((item) => <option value={item.id} key={item.id}>{item.name} · {translateStatus(t, item.verification_status)}</option>)}
-        </select>
-        <select aria-label="Chế độ tham gia" value={accessType} onChange={(event) => setAccessType(event.target.value as "" | "public" | "invite_only")}>
-          <option value="">{t("challenge.selectAccess")}</option>
-          <option value="public">{t("challenge.publicOption")}</option>
-          <option value="invite_only">{t("challenge.inviteOption")}</option>
-        </select>
-        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t("challenge.titlePlaceholder")} />
-        <textarea value={brief} onChange={(event) => setBrief(event.target.value)} placeholder={t("challenge.briefPlaceholder")} />
-        <input value={skills} onChange={(event) => setSkills(event.target.value)} placeholder={t("challenge.skillsPlaceholder")} />
-        <input value={reward} onChange={(event) => setReward(event.target.value)} placeholder={t("challenge.rewardPlaceholder")} />
-        <select aria-label={t("challenge.rewardType")} value={rewardType} onChange={(event) => { setRewardType(event.target.value as "" | "usdc" | "badge"); if (event.target.value === "badge") setRewardAmountUsdc(""); }}>
-          <option value="">{t("challenge.selectRewardType")}</option>
-          <option value="usdc">{t("challenge.rewardUsdc")}</option>
-          <option value="badge">{t("challenge.rewardBadge")}</option>
-        </select>
-        {rewardType === "usdc" && <div className="invoice-form-grid"><label>{t("challenge.rewardAmount")}<input aria-label={t("challenge.rewardAmount")} inputMode="decimal" value={rewardAmountUsdc} onChange={(event) => setRewardAmountUsdc(event.target.value)} placeholder={t("challenge.rewardAmountPlaceholder")} /></label><label>{t("challenge.rewardSlots")}<input type="number" min="1" max="100" value={rewardSlots} onChange={(event) => setRewardSlots(event.target.value)} /></label></div>}
-        {rewardType === "badge" && <><input value={badgeName} onChange={(event) => setBadgeName(event.target.value)} placeholder={t("challenge.badgeName")} /><textarea value={badgeDescription} onChange={(event) => setBadgeDescription(event.target.value)} placeholder={t("challenge.badgeDescription")} /><label>{t("challenge.rewardSlots")}<input type="number" min="1" max="100" value={rewardSlots} onChange={(event) => setRewardSlots(event.target.value)} /></label></>}
-        <label>{t("challenge.minimumScore")}<input type="number" min="0" max="100" value={minimumScore} onChange={(event) => setMinimumScore(event.target.value)} /></label>
-        <button className="button button-primary" disabled={busy || !organizationId || !reviewerOrganizationId || !accessType || !rewardType} onClick={create}>{t("challenge.create")}</button>
+        {formStep === 1 && <>
+          <label>{t("challenge.organizationLabel")}<select value={organizationId} onChange={(event) => setOrganizationId(event.target.value)}>{businessMemberships.map((item) => <option value={item.organization_id} key={item.id}>{item.organization_name}</option>)}</select></label>
+          <label>{t("challenge.reviewerLabel")}<select value={reviewerOrganizationId} onChange={(event) => setReviewerOrganizationId(event.target.value)}><option value="">{t("challenge.selectReviewer")}</option>{universities.map((item) => <option value={item.id} key={item.id}>{item.name} · {translateStatus(t, item.verification_status)}</option>)}</select></label>
+        </>}
+        {formStep === 2 && <>
+          <label>{t("challenge.titleLabel")}<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t("challenge.titlePlaceholder")} /></label>
+          <label>{t("challenge.briefLabel")}<textarea value={brief} onChange={(event) => setBrief(event.target.value)} placeholder={t("challenge.briefPlaceholder")} /></label>
+          <label>{t("challenge.skillsLabel")}<input value={skills} onChange={(event) => setSkills(event.target.value)} placeholder={t("challenge.skillsPlaceholder")} /></label>
+          <label>{t("challenge.outcomeLabel")}<input value={reward} onChange={(event) => setReward(event.target.value)} placeholder={t("challenge.rewardPlaceholder")} /></label>
+        </>}
+        {formStep === 3 && <>
+          <label>{t("challenge.accessLabel")}<select aria-label={t("challenge.accessLabel")} value={accessType} onChange={(event) => setAccessType(event.target.value as "" | "public" | "invite_only")}><option value="">{t("challenge.selectAccess")}</option><option value="public">{t("challenge.publicOption")}</option><option value="invite_only">{t("challenge.inviteOption")}</option></select></label>
+          <label>{t("challenge.rewardType")}<select aria-label={t("challenge.rewardType")} value={rewardType} onChange={(event) => { setRewardType(event.target.value as "" | "usdc" | "badge"); if (event.target.value === "badge") setRewardAmountUsdc(""); }}><option value="">{t("challenge.selectRewardType")}</option><option value="usdc">{t("challenge.rewardUsdc")}</option><option value="badge">{t("challenge.rewardBadge")}</option></select></label>
+          {rewardType === "usdc" && <div className="invoice-form-grid"><label>{t("challenge.rewardAmount")}<input aria-label={t("challenge.rewardAmount")} inputMode="decimal" value={rewardAmountUsdc} onChange={(event) => setRewardAmountUsdc(event.target.value)} placeholder={t("challenge.rewardAmountPlaceholder")} /></label><label>{t("challenge.rewardSlots")}<input type="number" min="1" max="100" value={rewardSlots} onChange={(event) => setRewardSlots(event.target.value)} /></label></div>}
+          {rewardType === "badge" && <><label>{t("challenge.badgeName")}<input value={badgeName} onChange={(event) => setBadgeName(event.target.value)} placeholder={t("challenge.badgeName")} /></label><label>{t("challenge.badgeDescription")}<textarea value={badgeDescription} onChange={(event) => setBadgeDescription(event.target.value)} placeholder={t("challenge.badgeDescription")} /></label><label>{t("challenge.rewardSlots")}<input type="number" min="1" max="100" value={rewardSlots} onChange={(event) => setRewardSlots(event.target.value)} /></label></>}
+          <label>{t("challenge.minimumScore")}<input type="number" min="0" max="100" value={minimumScore} onChange={(event) => setMinimumScore(event.target.value)} /></label>
+        </>}
+        <div className="wizard-actions">{formStep > 1 && <button className="button button-secondary" disabled={busy} onClick={() => setFormStep((current) => (current - 1) as 1 | 2 | 3)}>{t("common.back")}</button>}{formStep < 3 ? <button className="button button-primary" disabled={busy} onClick={nextFormStep}>{t("common.continue")}</button> : <button className="button button-primary" disabled={busy || !organizationId || !reviewerOrganizationId || !accessType || !rewardType} onClick={create}>{t("challenge.create")}</button>}</div>
       </div>
     </section>}
 
