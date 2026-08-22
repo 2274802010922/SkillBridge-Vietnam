@@ -4730,3 +4730,888 @@ button:hover .k95-kinetic-char .char-bot {
     font-size: 40px;
   }
 }
+
+/* Product workspace readability pass.
+   Scoped to authenticated surfaces so the landing page and its motion system
+   keep their current visual treatment. */
+.product-app {
+  --workspace-copy-size: 15px;
+  --workspace-copy-leading: 1.65;
+}
+
+.product-app .app-layout {
+  width: min(1380px, calc(100% - 48px));
+  grid-template-columns: 224px minmax(0, 1fr);
+  gap: 48px;
+}
+
+.product-app .app-content,
+.product-app .workspace-product-content {
+  font-size: var(--workspace-copy-size);
+  line-height: var(--workspace-copy-leading);
+}
+
+.product-app .app-welcome {
+  align-items: start;
+  gap: 36px;
+  margin-bottom: 32px;
+}
+
+.product-app .app-welcome h1 {
+  margin-block: 11px 12px;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.product-app .app-welcome p,
+.product-app .app-panel > p,
+.product-app .invitation-panel > div > p,
+.product-app .challenge-card > p,
+.product-app .opportunity-list p,
+.product-app .passport-card p,
+.product-app .payout-card > p,
+.product-app .review-brief,
+.product-app .review-editor > blockquote,
+.product-app .payment-choice-card p,
+.product-app .payment-choice-card ol,
+.product-app .payment-explainer > p,
+.product-app .manual-path-description,
+.product-app .assessment-footnote {
+  font-size: var(--workspace-copy-size);
+  line-height: var(--workspace-copy-leading);
+}
+
+.product-app .app-welcome p,
+.product-app .app-panel > p,
+.product-app .review-brief,
+.product-app .next-action-copy p {
+  max-width: 72ch;
+}
+
+.product-app .app-panel h2,
+.product-app .challenge-card h2,
+.product-app .opportunity-list h2,
+.product-app .passport-card h2,
+.product-app .invoice-card h2,
+.product-app .payout-card h2,
+.product-app .review-editor h2,
+.product-app .review-path-card h3,
+.product-app .assessment-column-heading h3 {
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.product-app .panel-kicker,
+.product-app .app-welcome > div > span,
+.product-app .entity-top,
+.product-app .sidebar-label,
+.product-app .sidebar-section-label,
+.product-app .submission-progress > span,
+.product-app .assessment-column-heading span,
+.product-app .review-path-card > span,
+.product-app .invoice-card dt,
+.product-app .payout-card dt,
+.product-app .opportunity-list dt,
+.product-app .audit-list article div > span {
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: .07em;
+}
+
+.product-app .app-sidebar {
+  gap: 8px;
+}
+
+.product-app .app-sidebar > a,
+.product-app .sidebar-advanced > a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 11px 13px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.product-app .sidebar-advanced summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.product-app .sidebar-foot span {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.product-app .sidebar-foot strong {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.product-app .sidebar-foot small {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.product-app .role-context-badge,
+.product-app .role-switcher,
+.product-app .wallet-pill,
+.product-app .language-switcher {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.product-app .role-context-badge,
+.product-app .role-switcher {
+  min-height: 38px;
+  align-items: center;
+}
+
+.product-app .wallet-pill button,
+.product-app .language-switcher button {
+  min-height: 34px;
+  font-size: 12px;
+}
+
+.product-app .app-panel,
+.product-app .challenge-card,
+.product-app .opportunity-list > article,
+.product-app .passport-card,
+.product-app .invoice-card,
+.product-app .payout-card,
+.product-app .assessment-column,
+.product-app .review-path-card {
+  padding: clamp(24px, 2.2vw, 30px);
+}
+
+.product-app .dashboard-grid,
+.product-app .challenge-list,
+.product-app .opportunity-list,
+.product-app .passport-grid,
+.product-app .invoice-list,
+.product-app .payout-list,
+.product-app .talent-grid,
+.product-app .payment-choice-grid {
+  gap: 24px;
+}
+
+.product-app .stack-form {
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.product-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.product-app select,
+.product-app textarea {
+  min-height: 48px;
+  padding: 11px 14px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.product-app label,
+.product-app .challenge-wizard .stack-form > label,
+.product-app .invoice-form label,
+.product-app .submission-editor > label,
+.product-app .opportunity-builder label {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.product-app .button,
+.product-app .button-secondary {
+  min-height: 46px;
+  padding-inline: 18px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.product-app .text-button,
+.product-app .file-list button,
+.product-app .file-actions a,
+.product-app .passport-links a,
+.product-app .chain-proof-link,
+.product-app .review-decisions > button:not(.button),
+.product-app .join-url button,
+.product-app .passport-card > button {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.product-app .app-notice {
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.product-app .join-url {
+  gap: 12px;
+  padding: 12px;
+}
+
+.product-app .join-url code,
+.product-app .passport-score span {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.product-app .identity-card {
+  padding: 20px;
+}
+
+.product-app .identity-card small,
+.product-app .identity-card code,
+.product-app .identity-card b {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.product-app .identity-card code {
+  margin-block: 11px;
+}
+
+.product-app .next-action-panel {
+  padding: 28px 30px;
+}
+
+.product-app .next-action-copy h2 {
+  line-height: 1.14;
+  text-wrap: balance;
+}
+
+.product-app .next-action-copy p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.product-app .journey-summary {
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.product-app .journey-summary > div {
+  min-height: 54px;
+  gap: 10px;
+  padding: 11px 13px;
+}
+
+.product-app .journey-summary strong,
+.product-app .wizard-steps li,
+.product-app .submission-progress li {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.product-app .wizard-steps li span,
+.product-app .submission-progress li i {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+.product-app .membership-list,
+.product-app .submission-list,
+.product-app .file-list,
+.product-app .review-rubric,
+.product-app .review-assessment-columns .review-rubric {
+  gap: 12px;
+}
+
+.product-app .membership-list article,
+.product-app .submission-list button,
+.product-app .file-list article {
+  padding: 15px 16px;
+}
+
+.product-app .membership-list article {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.product-app .membership-list strong,
+.product-app .file-list article strong,
+.product-app .submission-list strong {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.product-app .membership-list small,
+.product-app .membership-list b,
+.product-app .submission-list small,
+.product-app .submission-list span,
+.product-app .file-list small {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.product-app .entity-top {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.product-app .entity-tags {
+  gap: 8px;
+}
+
+.product-app .entity-tags span,
+.product-app .assessment-column-heading > b,
+.product-app .official-mark,
+.product-app .ai-score-badge {
+  padding: 6px 9px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.product-app .challenge-card > p,
+.product-app .payment-choice-card p,
+.product-app .review-path-card p {
+  min-height: 0;
+}
+
+.product-app .challenge-card dl,
+.product-app .invoice-card dl,
+.product-app .payout-card dl,
+.product-app .opportunity-list dl {
+  gap: 16px;
+}
+
+.product-app .challenge-card dd,
+.product-app .invoice-card dd,
+.product-app .payout-card dd,
+.product-app .opportunity-list dd {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.product-app .challenge-actions,
+.product-app .invoice-actions,
+.product-app .file-actions,
+.product-app .review-decisions,
+.product-app .chain-actions,
+.product-app .passport-links {
+  gap: 10px;
+}
+
+.product-app .file-uploader {
+  padding: 20px;
+}
+
+.product-app .editor-heading small,
+.product-app .file-uploader small {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.product-app .review-editor > blockquote {
+  padding: 17px 18px;
+}
+
+.product-app .assessment-column-heading {
+  gap: 16px;
+  padding-bottom: 16px;
+}
+
+.product-app .assessment-column .assessment-summary {
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 20px;
+  padding: 17px;
+}
+
+.product-app .assessment-column .assessment-summary p,
+.product-app .review-assessment-columns .review-rubric p,
+.product-app .review-assessment-columns .review-rubric blockquote,
+.product-app .human-summary textarea,
+.product-app .rubric-note,
+.product-app .review-note {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.product-app .review-assessment-columns .review-rubric > article {
+  padding: 16px;
+}
+
+.product-app .review-assessment-columns .review-rubric > article > div > strong {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.product-app .review-rubric blockquote small {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.product-app .assessment-footnote {
+  padding-top: 16px;
+}
+
+.product-app .invoice-toolbar > span,
+.product-app .invoice-amount small,
+.product-app .invoice-amount span,
+.product-app .payout-amount span {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.product-app .invoice-verify label,
+.product-app .payout-verify label {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.product-app .invoice-verify input,
+.product-app .payout-verify input,
+.product-app .passport-card > code,
+.product-app .audit-list pre {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.product-app .audit-list > article {
+  padding: 20px 22px;
+}
+
+.product-app .audit-list article div > strong {
+  margin-block: 8px 6px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.product-app .audit-list article div > small,
+.product-app .audit-list time,
+.product-app .audit-list summary {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.product-app .technical-details summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@media (max-width: 1180px) and (min-width: 1024px) {
+  .product-app .app-layout {
+    gap: 34px;
+  }
+
+  .product-app .review-layout,
+  .product-app .submission-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .product-app .submission-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .product-app .app-layout {
+    width: min(100% - 40px, 1240px);
+  }
+
+  .product-app .mobile-workspace-navigation a {
+    min-height: 48px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .product-app .mobile-workspace-trigger {
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .product-app .mobile-nav-heading,
+  .product-app .mobile-nav-heading strong,
+  .product-app .mobile-nav-advanced summary {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 767px) {
+  .product-app {
+    --workspace-copy-size: 16px;
+    --workspace-copy-leading: 1.65;
+  }
+
+  .product-app .app-layout {
+    width: min(100% - 32px, 1240px);
+    padding-block: 28px 64px;
+  }
+
+  .product-app .app-welcome {
+    gap: 20px;
+    margin-bottom: 26px;
+  }
+
+  .product-app .app-welcome h1 {
+    line-height: 1.06;
+  }
+
+  .product-app .app-panel,
+  .product-app .challenge-card,
+  .product-app .opportunity-list > article,
+  .product-app .passport-card,
+  .product-app .invoice-card,
+  .product-app .payout-card,
+  .product-app .assessment-column,
+  .product-app .review-path-card {
+    padding: 22px 20px;
+  }
+
+  .product-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  .product-app select,
+  .product-app textarea {
+    font-size: 16px;
+  }
+
+  .product-app .button,
+  .product-app .button-secondary,
+  .product-app .text-button,
+  .product-app .file-actions > a,
+  .product-app .passport-links > a,
+  .product-app .chain-actions > a {
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  .product-app .next-action-panel {
+    padding: 24px 20px;
+  }
+
+  .product-app .journey-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .product-app .journey-summary > div {
+    min-height: 50px;
+  }
+
+  .product-app .challenge-actions,
+  .product-app .wizard-actions,
+  .product-app .membership-list article {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .product-app .audit-list > article {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .product-app .challenge-actions > *,
+  .product-app .wizard-actions > *,
+  .product-app .challenge-actions .button {
+    width: 100%;
+  }
+
+  .product-app .membership-list b {
+    align-self: flex-start;
+  }
+
+  .product-app .assessment-column .assessment-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .product-app .invoice-amount,
+  .product-app .payout-amount {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .product-app .invoice-amount small {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-app .app-topbar {
+    padding-inline: 8px;
+  }
+
+  .product-app .topbar-actions {
+    gap: 5px;
+  }
+
+  .product-app .role-context-badge {
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .product-app .role-switcher {
+    max-width: 72px;
+    padding-inline: 6px;
+  }
+
+  .product-app .role-switcher select {
+    max-width: 60px;
+  }
+
+  .product-app .wallet-pill {
+    gap: 0;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .product-app .wallet-status-dot {
+    display: none;
+  }
+
+  .product-app .language-switcher {
+    gap: 1px;
+    padding: 3px;
+  }
+
+  .product-app .language-switcher button {
+    min-width: 30px;
+    min-height: 36px;
+    padding-inline: 5px;
+  }
+}
+
+/* The public role simulator is part of the product experience too. */
+.role-workspace .workspace-tag,
+.role-workspace .workspace-status-card > span,
+.role-workspace .role-panel-heading > div > span,
+.role-workspace .entity-top,
+.role-workspace .role-action-zone small,
+.role-workspace .shared-state-heading {
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: .07em;
+}
+
+.role-workspace .workspace-status-card > small,
+.role-workspace .workspace-status-card button {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.role-workspace .workspace-status-card button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.role-workspace .role-mode-notice {
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.role-workspace .role-mode-notice strong {
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.role-workspace .role-tabs button {
+  min-height: 96px;
+  gap: 15px;
+  padding: 18px 20px;
+}
+
+.role-workspace .role-tabs small {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.role-workspace .role-tabs strong {
+  margin-top: 7px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.role-workspace .role-tabs i {
+  padding: 5px 7px;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.role-workspace .journey-rail > div {
+  min-height: 50px;
+  gap: 8px;
+  padding: 12px 10px;
+}
+
+.role-workspace .journey-rail span {
+  width: 24px;
+  height: 24px;
+  font-size: 9px;
+}
+
+.role-workspace .journey-rail small {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.role-workspace .role-dashboard {
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr);
+}
+
+.role-workspace .role-main-panel {
+  padding: 34px;
+}
+
+.role-workspace .role-panel-heading p {
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.role-workspace .role-content-grid {
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.role-workspace .workspace-entity {
+  padding: 22px;
+}
+
+.role-workspace .workspace-entity h3 {
+  line-height: 1.22;
+  text-wrap: balance;
+}
+
+.role-workspace .workspace-entity p {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.role-workspace .entity-tags {
+  gap: 8px;
+}
+
+.role-workspace .entity-tags span {
+  padding: 6px 9px;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.role-workspace .workspace-entity dl {
+  flex-wrap: wrap;
+  gap: 18px 34px;
+}
+
+.role-workspace .workspace-entity dt,
+.role-workspace .hash-line span,
+.role-workspace .review-score span,
+.role-workspace .review-score small {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.role-workspace .workspace-entity dd,
+.role-workspace .hash-line code {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.role-workspace .workspace-entity blockquote {
+  padding: 13px 15px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.role-workspace .role-action-zone small {
+  color: var(--coral);
+}
+
+.role-workspace .role-action-zone strong {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.role-workspace .shared-state-panel {
+  padding: 28px;
+}
+
+.role-workspace .shared-state-summary {
+  gap: 10px;
+}
+
+.role-workspace .shared-state-summary > div {
+  padding: 13px;
+}
+
+.role-workspace .shared-state-summary span,
+.role-workspace .role-event small {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.role-workspace .shared-state-summary strong,
+.role-workspace .role-event strong {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.role-workspace .role-event {
+  gap: 12px;
+  padding-block: 15px;
+}
+
+.role-workspace .role-event p {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1023px) {
+  .role-workspace .role-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .role-workspace .role-main-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 680px) {
+  .role-workspace {
+    width: min(100% - 32px, 1240px);
+  }
+
+  .role-workspace .workspace-intro > div > p,
+  .role-workspace .role-panel-heading p {
+    font-size: 16px;
+  }
+
+  .role-workspace .role-mode-notice,
+  .role-workspace .role-panel-heading,
+  .role-workspace .role-action-zone,
+  .role-workspace .hash-line {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .role-workspace .role-tabs button {
+    min-width: 210px;
+  }
+
+  .role-workspace .journey-rail > div {
+    min-width: 136px;
+  }
+
+  .role-workspace .role-main-panel,
+  .role-workspace .shared-state-panel {
+    padding: 24px 20px;
+  }
+
+  .role-workspace .role-content-grid,
+  .role-workspace .shared-state-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
