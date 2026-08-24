@@ -26,6 +26,168 @@
   --shadow-float: 0 18px 44px rgba(11, 20, 38, .16);
 }
 
+/* Devnet off-ramp: real on-chain transfer, explicitly isolated test bank leg. */
+.product-app .cashout-workspace { display: grid; gap: 20px; }
+.product-app .cashout-welcome > div:first-child { max-width: 860px; }
+.product-app .cashout-welcome h1 { max-width: 18ch; text-wrap: balance; }
+.product-app .cashout-mode-card strong { color: var(--blue); font: 800 clamp(25px, 3vw, 38px)/1 var(--font-geist-mono), monospace; letter-spacing: -.06em; }
+.product-app .cashout-safety-banner { display: flex; align-items: flex-start; gap: 12px; padding: 15px 17px; border: 1px solid #e2c26f; border-radius: 12px; background: #fff9e9; color: #674916; }
+.product-app .cashout-safety-banner > span { display: grid; width: 25px; height: 25px; flex: none; place-items: center; border: 1px solid currentColor; border-radius: 50%; font: 800 12px/1 var(--font-geist-mono), monospace; }
+.product-app .cashout-safety-banner strong { display: block; margin-bottom: 3px; color: #4f370f; font-size: 13px; }
+.product-app .cashout-safety-banner p { margin: 0; font-size: 12px; line-height: 1.55; }
+.product-app .cashout-config-error { margin: 0; border-color: #efb0a8; background: #fff2f0; color: #8a281d; }
+
+.product-app .cashout-stepper { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.product-app .cashout-stepper li { display: flex; min-width: 0; min-height: 54px; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.58); color: var(--muted); }
+.product-app .cashout-stepper li > span { display: grid; width: 27px; height: 27px; flex: none; place-items: center; border-radius: 50%; background: var(--surface-muted); color: var(--blue); font: 800 10px/1 var(--font-geist-mono), monospace; }
+.product-app .cashout-stepper li b { min-width: 0; overflow-wrap: anywhere; font-size: 12px; line-height: 1.3; }
+.product-app .cashout-stepper li.active { border-color: var(--ink); background: var(--paper); color: var(--ink); box-shadow: 3px 3px 0 var(--lime-strong); }
+.product-app .cashout-stepper li.active > span { background: var(--lime); color: var(--ink); }
+.product-app .cashout-stepper li.done { border-color: #b5d184; background: #f8ffed; color: #315d21; }
+.product-app .cashout-stepper li.done > span { background: #dff2bb; color: #315d21; }
+
+.product-app .cashout-flow-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 16px; align-items: start; }
+.product-app .cashout-beneficiary-panel,
+.product-app .cashout-amount-panel,
+.product-app .cashout-wallet-panel { display: grid; gap: 18px; margin: 0; }
+.product-app .cashout-section-heading { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.product-app .cashout-section-heading > div { min-width: 0; }
+.product-app .cashout-section-heading h2 { margin: 5px 0 0; font-size: clamp(21px, 2.4vw, 29px); line-height: 1.12; text-wrap: balance; }
+.product-app .cashout-section-heading p { max-width: 720px; margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.product-app .cashout-security-chip,
+.product-app .cashout-status-pill { display: inline-flex; min-height: 28px; flex: none; align-items: center; padding: 5px 9px; border: 1px solid #b9d967; border-radius: 999px; background: #f1f8df; color: #315d21; font: 750 9px/1.2 var(--font-geist-mono), monospace; letter-spacing: .03em; text-transform: uppercase; }
+.product-app .cashout-beneficiary-panel > label,
+.product-app .cashout-beneficiary-form label,
+.product-app .cashout-amount-entry label,
+.product-app .cashout-manual-verify label { display: grid; gap: 7px; color: var(--ink-soft); font-size: 12px; font-weight: 750; }
+.product-app .cashout-beneficiary-panel select,
+.product-app .cashout-beneficiary-form input,
+.product-app .cashout-beneficiary-form select,
+.product-app .cashout-amount-entry input,
+.product-app .cashout-manual-verify input { width: 100%; min-height: 46px; }
+.product-app .cashout-beneficiary-form { padding-top: 13px; border-top: 1px solid var(--line); }
+.product-app .cashout-beneficiary-form summary { min-height: 44px; padding: 11px 0; color: var(--blue); cursor: pointer; font-size: 13px; font-weight: 750; }
+.product-app .cashout-beneficiary-form[open] summary { margin-bottom: 10px; }
+.product-app .cashout-form-grid { display: grid; grid-template-columns: minmax(0, .55fr) minmax(0, 1fr); gap: 11px; margin-bottom: 12px; }
+.product-app .cashout-form-grid .full { grid-column: 1 / -1; }
+.product-app .cashout-beneficiary-form > .button { width: 100%; }
+.product-app .cashout-amount-panel { align-content: space-between; min-height: 100%; }
+.product-app .cashout-amount-panel h2 { margin: 5px 0 7px; font-size: clamp(22px, 2.5vw, 30px); line-height: 1.12; }
+.product-app .cashout-amount-panel p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.product-app .cashout-amount-entry { display: grid; gap: 11px; }
+.product-app .cashout-token-input { display: flex; min-width: 0; align-items: center; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--paper); }
+.product-app .cashout-token-input:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(45, 94, 209, .14); }
+.product-app .cashout-token-input input { min-width: 0; border: 0; box-shadow: none; font-size: 20px; font-weight: 750; }
+.product-app .cashout-token-input input:focus { box-shadow: none; }
+.product-app .cashout-token-input span { flex: none; padding: 0 13px; color: var(--blue); font: 800 11px/1 var(--font-geist-mono), monospace; }
+.product-app .cashout-amount-entry .button { width: 100%; }
+
+.product-app .cashout-quote { display: grid; grid-template-columns: minmax(190px, .62fr) minmax(0, 1.38fr); gap: 18px; padding: clamp(19px, 2.5vw, 27px); border: 1px solid var(--ink); border-radius: 14px; background: var(--paper); box-shadow: 4px 4px 0 rgba(7, 19, 36, .12); }
+.product-app .cashout-quote-lead { display: grid; align-content: start; gap: 8px; }
+.product-app .cashout-quote-lead > span { color: var(--coral); font: 800 9px/1.3 var(--font-geist-mono), monospace; letter-spacing: .09em; }
+.product-app .cashout-quote-lead > strong { font-size: clamp(31px, 4vw, 48px); line-height: 1; letter-spacing: -.065em; }
+.product-app .cashout-quote-lead > small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.product-app .cashout-countdown { display: inline-flex; width: fit-content; min-height: 31px; align-items: center; gap: 7px; margin-top: 5px; padding: 6px 9px; border: 1px solid #b9d967; border-radius: 999px; background: #f1f8df; color: #315d21; font: 800 11px/1 var(--font-geist-mono), monospace; }
+.product-app .cashout-countdown.expired { border-color: #efb0a8; background: #fff2f0; color: #9a3025; }
+.product-app .cashout-quote dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.product-app .cashout-quote dl > div { display: grid; min-height: 90px; align-content: space-between; gap: 13px; padding: 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-muted); }
+.product-app .cashout-quote dl > div.cashout-net { border-color: #a7cc69; background: #f7ffed; }
+.product-app .cashout-quote dt { color: var(--muted); font: 750 8px/1.35 var(--font-geist-mono), monospace; letter-spacing: .055em; text-transform: uppercase; }
+.product-app .cashout-quote dd { margin: 0; color: var(--ink); font-size: 16px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+.product-app .cashout-confirmation { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-top: 17px; border-top: 1px dashed var(--line-strong); }
+.product-app .cashout-confirmation > strong { max-width: 700px; color: #8a281d; font-size: 13px; line-height: 1.5; }
+.product-app .cashout-confirmation .check-row { display: flex; max-width: 760px; align-items: flex-start; gap: 10px; color: var(--ink-soft); font-size: 12px; font-weight: 650; line-height: 1.55; }
+.product-app .cashout-confirmation .check-row input { width: 18px; height: 18px; min-height: 18px; flex: none; margin-top: 1px; }
+.product-app .cashout-confirmation .button { min-width: 220px; }
+.product-app .cashout-expired-recovery { grid-column: 1 / -1; display: grid; gap: 13px; }
+.product-app .cashout-expired-recovery .cashout-confirmation { grid-column: auto; }
+
+.product-app .cashout-status-pill.status-onchain_pending { border-color: #e2c26f; background: #fff9e9; color: #674916; }
+.product-app .cashout-status-pill.status-onchain_failed { border-color: #efb0a8; background: #fff2f0; color: #8a281d; }
+.product-app .cashout-status-pill.status-bank_processing,
+.product-app .cashout-status-pill.status-sandbox_completed { border-color: #9ac65a; background: #f1f8df; color: #315d21; }
+.product-app .cashout-wallet-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr); gap: 14px; align-items: start; }
+.product-app .cashout-payment-actions { display: grid; gap: 12px; min-width: 0; }
+.product-app .cashout-payment-actions .wallet-payment-control { display: grid; gap: 9px; }
+.product-app .cashout-payment-actions .wallet-payment-control > select,
+.product-app .cashout-payment-actions .wallet-payment-control > .button,
+.product-app .cashout-solana-pay { width: 100%; }
+.product-app .cashout-manual-verify,
+.product-app .cashout-bank-sandbox { display: grid; gap: 10px; padding: 14px; border: 1px dashed var(--line-strong); border-radius: 10px; background: var(--surface-muted); }
+.product-app .cashout-manual-verify small,
+.product-app .cashout-bank-sandbox p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.product-app .cashout-manual-verify .button,
+.product-app .cashout-bank-sandbox .button { width: 100%; }
+.product-app .cashout-order-proof { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfd; }
+.product-app .cashout-order-proof > span { color: var(--blue); font: 800 9px/1.3 var(--font-geist-mono), monospace; letter-spacing: .08em; }
+.product-app .cashout-order-proof dl { display: grid; gap: 0; margin: 10px 0 0; }
+.product-app .cashout-order-proof dl > div { display: grid; grid-template-columns: minmax(100px, .72fr) minmax(0, 1.28fr); gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.product-app .cashout-order-proof dt { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.product-app .cashout-order-proof dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: var(--ink); font: 700 10px/1.45 var(--font-geist-mono), monospace; }
+.product-app .cashout-order-proof a { color: var(--blue); text-decoration: underline; text-underline-offset: 2px; }
+.product-app .cashout-complete { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 15px; border: 1px solid #9ac65a; border-radius: 10px; background: #f7ffed; }
+.product-app .cashout-complete > span { display: grid; width: 34px; height: 34px; flex: none; place-items: center; border-radius: 50%; background: var(--lime); color: var(--ink); font-weight: 900; }
+.product-app .cashout-complete > div { min-width: 180px; flex: 1; }
+.product-app .cashout-complete p { margin: 3px 0 0; color: #496238; font-size: 12px; line-height: 1.5; }
+.product-app .cashout-timeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.product-app .cashout-timeline li { display: flex; min-width: 0; align-items: center; gap: 8px; color: var(--muted); }
+.product-app .cashout-timeline li > span { display: grid; width: 25px; height: 25px; flex: none; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); font: 800 9px/1 var(--font-geist-mono), monospace; }
+.product-app .cashout-timeline li b { overflow-wrap: anywhere; font-size: 10px; line-height: 1.3; }
+.product-app .cashout-timeline li.current { color: var(--blue); }
+.product-app .cashout-timeline li.current > span { border-color: var(--blue); background: #eff5ff; }
+.product-app .cashout-timeline li.done { color: #315d21; }
+.product-app .cashout-timeline li.done > span { border-color: #9ac65a; background: #f1f8df; }
+
+.product-app .cashout-history { display: grid; gap: 14px; }
+.product-app .cashout-history-list { display: grid; gap: 8px; margin-top: 0; }
+.product-app .cashout-history-list > button { display: flex; width: 100%; min-height: 62px; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.68); color: var(--ink); cursor: pointer; text-align: left; }
+.product-app .cashout-history-list > button:hover { border-color: var(--blue); background: #f7faff; }
+.product-app .cashout-history-list > button:focus-visible { outline: 3px solid rgba(45,94,209,.28); outline-offset: 2px; }
+.product-app .cashout-history-list > button.active { border-color: var(--ink); box-shadow: 3px 3px 0 var(--lime-strong); }
+.product-app .cashout-history-list > button > div { display: grid; gap: 3px; min-width: 0; }
+.product-app .cashout-history-list > button > div:last-child { text-align: right; }
+.product-app .cashout-history-list strong { font-size: 14px; }
+.product-app .cashout-history-list span,
+.product-app .cashout-history-list small { overflow-wrap: anywhere; color: var(--muted); font: 700 9px/1.4 var(--font-geist-mono), monospace; }
+.product-app .cashout-history-list b { font-size: 13px; }
+.product-app .cashout-notice,
+.product-app .cashout-error { position: sticky; z-index: 5; bottom: 14px; margin: 0; box-shadow: 0 8px 24px rgba(7,19,36,.14); }
+
+@media (max-width: 900px) {
+  .product-app .cashout-flow-grid,
+  .product-app .cashout-quote,
+  .product-app .cashout-wallet-layout { grid-template-columns: minmax(0, 1fr); }
+  .product-app .cashout-confirmation { grid-column: 1; }
+  .product-app .cashout-quote dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .product-app .cashout-quote dl > div { min-height: 84px; }
+}
+
+@media (max-width: 700px) {
+  .product-app .cashout-stepper { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .product-app .cashout-quote dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .product-app .cashout-confirmation { align-items: stretch; flex-direction: column; }
+  .product-app .cashout-confirmation .button { width: 100%; min-width: 0; }
+  .product-app .cashout-timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 13px; }
+}
+
+@media (max-width: 520px) {
+  .product-app .cashout-workspace { gap: 16px; }
+  .product-app .cashout-safety-banner { padding: 13px; }
+  .product-app .cashout-stepper li { min-height: 50px; padding: 9px; }
+  .product-app .cashout-stepper li b { font-size: 11px; }
+  .product-app .cashout-section-heading { align-items: stretch; flex-direction: column; }
+  .product-app .cashout-security-chip,
+  .product-app .cashout-status-pill { width: fit-content; }
+  .product-app .cashout-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .product-app .cashout-form-grid .full { grid-column: auto; }
+  .product-app .cashout-quote { padding: 17px; }
+  .product-app .cashout-quote dl { grid-template-columns: minmax(0, 1fr); }
+  .product-app .cashout-quote dl > div { min-height: 0; }
+  .product-app .cashout-order-proof dl > div { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .product-app .cashout-history-list > button { align-items: stretch; flex-direction: column; }
+  .product-app .cashout-history-list > button > div:last-child { text-align: left; }
+}
+
 html { background: var(--cream); }
 
 body {

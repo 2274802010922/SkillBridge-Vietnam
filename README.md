@@ -24,9 +24,11 @@ internal review or an independent reviewing organization; only active reviewer
 members can open the queue, while a human reviewer explicitly approves every
 payout. The reviewing organization is shown on the challenge and review
 screens, and the Reward Vault signs that Devnet transaction with a Solana
-Explorer proof. The product also contains a
-clearly labelled USDC-to-VND Cash-out sandbox: it computes a simulated quote
-only and never collects banking data, sends USDC, or contacts an off-ramp.
+Explorer proof. The USDC-to-VND lab now creates a short-lived test quote,
+tokenizes a synthetic beneficiary, builds a reference-bound USDC transfer for
+the connected wallet, and verifies the finalized transaction on Solana Devnet.
+The on-chain leg is real Devnet activity; the bank/VND leg remains an explicit
+sandbox and never claims a real payout.
 
 The `/workspace` route is an isolated role simulator for judges and product
 walkthroughs. The authenticated `/app` routes are the production pilot surface:
@@ -97,7 +99,16 @@ to the Vercel project:
    Vault, configure a separate `SOLANA_REWARD_VAULT_SECRET` keypair and fund
    that Devnet wallet with enough SOL for payout fees. Its public address is
    derived server-side; never expose the secret to the browser.
-4. Deploy a Preview, test every wallet role, AI assessment, human approval,
+4. Configure the Devnet off-ramp lab values from `.env.example`. The default
+   settlement recipient is the public Reward Vault address; set
+   `CASHOUT_DEVNET_SETTLEMENT_WALLET` only when you have a separate public
+   Devnet settlement wallet. `CASHOUT_SANDBOX_VND_RATE` is a time-limited test
+   quote, not a live FX feed. The wallet-signed USDC transfer and Explorer proof
+   are real on Devnet, while the VND bank reconciliation remains a clearly
+   labelled sandbox. Do not enable Mainnet or claim real bank payout until a
+   licensed off-ramp provider supplies the Vietnam/VND corridor, KYC flow,
+   executable quotes and signed webhooks.
+5. Deploy a Preview, test every wallet role, AI assessment, human approval,
    Devnet issuance/revocation, and opportunity verification, then promote that
    exact deployment to Production.
 

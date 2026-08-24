@@ -350,9 +350,21 @@ const statements = [
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS cashout_beneficiaries (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider_beneficiary_id TEXT NOT NULL UNIQUE,
+    bank_code TEXT NOT NULL,
+    account_last4 TEXT NOT NULL,
+    account_holder_masked TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'sandbox_verified',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS cashout_sessions (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    beneficiary_id TEXT REFERENCES cashout_beneficiaries(id),
     wallet_address TEXT NOT NULL,
     amount_usdc TEXT NOT NULL,
     amount_atomic TEXT NOT NULL,
@@ -362,8 +374,42 @@ const statements = [
     provider TEXT NOT NULL DEFAULT 'skillbridge_sandbox',
     status TEXT NOT NULL DEFAULT 'quote_ready',
     provider_reference TEXT NOT NULL,
+    rate_vnd TEXT,
+    provider_fee_vnd TEXT,
+    network_fee_vnd TEXT,
+    quote_expires_at TEXT,
+    rate_source TEXT NOT NULL DEFAULT 'configured_test_rate',
+    settlement_wallet TEXT,
+    reference_key TEXT UNIQUE,
+    submitted_tx TEXT,
+    payment_tx TEXT UNIQUE,
+    payment_observed_at TEXT,
+    verification_state TEXT NOT NULL DEFAULT 'awaiting_signature',
+    last_error_code TEXT,
+    bank_reference TEXT,
+    terms_accepted_at TEXT,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS cashout_events (
+    id TEXT PRIMARY KEY,
+    cashout_session_id TEXT NOT NULL REFERENCES cashout_sessions(id) ON DELETE CASCADE,
+    event_key TEXT NOT NULL UNIQUE,
+    event_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS cashout_webhook_events (
+    id TEXT PRIMARY KEY,
+    provider TEXT NOT NULL,
+    provider_event_id TEXT NOT NULL UNIQUE,
+    signature_valid INTEGER NOT NULL DEFAULT 0,
+    payload_hash TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'received',
+    received_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processed_at TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS talent_profiles (
     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -475,7 +521,9 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS idx_challenge_funds_challenge_status ON challenge_funds(challenge_id, status)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_challenge_funding_events_signature ON challenge_funding_events(signature)`,
   `CREATE INDEX IF NOT EXISTS idx_challenge_refunds_challenge_status ON challenge_refunds(challenge_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_cashout_beneficiaries_user_created ON cashout_beneficiaries(user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_cashout_sessions_user_created ON cashout_sessions(user_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_cashout_events_session_created ON cashout_events(cashout_session_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_talent_profiles_visibility ON talent_profiles(visibility, updated_at)`,
   `CREATE INDEX IF NOT EXISTS idx_external_attestations_recipient ON external_attestations(recipient_user_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_contracts_org_status ON freelance_contracts(organization_id, status)`,
@@ -557,6 +605,32 @@ export async function ensureCoreSchema(db: D1Database) {
     catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
   }
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_challenge_funds_submitted_tx ON challenge_funds(submitted_tx)").run();
+  const cashoutColumns = await db.prepare("PRAGMA table_info(cashout_sessions)").all<{ name: string }>();
+  for (const definition of [
+    ["beneficiary_id", "TEXT REFERENCES cashout_beneficiaries(id)"],
+    ["rate_vnd", "TEXT"],
+    ["provider_fee_vnd", "TEXT"],
+    ["network_fee_vnd", "TEXT"],
+    ["quote_expires_at", "TEXT"],
+    ["rate_source", "TEXT NOT NULL DEFAULT 'configured_test_rate'"],
+    ["settlement_wallet", "TEXT"],
+    ["reference_key", "TEXT"],
+    ["submitted_tx", "TEXT"],
+    ["payment_tx", "TEXT"],
+    ["payment_observed_at", "TEXT"],
+    ["verification_state", "TEXT NOT NULL DEFAULT 'awaiting_signature'"],
+    ["last_error_code", "TEXT"],
+    ["bank_reference", "TEXT"],
+    ["terms_accepted_at", "TEXT"],
+    ["metadata_json", "TEXT NOT NULL DEFAULT '{}'"],
+  ] as const) {
+    if (cashoutColumns.results.some((column) => column.name === definition[0])) continue;
+    try { await db.prepare(`ALTER TABLE cashout_sessions ADD COLUMN ${definition[0]} ${definition[1]}`).run(); }
+    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+  }
+  await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_cashout_sessions_reference ON cashout_sessions(reference_key)").run();
+  await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_cashout_sessions_payment_tx ON cashout_sessions(payment_tx)").run();
+  await db.prepare("CREATE INDEX IF NOT EXISTS idx_cashout_sessions_submitted_tx ON cashout_sessions(submitted_tx)").run();
   const assessmentColumns = await db.prepare("PRAGMA table_info(assessments)").all<{ name: string }>();
   const credentialColumns = await db.prepare("PRAGMA table_info(skill_credentials)").all<{ name: string }>();
   if (!credentialColumns.results.some((column) => column.name === "skills_json")) {

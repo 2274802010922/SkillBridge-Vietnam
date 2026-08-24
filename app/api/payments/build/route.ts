@@ -3,14 +3,15 @@ import { getAssociatedTokenAccountAddress, getTransferTokensInstructions } from 
 import { env } from "@/lib/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../../../lib/auth";
 import { requireOrganizationRole } from "../../../../lib/authorization";
+import { buildCashoutTransferTransaction } from "../../../../lib/cashout";
 import { buildRewardFundingTransaction, type RewardAsset } from "../../../../lib/reward-vault";
 
 /** Build an unsigned USDC transfer. The connected wallet signs and sends it in the browser. */
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const body = await request.json() as { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; senderWallet?: string };
-    if ((!body.invoiceId && !body.payoutSubmissionId && !body.fundingChallengeId) || !body.senderWallet?.trim()) return Response.json({ error: "Thiếu thông tin giao dịch." }, { status: 400 });
+    const body = await request.json() as { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; senderWallet?: string };
+    if ((!body.invoiceId && !body.payoutSubmissionId && !body.fundingChallengeId && !body.cashoutId) || !body.senderWallet?.trim()) return Response.json({ error: "Thiếu thông tin giao dịch." }, { status: 400 });
     if (body.fundingChallengeId) {
       const user = await requireSessionUser(request);
       if (user.walletAddress !== body.senderWallet.trim()) return Response.json({ error: "Ví nạp quỹ phải là ví đang đăng nhập." }, { status: 403 });
@@ -30,6 +31,34 @@ export async function POST(request: Request) {
       return Response.json({
         transaction: funding.transaction, asset: fund.asset, amount: fund.required_display,
         recipientWallet: funding.vaultWallet, reference: fund.reference_key, purpose: "challenge_funding",
+      });
+    }
+    if (body.cashoutId) {
+      const user = await requireSessionUser(request);
+      const senderWallet = body.senderWallet.trim();
+      if (user.walletAddress !== senderWallet) return Response.json({ error: "Ví gửi USDC phải là ví đang đăng nhập." }, { status: 403 });
+      const order = await env.DB.prepare(`
+        SELECT id, wallet_address, amount_usdc, amount_atomic, status, quote_expires_at,
+          settlement_wallet, reference_key, submitted_tx, payment_tx
+        FROM cashout_sessions WHERE id = ? AND user_id = ?
+      `).bind(body.cashoutId, user.id).first<{
+        id: string; wallet_address: string; amount_usdc: string; amount_atomic: string; status: string;
+        quote_expires_at: string | null; settlement_wallet: string | null; reference_key: string | null; submitted_tx: string | null; payment_tx: string | null;
+      }>();
+      if (!order) return Response.json({ error: "Không tìm thấy lệnh rút tiền." }, { status: 404 });
+      if (order.payment_tx || order.submitted_tx) return Response.json({ error: "Lệnh đã có transaction. Hãy xác minh lại, không gửi thêm USDC." }, { status: 409 });
+      if (order.status !== "awaiting_wallet_signature") return Response.json({ error: "Hãy xác nhận báo giá trước khi ký giao dịch." }, { status: 409 });
+      if (!order.quote_expires_at || new Date(order.quote_expires_at).getTime() <= Date.now()) {
+        await env.DB.prepare("UPDATE cashout_sessions SET status = 'quote_expired', updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(order.id).run();
+        return Response.json({ error: "Báo giá đã hết hạn. Hãy tạo báo giá mới.", code: "QUOTE_EXPIRED" }, { status: 409 });
+      }
+      if (!order.settlement_wallet || !order.reference_key) return Response.json({ error: "Off-ramp Devnet chưa được cấu hình." }, { status: 503 });
+      const transaction = await buildCashoutTransferTransaction(env, {
+        senderWallet, settlementWallet: order.settlement_wallet, amountAtomic: order.amount_atomic, reference: order.reference_key,
+      });
+      return Response.json({
+        transaction, amountUsdc: order.amount_usdc, recipientWallet: order.settlement_wallet,
+        reference: order.reference_key, purpose: "cashout_devnet_deposit",
       });
     }
     let payment: { id: string; recipient_wallet: string; amount_usdc: string; amount_atomic: string; payment_reference: string; status: string };

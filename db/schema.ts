@@ -467,11 +467,28 @@ export const challengeRefunds = sqliteTable(
   (table) => [index("idx_challenge_refunds_challenge_status").on(table.challengeId, table.status)],
 );
 
+export const cashoutBeneficiaries = sqliteTable(
+  "cashout_beneficiaries",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    providerBeneficiaryId: text("provider_beneficiary_id").notNull().unique(),
+    bankCode: text("bank_code").notNull(),
+    accountLast4: text("account_last4").notNull(),
+    accountHolderMasked: text("account_holder_masked").notNull(),
+    status: text("status").notNull().default("sandbox_verified"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("idx_cashout_beneficiaries_user_created").on(table.userId, table.createdAt)],
+);
+
 export const cashoutSessions = sqliteTable(
   "cashout_sessions",
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    beneficiaryId: text("beneficiary_id").references(() => cashoutBeneficiaries.id),
     walletAddress: text("wallet_address").notNull(),
     amountUsdc: text("amount_usdc").notNull(),
     amountAtomic: text("amount_atomic").notNull(),
@@ -481,11 +498,51 @@ export const cashoutSessions = sqliteTable(
     provider: text("provider").notNull().default("skillbridge_sandbox"),
     status: text("status").notNull().default("quote_ready"),
     providerReference: text("provider_reference").notNull(),
+    rateVnd: text("rate_vnd"),
+    providerFeeVnd: text("provider_fee_vnd"),
+    networkFeeVnd: text("network_fee_vnd"),
+    quoteExpiresAt: text("quote_expires_at"),
+    rateSource: text("rate_source").notNull().default("configured_test_rate"),
+    settlementWallet: text("settlement_wallet"),
+    referenceKey: text("reference_key").unique(),
+    submittedTx: text("submitted_tx"),
+    paymentTx: text("payment_tx").unique(),
+    paymentObservedAt: text("payment_observed_at"),
+    verificationState: text("verification_state").notNull().default("awaiting_signature"),
+    lastErrorCode: text("last_error_code"),
+    bankReference: text("bank_reference"),
+    termsAcceptedAt: text("terms_accepted_at"),
+    metadataJson: text("metadata_json").notNull().default("{}"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [index("idx_cashout_sessions_user_created").on(table.userId, table.createdAt)],
 );
+
+export const cashoutEvents = sqliteTable(
+  "cashout_events",
+  {
+    id: text("id").primaryKey(),
+    cashoutSessionId: text("cashout_session_id").notNull().references(() => cashoutSessions.id, { onDelete: "cascade" }),
+    eventKey: text("event_key").notNull().unique(),
+    eventType: text("event_type").notNull(),
+    status: text("status").notNull(),
+    metadataJson: text("metadata_json").notNull().default("{}"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [index("idx_cashout_events_session_created").on(table.cashoutSessionId, table.createdAt)],
+);
+
+export const cashoutWebhookEvents = sqliteTable("cashout_webhook_events", {
+  id: text("id").primaryKey(),
+  provider: text("provider").notNull(),
+  providerEventId: text("provider_event_id").notNull().unique(),
+  signatureValid: integer("signature_valid").notNull().default(0),
+  payloadHash: text("payload_hash").notNull(),
+  status: text("status").notNull().default("received"),
+  receivedAt: text("received_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  processedAt: text("processed_at"),
+});
 
 export const paymentEvents = sqliteTable(
   "payment_events",

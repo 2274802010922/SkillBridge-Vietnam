@@ -35,7 +35,7 @@ function findSolanaAccount(accounts: readonly WalletAccount[]) {
     ?? accounts.find((item) => item.chains.some((chain) => chain.startsWith("solana:")));
 }
 
-export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; onSubmitted: (signature: string) => Promise<WalletPaymentResult | void> | WalletPaymentResult | void; label?: string }) {
+export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; onSubmitted: (signature: string) => Promise<WalletPaymentResult | void> | WalletPaymentResult | void; label?: string }) {
   const { t } = useLanguage();
   const [wallets, setWallets] = useState<readonly PaymentWallet[]>([]);
   const [selected, setSelected] = useState("");
@@ -56,7 +56,7 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
       let account: WalletAccount | undefined = findSolanaAccount(wallet.accounts);
       if (!account) account = findSolanaAccount((await wallet.features[StandardConnect].connect()).accounts);
       if (!account) throw new Error("Ví không cung cấp tài khoản Solana.");
-      const buildResponse = await fetch("/api/payments/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ invoiceId, payoutSubmissionId, fundingChallengeId, senderWallet: account.address }) });
+      const buildResponse = await fetch("/api/payments/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, senderWallet: account.address }) });
       const built = await buildResponse.json() as { transaction?: string; error?: string };
       if (!buildResponse.ok || !built.transaction) throw new Error(built.error ?? "Không thể tạo giao dịch thanh toán.");
       const transaction = fromBase64(built.transaction);

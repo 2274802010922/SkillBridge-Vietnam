@@ -176,21 +176,31 @@ test("supports Wallet Standard sign-and-send and sign-only Devnet payment flows"
   assert.match(invoiceRoute, /publicPayer/);
 });
 
-test("includes an on-chain reward-vault gate and a clearly isolated cash-out sandbox", async () => {
-  const [challengeRoute, fundingRoute, payoutRoute, cashoutRoute, cashoutUi, walletAssets] = await Promise.all([
+test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", async () => {
+  const [challengeRoute, fundingRoute, payoutRoute, cashoutRoute, cashoutVerify, cashoutUi, walletAssets, webhookRoute] = await Promise.all([
     readFile(new URL("../app/api/challenges/[id]/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/challenges/[id]/funding/verify/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/payouts/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/cashout/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/cashout/[id]/verify/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/cashout-workspace.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/wallet/assets/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/webhooks/offramp/route.ts", import.meta.url), "utf8"),
   ]);
   assert.match(challengeRoute, /funding_status !== "funded"/);
   assert.match(fundingRoute, /verifySolPayment/);
   assert.match(fundingRoute, /verifyUsdcPayment/);
   assert.match(payoutRoute, /sendRewardVaultTransfer/);
-  assert.match(cashoutRoute, /No bank transfer or on-chain transfer is performed/);
-  assert.match(cashoutUi, /No real bank transfer was made/);
+  assert.match(cashoutRoute, /createDevnetCashoutQuote/);
+  assert.match(cashoutRoute, /quote_expires_at/);
+  assert.match(cashoutVerify, /verifyUsdcPayment/);
+  assert.match(cashoutVerify, /requireFinalized: true/);
+  assert.match(cashoutVerify, /TX_ALREADY_USED/);
+  assert.match(cashoutUi, /WalletPaymentButton cashoutId/);
+  assert.match(cashoutUi, /No real VND was transferred/);
+  assert.match(cashoutUi, /private key or seed phrase/);
+  assert.match(webhookRoute, /x-skillbridge-signature/);
+  assert.match(webhookRoute, /provider_event_id/);
   assert.match(walletAssets, /getTokenAccountsByOwner/);
 });
 

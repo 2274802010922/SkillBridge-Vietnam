@@ -17,6 +17,11 @@ export type RuntimeEnvironment = Cloudflare.Env & {
   SOLANA_REWARD_VAULT_SECRET?: string;
   CHALLENGE_BADGE_BOND_SOL?: string;
   CASHOUT_SANDBOX_VND_RATE?: string;
+  CASHOUT_PROVIDER_FEE_BPS?: string;
+  CASHOUT_NETWORK_FEE_VND?: string;
+  CASHOUT_QUOTE_TTL_SECONDS?: string;
+  CASHOUT_DEVNET_SETTLEMENT_WALLET?: string;
+  CASHOUT_WEBHOOK_SECRET?: string;
 };
 
 export const env = {
@@ -42,5 +47,10 @@ export const env = {
   get SOLANA_REWARD_VAULT_SECRET() { return process.env.SOLANA_REWARD_VAULT_SECRET; },
   get CHALLENGE_BADGE_BOND_SOL() { return process.env.CHALLENGE_BADGE_BOND_SOL; },
   get CASHOUT_SANDBOX_VND_RATE() { return process.env.CASHOUT_SANDBOX_VND_RATE; },
+  get CASHOUT_PROVIDER_FEE_BPS() { return process.env.CASHOUT_PROVIDER_FEE_BPS; },
+  get CASHOUT_NETWORK_FEE_VND() { return process.env.CASHOUT_NETWORK_FEE_VND; },
+  get CASHOUT_QUOTE_TTL_SECONDS() { return process.env.CASHOUT_QUOTE_TTL_SECONDS; },
+  get CASHOUT_DEVNET_SETTLEMENT_WALLET() { return process.env.CASHOUT_DEVNET_SETTLEMENT_WALLET; },
+  get CASHOUT_WEBHOOK_SECRET() { return process.env.CASHOUT_WEBHOOK_SECRET; },
   get SOLANA_USDC_MINT() { return process.env.SOLANA_USDC_MINT || "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"; },
 } as RuntimeEnvironment;
