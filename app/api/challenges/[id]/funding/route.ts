@@ -26,6 +26,10 @@ type ChallengeFundingRow = {
   reference_key: string | null;
   fund_status: string | null;
   funding_tx: string | null;
+  submitted_tx: string | null;
+  verification_state: string | null;
+  last_verification_error_code: string | null;
+  verification_checked_at: string | null;
 };
 
 async function fundingRow(challengeId: string) {
@@ -34,7 +38,8 @@ async function fundingRow(challengeId: string) {
       c.reward_amount_atomic, c.reward_slots, c.funding_status,
       f.id AS fund_id, f.asset, f.required_display, f.required_atomic, f.funded_atomic,
       f.disbursed_atomic, f.refunded_atomic, f.vault_wallet, f.reference_key,
-      f.status AS fund_status, f.funding_tx
+      f.status AS fund_status, f.funding_tx, f.submitted_tx, f.verification_state,
+      f.last_verification_error_code, f.verification_checked_at
     FROM challenges c
     LEFT JOIN challenge_funds f ON f.challenge_id = c.id
     WHERE c.id = ?
@@ -56,6 +61,10 @@ function serializeFunding(row: ChallengeFundingRow) {
     vaultWallet: row.vault_wallet,
     reference: row.reference_key,
     fundingTx: row.funding_tx,
+    submittedTx: row.submitted_tx,
+    verificationState: row.verification_state ?? "awaiting_signature",
+    lastVerificationErrorCode: row.last_verification_error_code,
+    verificationCheckedAt: row.verification_checked_at,
     solanaPayUrl: solanaPayRewardUrl({ recipientWallet: row.vault_wallet, amount: row.required_display, asset, reference: row.reference_key, mint: env.SOLANA_USDC_MINT }),
   };
 }

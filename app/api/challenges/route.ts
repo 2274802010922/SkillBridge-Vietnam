@@ -19,7 +19,9 @@ export async function GET(request: Request) {
         f.required_atomic AS fund_required_atomic, f.funded_atomic AS fund_funded_atomic,
         f.disbursed_atomic AS fund_disbursed_atomic, f.refunded_atomic AS fund_refunded_atomic,
         f.vault_wallet AS fund_vault_wallet, f.reference_key AS fund_reference_key,
-        f.status AS fund_status, f.funding_tx AS fund_funding_tx
+        f.status AS fund_status, f.funding_tx AS fund_funding_tx,
+        f.submitted_tx AS fund_submitted_tx, f.verification_state AS fund_verification_state,
+        f.last_verification_error_code AS fund_verification_error_code, f.verification_checked_at AS fund_verification_checked_at
       FROM challenges c
       JOIN organizations o ON o.id = c.organization_id
       LEFT JOIN memberships owner ON owner.organization_id = c.organization_id

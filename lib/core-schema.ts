@@ -304,6 +304,11 @@ const statements = [
     sender_wallet TEXT,
     status TEXT NOT NULL DEFAULT 'awaiting_payment',
     funding_tx TEXT UNIQUE,
+    submitted_tx TEXT,
+    verification_state TEXT NOT NULL DEFAULT 'awaiting_signature',
+    last_verification_error_code TEXT,
+    verification_checked_at TEXT,
+    verification_attempts INTEGER NOT NULL DEFAULT 0,
     funded_at TEXT,
     created_by_user_id TEXT NOT NULL REFERENCES users(id),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -518,6 +523,19 @@ export async function ensureCoreSchema(db: D1Database) {
     try { await db.prepare("ALTER TABLE challenge_payouts ADD COLUMN asset TEXT NOT NULL DEFAULT 'usdc'").run(); }
     catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
   }
+  const fundingColumns = await db.prepare("PRAGMA table_info(challenge_funds)").all<{ name: string }>();
+  for (const definition of [
+    ["submitted_tx", "TEXT"],
+    ["verification_state", "TEXT NOT NULL DEFAULT 'awaiting_signature'"],
+    ["last_verification_error_code", "TEXT"],
+    ["verification_checked_at", "TEXT"],
+    ["verification_attempts", "INTEGER NOT NULL DEFAULT 0"],
+  ] as const) {
+    if (fundingColumns.results.some((column) => column.name === definition[0])) continue;
+    try { await db.prepare(`ALTER TABLE challenge_funds ADD COLUMN ${definition[0]} ${definition[1]}`).run(); }
+    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+  }
+  await db.prepare("CREATE INDEX IF NOT EXISTS idx_challenge_funds_submitted_tx ON challenge_funds(submitted_tx)").run();
   const assessmentColumns = await db.prepare("PRAGMA table_info(assessments)").all<{ name: string }>();
   const credentialColumns = await db.prepare("PRAGMA table_info(skill_credentials)").all<{ name: string }>();
   if (!credentialColumns.results.some((column) => column.name === "skills_json")) {

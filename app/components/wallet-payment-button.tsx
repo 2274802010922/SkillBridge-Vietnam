@@ -14,6 +14,7 @@ import bs58 from "bs58";
 import { useLanguage } from "./i18n";
 
 const DEVNET_CHAIN = "solana:devnet";
+export type WalletPaymentResult = { status: "funded" | "pending" };
 
 type PaymentWallet = Wallet & {
   features: StandardConnectFeature & Partial<SolanaSignAndSendTransactionFeature & SolanaSignTransactionFeature>;
@@ -34,13 +35,13 @@ function findSolanaAccount(accounts: readonly WalletAccount[]) {
     ?? accounts.find((item) => item.chains.some((chain) => chain.startsWith("solana:")));
 }
 
-export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; onSubmitted: (signature: string) => Promise<void> | void; label?: string }) {
+export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; onSubmitted: (signature: string) => Promise<WalletPaymentResult | void> | WalletPaymentResult | void; label?: string }) {
   const { t } = useLanguage();
   const [wallets, setWallets] = useState<readonly PaymentWallet[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stage, setStage] = useState<"idle" | "signing" | "broadcasting" | "verifying" | "success">("idle");
+  const [stage, setStage] = useState<"idle" | "signing" | "broadcasting" | "verifying" | "success" | "pending">("idle");
   useEffect(() => {
     const registry = getWallets();
     const refresh = () => { const next = registry.get().filter(supportsPayment); setWallets(next); setSelected((current) => current || next[0]?.name || ""); };
@@ -82,8 +83,8 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
 
       if (!signature) throw new Error(t("wallet.paymentUnsupported"));
       setStage("verifying");
-      await onSubmitted(signature);
-      setStage("success");
+      const result = await onSubmitted(signature);
+      setStage(result?.status === "pending" ? "pending" : "success");
     } catch (paymentError) {
       setStage("idle");
       setError(paymentError instanceof Error ? paymentError.message : t("wallet.paymentError"));
@@ -96,7 +97,7 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
     return btoa(binary);
   }
 
-  const status = stage === "signing" ? t("wallet.paymentSigning") : stage === "broadcasting" ? t("wallet.paymentBroadcasting") : stage === "verifying" ? t("wallet.paymentVerifying") : stage === "success" ? t("wallet.paymentSuccess") : null;
+  const status = stage === "signing" ? t("wallet.paymentSigning") : stage === "broadcasting" ? t("wallet.paymentBroadcasting") : stage === "verifying" ? t("wallet.paymentVerifying") : stage === "success" ? t("wallet.paymentSuccess") : stage === "pending" ? t("wallet.paymentPending") : null;
 
   return <div className="wallet-payment-control">
     {wallets.length > 1 && <select aria-label="Ví thanh toán" value={selected} onChange={(event) => setSelected(event.target.value)}>{wallets.map((item) => <option value={item.name} key={item.name}>{item.name}</option>)}</select>}

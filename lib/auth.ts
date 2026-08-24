@@ -130,8 +130,14 @@ export function jsonError(error: unknown) {
   const retryAfter = error instanceof Error && "retryAfter" in error
     ? String((error as Error & { retryAfter: number }).retryAfter)
     : null;
+  const code = error instanceof Error && "code" in error
+    ? String((error as Error & { code: string }).code)
+    : null;
+  const retryable = error instanceof Error && "retryable" in error
+    ? Boolean((error as Error & { retryable: boolean }).retryable)
+    : undefined;
   return Response.json(
-    { error: error instanceof Error ? error.message : "Đã có lỗi không mong muốn." },
+    { error: error instanceof Error ? error.message : "Đã có lỗi không mong muốn.", ...(code ? { code } : {}), ...(retryable !== undefined ? { retryable } : {}) },
     { status, headers: retryAfter ? { "retry-after": retryAfter } : undefined },
   );
 }
