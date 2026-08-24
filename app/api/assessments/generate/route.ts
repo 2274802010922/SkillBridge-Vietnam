@@ -8,6 +8,7 @@ import { requireChallengeReviewer } from "../../../../lib/authorization";
 import { auditStatement } from "../../../../lib/audit";
 import { getEvidence } from "../../../../lib/evidence-store";
 import { consumeRateLimit } from "../../../../lib/rate-limit";
+import { contentForPrompt, parseChallengeContent } from "../../../../lib/challenge-content";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -19,6 +20,7 @@ type Context = {
   evidence_json: string;
   title: string;
   brief: string;
+  content_json: string | null;
   rubric_json: string;
   reviewer_organization_id: string;
 };
@@ -83,7 +85,7 @@ export async function POST(request: Request) {
     if (!body.submissionId) return Response.json({ error: "Thiếu submissionId." }, { status: 400 });
     const context = await env.DB.prepare(`
       SELECT s.id AS submission_id, s.state, s.reflection, s.evidence_json,
-        c.title, c.brief, c.rubric_json, c.reviewer_organization_id
+        c.title, c.brief, c.content_json, c.rubric_json, c.reviewer_organization_id
       FROM submissions s
       JOIN participations p ON p.id = s.participation_id
       JOIN challenges c ON c.id = p.challenge_id
@@ -97,12 +99,14 @@ export async function POST(request: Request) {
     const files = fileRows.results;
     const submitted = JSON.parse(context.evidence_json) as EvidenceSource[];
     const rubric = JSON.parse(context.rubric_json) as Array<{ id: string; label: string; maxScore: number }>;
+    const structuredBrief = contentForPrompt(parseChallengeContent(context.content_json, context.brief)) || context.brief;
     const fileFingerprint = files.map((file) => ({ id: file.id, sha256: file.sha256, size: file.size_bytes, type: file.content_type }));
     const cacheKey = await sha256(JSON.stringify({
       submissionId: context.submission_id,
       files: fileFingerprint,
       reflection: context.reflection,
       submitted,
+      brief: structuredBrief,
       rubric,
       extractionVersion: "local-chunks-v2",
       promptVersion: "assessment-v2",
@@ -132,15 +136,15 @@ export async function POST(request: Request) {
     const retrieved = retrieveEvidence(
       submitted,
       chunks,
-      { title: context.title, brief: context.brief, rubric },
+      { title: context.title, brief: structuredBrief, rubric },
       {
         topKPerRubric: numeric(env.AI_TOP_K_PER_RUBRIC, 2, 1, 4),
         maxTokens: numeric(env.AI_MAX_INPUT_TOKENS, 6_000, 1_500, 12_000),
       },
     );
     if (!retrieved.evidence.length) return Response.json({ error: "Không tìm thấy evidence đủ điều kiện trong bài nộp." }, { status: 422 });
-    const inputTokenEstimate = estimateTokenCount(JSON.stringify({ title: context.title, brief: context.brief, rubric, evidence: retrieved.evidence }));
-    const envelope = await generateLiveAssessment(env, context.submission_id, { title: context.title, brief: context.brief, rubric }, retrieved.evidence);
+    const inputTokenEstimate = estimateTokenCount(JSON.stringify({ title: context.title, brief: structuredBrief, rubric, evidence: retrieved.evidence }));
+    const envelope = await generateLiveAssessment(env, context.submission_id, { title: context.title, brief: structuredBrief, rubric }, retrieved.evidence);
     const storedEnvelope = {
       ...envelope,
       extraction: { model: "local-document-parser", warnings },

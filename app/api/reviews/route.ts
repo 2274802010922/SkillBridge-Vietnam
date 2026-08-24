@@ -8,7 +8,7 @@ export async function GET(request: Request) {
       SELECT s.id AS submission_id, s.state AS submission_state, s.reflection,
         s.evidence_json, s.submitted_at, p.student_user_id,
         u.display_name AS student_name, w.address AS student_wallet,
-        c.id AS challenge_id, c.title AS challenge_title, c.brief AS challenge_brief,
+        c.id AS challenge_id, c.title AS challenge_title, c.brief AS challenge_brief, c.content_json,
         c.rubric_json, o.name AS business_name,
         reviewer.name AS reviewer_organization_name, reviewer.kind AS reviewer_organization_kind,
         c.reviewer_organization_id,

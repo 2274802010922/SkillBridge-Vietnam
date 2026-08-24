@@ -75,6 +75,7 @@ const statements = [
     created_by_user_id TEXT NOT NULL REFERENCES users(id),
     title TEXT NOT NULL,
     brief TEXT NOT NULL,
+    content_json TEXT NOT NULL DEFAULT '{}',
     skills_json TEXT NOT NULL DEFAULT '[]',
     rubric_json TEXT NOT NULL,
     reward TEXT NOT NULL,
@@ -504,6 +505,7 @@ export async function ensureCoreSchema(db: D1Database) {
     }
   }
   for (const definition of [
+    ["content_json", "TEXT NOT NULL DEFAULT '{}'"],
     ["reward_type", "TEXT NOT NULL DEFAULT 'badge'"],
     ["reward_metadata_json", "TEXT NOT NULL DEFAULT '{}'"],
     ["reward_slots", "INTEGER NOT NULL DEFAULT 1"],

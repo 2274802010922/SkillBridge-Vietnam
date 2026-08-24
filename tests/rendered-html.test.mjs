@@ -130,6 +130,26 @@ test("supports internal business and independent organization review provenance"
   assert.match(reviewUi, /review-provenance/);
 });
 
+test("presents challenges as structured, responsive content", async () => {
+  const [challengeRoute, challengeUi, detailUi, detailPage, styles] = await Promise.all([
+    readFile(new URL("../app/api/challenges/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/challenges-workspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/challenge-detail-workspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/app/challenges/[id]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(challengeRoute, /content_json/);
+  assert.match(challengeRoute, /normalizeChallengeContent/);
+  assert.match(challengeUi, /challenge-content-form/);
+  assert.match(challengeUi, /challenge-content-preview/);
+  assert.match(challengeUi, /challenge-details-link/);
+  assert.match(detailUi, /challenge-detail-layout/);
+  assert.match(detailUi, /parseChallengeContent/);
+  assert.match(detailPage, /ChallengeDetailWorkspace/);
+  assert.match(styles, /challenge-summary-meta/);
+  assert.match(styles, /challenge-wizard \.review-mode-option input\[type="radio"\]/);
+});
+
 test("supports Wallet Standard sign-and-send and sign-only Devnet payment flows", async () => {
   const [paymentButton, relayRoute, invoiceRoute] = await Promise.all([
     readFile(new URL("../app/components/wallet-payment-button.tsx", import.meta.url), "utf8"),

@@ -5,6 +5,7 @@ import { requireOrganizationRole } from "../../../lib/authorization";
 import { auditStatement } from "../../../lib/audit";
 import { isChallengeAccessType, type ChallengeAccessType } from "../../../lib/challenge-access";
 import { parseSolAmount, parseUsdcAmount } from "../../../lib/payments";
+import { normalizeChallengeContent, type ChallengeContent } from "../../../lib/challenge-content";
 
 export async function GET(request: Request) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
         c.reviewer_organization_id, reviewer.name AS reviewer_organization_name,
         reviewer.kind AS reviewer_organization_kind,
         CASE WHEN c.reviewer_organization_id IS NULL OR c.organization_id = c.reviewer_organization_id THEN 'self' ELSE 'independent' END AS review_mode,
-        c.title, c.brief, c.skills_json, c.rubric_json, c.reward, c.reward_type, c.reward_asset, c.reward_metadata_json, c.reward_slots, c.minimum_score, c.reward_amount_usdc, c.reward_amount_atomic, c.reward_mint, c.funding_status, c.funding_asset, c.funding_amount_display, c.funding_amount_atomic, c.funding_vault_wallet, c.funded_at, c.access_type, c.status,
+        c.title, c.brief, c.content_json, c.skills_json, c.rubric_json, c.reward, c.reward_type, c.reward_asset, c.reward_metadata_json, c.reward_slots, c.minimum_score, c.reward_amount_usdc, c.reward_amount_atomic, c.reward_mint, c.funding_status, c.funding_asset, c.funding_amount_display, c.funding_amount_atomic, c.funding_vault_wallet, c.funded_at, c.access_type, c.status,
         c.version, c.published_at, c.closes_at, c.created_at,
         CASE WHEN owner.user_id IS NOT NULL THEN 1 ELSE 0 END AS can_manage,
         p.id AS participation_id, p.state AS participation_state,
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     assertSameOrigin(request);
     const user = await requireSessionUser(request);
     const body = (await request.json()) as {
-      organizationId?: string; reviewerOrganizationId?: string; reviewMode?: "self" | "independent"; title?: string; brief?: string; skills?: string[];
+      organizationId?: string; reviewerOrganizationId?: string; reviewMode?: "self" | "independent"; title?: string; brief?: string; content?: Partial<ChallengeContent>; skills?: string[];
       reward?: string; rewardType?: "usdc" | "sol" | "badge"; rewardAmountUsdc?: string; badgeName?: string; badgeDescription?: string; rewardSlots?: number; minimumScore?: string; closesAt?: string | null; accessType?: ChallengeAccessType;
     };
     if (!body.organizationId) return Response.json({ error: "Thiếu tổ chức." }, { status: 400 });
@@ -64,7 +65,8 @@ export async function POST(request: Request) {
     if (!reviewerOrganization) return Response.json({ error: "Đơn vị review không hợp lệ." }, { status: 400 });
     const normalizedReviewMode = reviewerOrganizationId === body.organizationId ? "self" : "independent";
     const title = body.title?.trim() ?? "";
-    const brief = body.brief?.trim() ?? "";
+    const content = normalizeChallengeContent(body.content, body.brief);
+    const brief = content.summary;
     const reward = body.reward?.trim() ?? "";
     const rewardType = body.rewardType;
     if (rewardType !== "usdc" && rewardType !== "sol" && rewardType !== "badge") return Response.json({ error: "Chọn USDC, SOL Devnet hoặc huy hiệu." }, { status: 400 });
@@ -84,15 +86,15 @@ export async function POST(request: Request) {
     const minimumScoreNumber = Number(minimumScore);
     if (!Number.isFinite(minimumScoreNumber) || minimumScoreNumber < 0 || minimumScoreNumber > 100) return Response.json({ error: "Điểm tối thiểu phải từ 0 đến 100." }, { status: 400 });
     const rewardMetadata = rewardType === "badge" ? { name: body.badgeName!.trim().slice(0, 120), description: body.badgeDescription?.trim().slice(0, 500) ?? "" } : {};
-    if (title.length < 5 || title.length > 140 || brief.length < 40 || brief.length > 6000 || reward.length < 3 || skills.length < 1) {
+    if (title.length < 5 || title.length > 140 || brief.length < 40 || reward.length < 3 || skills.length < 1) {
       return Response.json({ error: "Challenge cần title, brief tối thiểu 40 ký tự, ít nhất một skill và reward." }, { status: 400 });
     }
     const id = crypto.randomUUID();
     await env.DB.batch([env.DB.prepare(`
       INSERT INTO challenges
-        (id, organization_id, reviewer_organization_id, created_by_user_id, title, brief, skills_json, rubric_json, reward, reward_type, reward_asset, reward_metadata_json, reward_slots, minimum_score, reward_amount_usdc, reward_amount_atomic, reward_mint, access_type, closes_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, body.organizationId, reviewerOrganizationId, user.id, title, brief, JSON.stringify(skills), JSON.stringify(RUBRIC), reward, rewardType, rewardType === "badge" ? null : rewardType, JSON.stringify(rewardMetadata), rewardSlots, minimumScore, rewardAmount?.display ?? null, rewardAmount?.atomic ?? null, rewardType === "usdc" ? env.SOLANA_USDC_MINT : null, accessType, body.closesAt || null),auditStatement(env.DB,{actorUserId:user.id,organizationId:body.organizationId,action:"challenge.created",targetType:"challenge",targetId:id,metadata:{title,reviewerOrganizationId,reviewMode:normalizedReviewMode,reviewerOrganizationKind:reviewerOrganization.kind,accessType,rewardType,rewardAmount:rewardAmount?.display ?? null}})]);
-    return Response.json({ challenge: { id, organizationId: body.organizationId, reviewerOrganizationId, reviewerOrganizationKind: reviewerOrganization.kind, reviewMode: normalizedReviewMode, title, brief, skills, rubric: RUBRIC, reward, rewardType, rewardAsset: rewardType === "badge" ? null : rewardType, rewardMetadata, rewardSlots, minimumScore, rewardAmountUsdc: rewardAmount?.display ?? null, rewardAmountAtomic: rewardAmount?.atomic ?? null, accessType, status: "draft" } }, { status: 201 });
+        (id, organization_id, reviewer_organization_id, created_by_user_id, title, brief, content_json, skills_json, rubric_json, reward, reward_type, reward_asset, reward_metadata_json, reward_slots, minimum_score, reward_amount_usdc, reward_amount_atomic, reward_mint, access_type, closes_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, body.organizationId, reviewerOrganizationId, user.id, title, brief, JSON.stringify(content), JSON.stringify(skills), JSON.stringify(RUBRIC), reward, rewardType, rewardType === "badge" ? null : rewardType, JSON.stringify(rewardMetadata), rewardSlots, minimumScore, rewardAmount?.display ?? null, rewardAmount?.atomic ?? null, rewardType === "usdc" ? env.SOLANA_USDC_MINT : null, accessType, body.closesAt || null),auditStatement(env.DB,{actorUserId:user.id,organizationId:body.organizationId,action:"challenge.created",targetType:"challenge",targetId:id,metadata:{title,reviewerOrganizationId,reviewMode:normalizedReviewMode,reviewerOrganizationKind:reviewerOrganization.kind,accessType,rewardType,rewardAmount:rewardAmount?.display ?? null}})]);
+    return Response.json({ challenge: { id, organizationId: body.organizationId, reviewerOrganizationId, reviewerOrganizationKind: reviewerOrganization.kind, reviewMode: normalizedReviewMode, title, brief, content, skills, rubric: RUBRIC, reward, rewardType, rewardAsset: rewardType === "badge" ? null : rewardType, rewardMetadata, rewardSlots, minimumScore, rewardAmountUsdc: rewardAmount?.display ?? null, rewardAmountAtomic: rewardAmount?.atomic ?? null, accessType, status: "draft" } }, { status: 201 });
   } catch (error) { return jsonError(error); }
 }

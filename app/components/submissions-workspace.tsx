@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { upload as uploadToBlob } from "@vercel/blob/client";
 import { translateStatus, useLanguage } from "./i18n";
 
@@ -125,7 +126,7 @@ export function SubmissionsWorkspace() {
 
   return <div className="workspace-product-content">
     <div className="app-welcome"><div><span>{t("submission.kicker")}</span><h1>{t("submission.title")}</h1><p>{t("submission.description")}</p></div><div className="identity-card"><small>{t("submission.count")}</small><strong className="metric-number">{items.length}</strong><b>{items.filter((item) => item.state === "submitted").length} {t("submission.waitingReview")}</b></div></div>
-    {items.length === 0 ? <section className="app-panel empty-product"><h2>{t("submission.noChallenge")}</h2><p>{t("submission.noChallengeDescription")}</p><a className="button button-dark" href="/app/challenges">{t("submission.viewChallenges")}</a></section> : <div className="submission-layout">
+    {items.length === 0 ? <section className="app-panel empty-product"><h2>{t("submission.noChallenge")}</h2><p>{t("submission.noChallengeDescription")}</p><Link className="button button-dark" href="/app/challenges">{t("submission.viewChallenges")}</Link></section> : <div className="submission-layout">
       <aside className="submission-list">{items.map((item) => <button className={selected === item.id ? "active" : ""} onClick={() => open(item.id)} key={item.id}><small>{item.organization_name}</small><strong>{item.challenge_title}</strong><span>{translateStatus(t, item.state)} · {item.file_count} {t("submission.fileCount")}</span></button>)}</aside>
       <section className="app-panel submission-editor">
         <div className="entity-top"><span>{active?.challenge_title}</span><b>{translateStatus(t, active?.state)}</b></div>

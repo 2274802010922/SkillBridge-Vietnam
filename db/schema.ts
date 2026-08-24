@@ -122,6 +122,7 @@ export const challenges = sqliteTable(
     createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
     title: text("title").notNull(),
     brief: text("brief").notNull(),
+    contentJson: text("content_json").notNull().default("{}"),
     skillsJson: text("skills_json").notNull().default("[]"),
     rubricJson: text("rubric_json").notNull(),
     reward: text("reward").notNull(),
