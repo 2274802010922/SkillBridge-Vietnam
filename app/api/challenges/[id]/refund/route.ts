@@ -14,6 +14,8 @@ type RefundFund = {
   sender_wallet: string | null;
   status: string;
   challenge_status: string;
+  locked_at: string | null;
+  refund_policy_state: string | null;
 };
 
 /** Return the undistributed Devnet reward balance to the wallet that funded the challenge. */
@@ -30,9 +32,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     `).bind(id).first<RefundFund>();
     if (!fund || fund.status !== "funded" || !fund.sender_wallet) return Response.json({ error: "Challenge chưa có quỹ đã nạp để hoàn lại." }, { status: 409 });
     if (fund.sender_wallet !== user.walletAddress) return Response.json({ error: "Chỉ ví đã nạp quỹ mới có thể yêu cầu hoàn quỹ." }, { status: 403 });
+    if (fund.challenge_status === "published" || (fund.locked_at && fund.challenge_status !== "closed")) return Response.json({ error: "Quỹ đã bị khóa khi challenge công bố và không thể hoàn đơn phương." }, { status: 409 });
     if (!['draft', 'closed'].includes(fund.challenge_status)) return Response.json({ error: "Hãy đóng challenge trước khi hoàn quỹ để bảo vệ người đang tham gia." }, { status: 409 });
-    const payout = await env.DB.prepare("SELECT id FROM challenge_payouts WHERE challenge_id = ? AND status = 'paid' LIMIT 1").bind(id).first();
-    if (payout) return Response.json({ error: "Không thể hoàn quỹ sau khi đã giải ngân phần thưởng." }, { status: 409 });
+    if (fund.challenge_status === "closed") {
+      const unresolved = await env.DB.prepare(`
+        SELECT COUNT(*) AS count FROM submissions s
+        JOIN participations p ON p.id = s.participation_id
+        WHERE p.challenge_id = ? AND p.state IN ('submitted', 'in_review', 'changes_requested')
+      `).bind(id).first<{ count: number }>();
+      if (Number(unresolved?.count ?? 0) > 0) return Response.json({ error: "Chưa thể hoàn quỹ: vẫn còn bài nộp đang chờ review hoặc chỉnh sửa." }, { status: 409 });
+      const unpaidApproved = await env.DB.prepare(`
+        SELECT COUNT(*) AS count FROM submissions s
+        JOIN participations p ON p.id = s.participation_id
+        LEFT JOIN challenge_payouts cp ON cp.submission_id = s.id AND cp.status = 'paid'
+        WHERE p.challenge_id = ? AND p.state = 'approved' AND cp.id IS NULL
+      `).bind(id).first<{ count: number }>();
+      if (Number(unpaidApproved?.count ?? 0) > 0) return Response.json({ error: "Chưa thể hoàn quỹ: bài đã được phê duyệt cần được giải ngân trước." }, { status: 409 });
+    }
     const refundExists = await env.DB.prepare("SELECT id FROM challenge_refunds WHERE challenge_id = ?").bind(id).first();
     if (refundExists) return Response.json({ error: "Challenge này đã có yêu cầu hoàn quỹ." }, { status: 409 });
     const amountAtomic = (BigInt(fund.funded_atomic) - BigInt(fund.disbursed_atomic) - BigInt(fund.refunded_atomic)).toString();

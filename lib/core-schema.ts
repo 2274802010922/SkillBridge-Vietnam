@@ -309,6 +309,13 @@ const statements = [
     last_verification_error_code TEXT,
     verification_checked_at TEXT,
     verification_attempts INTEGER NOT NULL DEFAULT 0,
+    terms_version TEXT,
+    terms_hash TEXT,
+    terms_signature TEXT,
+    terms_signer_wallet TEXT,
+    terms_accepted_at TEXT,
+    locked_at TEXT,
+    refund_policy_state TEXT NOT NULL DEFAULT 'pre_publish',
     funded_at TEXT,
     created_by_user_id TEXT NOT NULL REFERENCES users(id),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -530,6 +537,13 @@ export async function ensureCoreSchema(db: D1Database) {
     ["last_verification_error_code", "TEXT"],
     ["verification_checked_at", "TEXT"],
     ["verification_attempts", "INTEGER NOT NULL DEFAULT 0"],
+    ["terms_version", "TEXT"],
+    ["terms_hash", "TEXT"],
+    ["terms_signature", "TEXT"],
+    ["terms_signer_wallet", "TEXT"],
+    ["terms_accepted_at", "TEXT"],
+    ["locked_at", "TEXT"],
+    ["refund_policy_state", "TEXT NOT NULL DEFAULT 'pre_publish'"],
   ] as const) {
     if (fundingColumns.results.some((column) => column.name === definition[0])) continue;
     try { await db.prepare(`ALTER TABLE challenge_funds ADD COLUMN ${definition[0]} ${definition[1]}`).run(); }
