@@ -12,7 +12,7 @@ type NavItem = [WorkspaceId, string, MessageKey];
 
 const primaryNavigation: Record<WorkspaceRole, NavItem[]> = {
   student: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["cashout", "/app/cashout", "nav.cashout"]],
-  business: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"]],
+  business: [["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["reviews", "/app/reviews", "nav.reviews"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"]],
   university: [["overview", "/app", "nav.overview"], ["reviews", "/app/reviews", "nav.reviews"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["audit", "/app/audit", "nav.audit"]],
 };
 
@@ -22,7 +22,7 @@ const roleLabels: Record<WorkspaceRole, MessageKey> = { student: "role.student",
 
 function inferRoles(memberships: Membership[]): WorkspaceRole[] {
   const roles = new Set<WorkspaceRole>(["student"]);
-  if (memberships.some((item) => item.organization_kind === "business" && ["business_admin", "challenge_manager"].includes(item.role))) roles.add("business");
+  if (memberships.some((item) => item.organization_kind === "business" && ["business_admin", "challenge_manager", "reviewer", "credential_issuer"].includes(item.role))) roles.add("business");
   if (memberships.some((item) => item.organization_kind === "university" && ["university_admin", "reviewer", "credential_issuer"].includes(item.role))) roles.add("university");
   return roleOrder.filter((role) => roles.has(role));
 }

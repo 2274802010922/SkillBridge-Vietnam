@@ -2,7 +2,7 @@ import { env } from "@/lib/runtime-env";
 import { validateAssessment, type AssessmentDraft, type EvidenceSource } from "../../../../../lib/assessment-contract";
 import { auditStatement } from "../../../../../lib/audit";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../../../../lib/auth";
-import { requireUniversityReviewer } from "../../../../../lib/authorization";
+import { requireChallengeReviewer } from "../../../../../lib/authorization";
 
 type Row = {
   id:string; submission_id:string; status:string; assessment_json:string;
@@ -24,7 +24,7 @@ export async function POST(request:Request, { params }:{params:Promise<{id:strin
       WHERE a.id = ?
     `).bind(id).first<Row>();
     if (!row) return Response.json({error:"Assessment không tồn tại."},{status:404});
-    await requireUniversityReviewer(user.id,row.reviewer_organization_id);
+    await requireChallengeReviewer(user.id,row.reviewer_organization_id);
     if (row.status !== "in_review") return Response.json({error:"Assessment không ở trạng thái chờ review."},{status:409});
     const body = await request.json() as {
       decision?:"approved"|"rejected"|"changes_requested";

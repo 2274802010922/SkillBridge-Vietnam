@@ -2,7 +2,7 @@ import { env } from "@/lib/runtime-env";
 import type { AssessmentDraft } from "../../../../lib/assessment-contract";
 import { auditStatement } from "../../../../lib/audit";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../../../lib/auth";
-import { requireUniversityReviewer } from "../../../../lib/authorization";
+import { requireChallengeReviewer } from "../../../../lib/authorization";
 import { buildManualDraft, parseManualRubric, validateManualDraft } from "../../../../lib/manual-assessment";
 
 type SubmissionContext = {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     if (!body.submissionId && !body.assessmentId) return Response.json({ error: "Thiếu bài nộp." }, { status: 400 });
     const row = await contextFor(body.submissionId, body.assessmentId);
     if (!row) return Response.json({ error: "Bài nộp không tồn tại." }, { status: 404 });
-    await requireUniversityReviewer(user.id, row.reviewer_organization_id);
+    await requireChallengeReviewer(user.id, row.reviewer_organization_id);
     if (!["submitted", "in_review", "changes_requested"].includes(row.submission_state)) {
       return Response.json({ error: "Bài nộp không ở trạng thái có thể đánh giá." }, { status: 409 });
     }

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     await consumeRateLimit(env.DB, "solana_bootstrap", user.id, 3, 24 * 60 * 60);
     const body = await request.json() as { organizationId?: string };
     if (!body.organizationId) return Response.json({ error: "Thiếu organizationId." }, { status: 400 });
-    await requireOrganizationRole(user.id, body.organizationId, ["university_admin"], "university");
+    await requireOrganizationRole(user.id, body.organizationId, ["business_admin", "university_admin", "credential_issuer"]);
     const existing = await env.DB.prepare("SELECT * FROM credential_issuers WHERE organization_id = ?")
       .bind(body.organizationId).first<Record<string, unknown>>();
     if (existing) return Response.json({ issuer: existing });

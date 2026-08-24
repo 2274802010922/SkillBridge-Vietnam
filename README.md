@@ -8,7 +8,8 @@ The current MVP demonstrates one complete golden path:
 1. A student accepts a business challenge.
 2. The student submits evidence.
 3. AI returns a strict, evidence-linked assessment contract.
-4. A human reviewer approves it.
+4. The challenge's reviewing organization (the business itself or an invited
+   independent university/business) approves it.
 5. The platform issues a proof-of-skill credential.
 6. The credential unlocks an opportunity.
 7. Revocation removes access.
@@ -18,9 +19,12 @@ Freelancers can create non-custodial USDC Devnet invoice links: clients pay
 directly to the recipient wallet, then the freelancer verifies the signature
 for a receipt and CSV reconciliation report. Challenges use a separate Reward
 Vault: the business funds the full reward amount (or a refundable SOL badge
-bond) on Devnet before the challenge can publish. A human business reviewer
-then explicitly approves every payout; the Reward Vault signs that Devnet
-transaction and it is linked to Solana Explorer. The product also contains a
+bond) on Devnet before the challenge can publish. The challenge creator chooses
+internal review or an independent reviewing organization; only active reviewer
+members can open the queue, while a human reviewer explicitly approves every
+payout. The reviewing organization is shown on the challenge and review
+screens, and the Reward Vault signs that Devnet transaction with a Solana
+Explorer proof. The product also contains a
 clearly labelled USDC-to-VND Cash-out sandbox: it computes a simulated quote
 only and never collects banking data, sends USDC, or contacts an off-ramp.
 

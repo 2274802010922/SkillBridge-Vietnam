@@ -35,10 +35,25 @@ export async function requireChallengeManager(userId: string, challengeId: strin
   return challenge;
 }
 
+/** A challenge may be reviewed by an internal business team or an independent organization. */
+export async function requireChallengeReviewer(userId: string, organizationId: string) {
+  const row = await requireOrganizationRole(userId, organizationId, [
+    "business_admin", "challenge_manager", "reviewer", "university_admin",
+  ]);
+  if (row.kind === "business" && !["business_admin", "challenge_manager", "reviewer"].includes(row.role)) {
+    throw new Response("Bạn không có quyền review challenge này.", { status: 403 });
+  }
+  if (row.kind === "university" && !["university_admin", "reviewer"].includes(row.role)) {
+    throw new Response("Bạn không có quyền review challenge này.", { status: 403 });
+  }
+  return row;
+}
+
+/** Backward-compatible alias for existing callers; now supports both organization kinds. */
 export async function requireUniversityReviewer(userId: string, organizationId: string) {
-  return requireOrganizationRole(userId, organizationId, ["university_admin", "reviewer"], "university");
+  return requireChallengeReviewer(userId, organizationId);
 }
 
 export async function requireCredentialIssuer(userId: string, organizationId: string) {
-  return requireOrganizationRole(userId, organizationId, ["university_admin", "credential_issuer"], "university");
+  return requireOrganizationRole(userId, organizationId, ["university_admin", "credential_issuer", "business_admin"]);
 }

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
       WHERE ae.actor_user_id = ? OR ae.organization_id IN (
         SELECT organization_id FROM memberships
         WHERE user_id = ? AND status = 'active'
-          AND role IN ('business_admin', 'university_admin')
+          AND role IN ('business_admin', 'university_admin', 'reviewer', 'credential_issuer')
       )
       ORDER BY ae.created_at DESC LIMIT 200
     `).bind(user.id, user.id).all();
@@ -20,4 +20,3 @@ export async function GET(request: Request) {
     return jsonError(error);
   }
 }
-

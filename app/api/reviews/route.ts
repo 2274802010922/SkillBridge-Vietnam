@@ -10,7 +10,9 @@ export async function GET(request: Request) {
         u.display_name AS student_name, w.address AS student_wallet,
         c.id AS challenge_id, c.title AS challenge_title, c.brief AS challenge_brief,
         c.rubric_json, o.name AS business_name,
-        reviewer.name AS reviewer_organization_name, c.reviewer_organization_id,
+        reviewer.name AS reviewer_organization_name, reviewer.kind AS reviewer_organization_kind,
+        c.reviewer_organization_id,
+        CASE WHEN c.reviewer_organization_id IS NULL OR c.organization_id = c.reviewer_organization_id THEN 'self' ELSE 'independent' END AS review_mode,
         a.id AS assessment_id, a.status AS assessment_status, a.assessment_json, a.assessment_mode,
         a.provider, a.model, a.ai_result_hash, a.final_result_hash,
         (SELECT r.review_json FROM reviews r WHERE r.assessment_id = a.id ORDER BY r.created_at DESC LIMIT 1) AS review_json,
@@ -25,7 +27,7 @@ export async function GET(request: Request) {
       JOIN organizations reviewer ON reviewer.id = c.reviewer_organization_id
       JOIN memberships m ON m.organization_id = c.reviewer_organization_id
         AND m.user_id = ? AND m.status = 'active'
-        AND m.role IN ('university_admin','reviewer')
+        AND m.role IN ('business_admin','challenge_manager','reviewer','university_admin')
       LEFT JOIN assessments a ON a.submission_id = s.id
       LEFT JOIN skill_credentials sc ON sc.assessment_id = a.id
       WHERE s.state IN ('submitted','in_review','changes_requested','approved','rejected')

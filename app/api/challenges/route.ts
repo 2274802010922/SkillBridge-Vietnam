@@ -11,6 +11,9 @@ export async function GET(request: Request) {
     const user = await requireSessionUser(request);
     const rows = await env.DB.prepare(`
       SELECT DISTINCT c.id, c.organization_id, o.name AS organization_name,
+        c.reviewer_organization_id, reviewer.name AS reviewer_organization_name,
+        reviewer.kind AS reviewer_organization_kind,
+        CASE WHEN c.reviewer_organization_id IS NULL OR c.organization_id = c.reviewer_organization_id THEN 'self' ELSE 'independent' END AS review_mode,
         c.title, c.brief, c.skills_json, c.rubric_json, c.reward, c.reward_type, c.reward_asset, c.reward_metadata_json, c.reward_slots, c.minimum_score, c.reward_amount_usdc, c.reward_amount_atomic, c.reward_mint, c.funding_status, c.funding_asset, c.funding_amount_display, c.funding_amount_atomic, c.funding_vault_wallet, c.funded_at, c.access_type, c.status,
         c.version, c.published_at, c.closes_at, c.created_at,
         CASE WHEN owner.user_id IS NOT NULL THEN 1 ELSE 0 END AS can_manage,
@@ -27,6 +30,7 @@ export async function GET(request: Request) {
         f.locked_at AS fund_locked_at, f.refund_policy_state AS fund_refund_policy_state
       FROM challenges c
       JOIN organizations o ON o.id = c.organization_id
+      LEFT JOIN organizations reviewer ON reviewer.id = c.reviewer_organization_id
       LEFT JOIN memberships owner ON owner.organization_id = c.organization_id
         AND owner.user_id = ? AND owner.status = 'active'
         AND owner.role IN ('business_admin', 'challenge_manager')
@@ -45,14 +49,20 @@ export async function POST(request: Request) {
     assertSameOrigin(request);
     const user = await requireSessionUser(request);
     const body = (await request.json()) as {
-      organizationId?: string; reviewerOrganizationId?: string; title?: string; brief?: string; skills?: string[];
+      organizationId?: string; reviewerOrganizationId?: string; reviewMode?: "self" | "independent"; title?: string; brief?: string; skills?: string[];
       reward?: string; rewardType?: "usdc" | "sol" | "badge"; rewardAmountUsdc?: string; badgeName?: string; badgeDescription?: string; rewardSlots?: number; minimumScore?: string; closesAt?: string | null; accessType?: ChallengeAccessType;
     };
     if (!body.organizationId) return Response.json({ error: "Thiếu tổ chức." }, { status: 400 });
     await requireOrganizationRole(user.id, body.organizationId, ["business_admin", "challenge_manager"], "business");
-    if (!body.reviewerOrganizationId) return Response.json({ error: "Chọn một nhà trường chịu trách nhiệm review." }, { status: 400 });
-    const reviewerOrganization = await env.DB.prepare("SELECT id FROM organizations WHERE id = ? AND kind = 'university'").bind(body.reviewerOrganizationId).first();
-    if (!reviewerOrganization) return Response.json({ error: "Nhà trường review không hợp lệ." }, { status: 400 });
+    const reviewMode = body.reviewMode === "self" || (!body.reviewMode && !body.reviewerOrganizationId) ? "self" : "independent";
+    const reviewerOrganizationId = reviewMode === "self" ? body.organizationId : body.reviewerOrganizationId;
+    if (!reviewerOrganizationId) return Response.json({ error: "Chọn một đơn vị chịu trách nhiệm review." }, { status: 400 });
+    if (reviewMode === "independent" && reviewerOrganizationId === body.organizationId) {
+      return Response.json({ error: "Review độc lập phải do một tổ chức khác thực hiện." }, { status: 400 });
+    }
+    const reviewerOrganization = await env.DB.prepare("SELECT id, kind FROM organizations WHERE id = ? AND kind IN ('business', 'university')").bind(reviewerOrganizationId).first<{ id: string; kind: "business" | "university" }>();
+    if (!reviewerOrganization) return Response.json({ error: "Đơn vị review không hợp lệ." }, { status: 400 });
+    const normalizedReviewMode = reviewerOrganizationId === body.organizationId ? "self" : "independent";
     const title = body.title?.trim() ?? "";
     const brief = body.brief?.trim() ?? "";
     const reward = body.reward?.trim() ?? "";
@@ -82,7 +92,7 @@ export async function POST(request: Request) {
       INSERT INTO challenges
         (id, organization_id, reviewer_organization_id, created_by_user_id, title, brief, skills_json, rubric_json, reward, reward_type, reward_asset, reward_metadata_json, reward_slots, minimum_score, reward_amount_usdc, reward_amount_atomic, reward_mint, access_type, closes_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, body.organizationId, body.reviewerOrganizationId, user.id, title, brief, JSON.stringify(skills), JSON.stringify(RUBRIC), reward, rewardType, rewardType === "badge" ? null : rewardType, JSON.stringify(rewardMetadata), rewardSlots, minimumScore, rewardAmount?.display ?? null, rewardAmount?.atomic ?? null, rewardType === "usdc" ? env.SOLANA_USDC_MINT : null, accessType, body.closesAt || null),auditStatement(env.DB,{actorUserId:user.id,organizationId:body.organizationId,action:"challenge.created",targetType:"challenge",targetId:id,metadata:{title,reviewerOrganizationId:body.reviewerOrganizationId,accessType,rewardType,rewardAmount:rewardAmount?.display ?? null}})]);
-    return Response.json({ challenge: { id, organizationId: body.organizationId, reviewerOrganizationId: body.reviewerOrganizationId, title, brief, skills, rubric: RUBRIC, reward, rewardType, rewardAsset: rewardType === "badge" ? null : rewardType, rewardMetadata, rewardSlots, minimumScore, rewardAmountUsdc: rewardAmount?.display ?? null, rewardAmountAtomic: rewardAmount?.atomic ?? null, accessType, status: "draft" } }, { status: 201 });
+    `).bind(id, body.organizationId, reviewerOrganizationId, user.id, title, brief, JSON.stringify(skills), JSON.stringify(RUBRIC), reward, rewardType, rewardType === "badge" ? null : rewardType, JSON.stringify(rewardMetadata), rewardSlots, minimumScore, rewardAmount?.display ?? null, rewardAmount?.atomic ?? null, rewardType === "usdc" ? env.SOLANA_USDC_MINT : null, accessType, body.closesAt || null),auditStatement(env.DB,{actorUserId:user.id,organizationId:body.organizationId,action:"challenge.created",targetType:"challenge",targetId:id,metadata:{title,reviewerOrganizationId,reviewMode:normalizedReviewMode,reviewerOrganizationKind:reviewerOrganization.kind,accessType,rewardType,rewardAmount:rewardAmount?.display ?? null}})]);
+    return Response.json({ challenge: { id, organizationId: body.organizationId, reviewerOrganizationId, reviewerOrganizationKind: reviewerOrganization.kind, reviewMode: normalizedReviewMode, title, brief, skills, rubric: RUBRIC, reward, rewardType, rewardAsset: rewardType === "badge" ? null : rewardType, rewardMetadata, rewardSlots, minimumScore, rewardAmountUsdc: rewardAmount?.display ?? null, rewardAmountAtomic: rewardAmount?.atomic ?? null, accessType, status: "draft" } }, { status: 201 });
   } catch (error) { return jsonError(error); }
 }

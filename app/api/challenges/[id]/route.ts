@@ -9,12 +9,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const row = await env.DB.prepare(`
       SELECT c.*, o.name AS organization_name,
+        reviewer.name AS reviewer_organization_name, reviewer.kind AS reviewer_organization_kind,
+        CASE WHEN c.reviewer_organization_id IS NULL OR c.organization_id = c.reviewer_organization_id THEN 'self' ELSE 'independent' END AS review_mode,
         f.status AS fund_status, f.asset AS fund_asset, f.required_display AS fund_required_display,
         f.funded_atomic AS fund_funded_atomic, f.vault_wallet AS fund_vault_wallet,
         f.funding_tx AS fund_funding_tx, f.terms_version AS fund_terms_version,
         f.terms_hash AS fund_terms_hash, f.terms_signature AS fund_terms_signature,
         f.locked_at AS fund_locked_at, f.refund_policy_state AS fund_refund_policy_state
       FROM challenges c JOIN organizations o ON o.id = c.organization_id
+      LEFT JOIN organizations reviewer ON reviewer.id = c.reviewer_organization_id
       LEFT JOIN challenge_funds f ON f.challenge_id = c.id
       WHERE c.id = ?
     `).bind(id).first<Record<string, unknown>>();

@@ -111,6 +111,25 @@ test("keeps the product navigation role-first and exposes a unified payment hub"
   assert.match(payments, /payments\.challengeTitle/);
 });
 
+test("supports internal business and independent organization review provenance", async () => {
+  const [challengeRoute, authorization, challengeUi, reviewUi] = await Promise.all([
+    readFile(new URL("../app/api/challenges/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/authorization.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/challenges-workspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/reviews-workspace.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(challengeRoute, /reviewMode/);
+  assert.match(challengeRoute, /reviewerOrganizationId/);
+  assert.match(challengeRoute, /kind IN \('business', 'university'\)/);
+  assert.match(challengeRoute, /Review độc lập phải do một tổ chức khác/);
+  assert.match(authorization, /requireChallengeReviewer/);
+  assert.match(authorization, /business_admin.*challenge_manager.*reviewer.*university_admin/);
+  assert.match(challengeUi, /review-mode-options/);
+  assert.match(challengeUi, /reviewSelf/);
+  assert.match(challengeUi, /reviewIndependent/);
+  assert.match(reviewUi, /review-provenance/);
+});
+
 test("supports Wallet Standard sign-and-send and sign-only Devnet payment flows", async () => {
   const [paymentButton, relayRoute, invoiceRoute] = await Promise.all([
     readFile(new URL("../app/components/wallet-payment-button.tsx", import.meta.url), "utf8"),

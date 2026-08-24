@@ -4,7 +4,7 @@ import { chunkDocumentSections, estimateTokenCount, extractDocumentSections, typ
 import { retrieveEvidence } from "../../../../lib/evidence-retrieval";
 import { generateLiveAssessment } from "../../../../lib/assessment-engine";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../../../lib/auth";
-import { requireUniversityReviewer } from "../../../../lib/authorization";
+import { requireChallengeReviewer } from "../../../../lib/authorization";
 import { auditStatement } from "../../../../lib/audit";
 import { getEvidence } from "../../../../lib/evidence-store";
 import { consumeRateLimit } from "../../../../lib/rate-limit";
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
       WHERE s.id = ?
     `).bind(body.submissionId).first<Context>();
     if (!context || !context.reviewer_organization_id) return Response.json({ error: "Bài nộp hoặc đơn vị review không tồn tại." }, { status: 404 });
-    await requireUniversityReviewer(user.id, context.reviewer_organization_id);
+    await requireChallengeReviewer(user.id, context.reviewer_organization_id);
     if (!( ["submitted", "in_review"] as const).includes(context.state as "submitted" | "in_review")) return Response.json({ error: "Bài nộp chưa sẵn sàng để AI đánh giá." }, { status: 409 });
 
     const fileRows = await env.DB.prepare("SELECT id, r2_key, original_name, content_type, size_bytes, sha256 FROM submission_files WHERE submission_id = ? ORDER BY created_at").bind(context.submission_id).all<FileRow>();

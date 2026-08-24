@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     `).bind(id).first<{ r2_key: string; original_name: string; content_type: string; student_user_id: string; organization_id: string; reviewer_organization_id: string | null }>();
     if (!row) return Response.json({ error: "File không tồn tại." }, { status: 404 });
     if (row.student_user_id !== user.id) {
-      const allowed = await env.DB.prepare(`SELECT 1 AS allowed FROM memberships WHERE user_id = ? AND organization_id = ? AND status = 'active' AND role IN ('university_admin','reviewer') LIMIT 1`).bind(user.id, row.reviewer_organization_id).first();
+      const allowed = await env.DB.prepare(`SELECT 1 AS allowed FROM memberships WHERE user_id = ? AND organization_id = ? AND status = 'active' AND role IN ('business_admin','challenge_manager','reviewer','university_admin') LIMIT 1`).bind(user.id, row.reviewer_organization_id).first();
       if (!allowed) return Response.json({ error: "Bạn không có quyền xem file này." }, { status: 403 });
     }
     const object = await getEvidence(row.r2_key);

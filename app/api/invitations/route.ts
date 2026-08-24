@@ -3,7 +3,7 @@ import { assertSameOrigin, jsonError, randomToken, requireSessionUser, sha256, v
 import { auditStatement } from "../../../lib/audit";
 
 const allowedRoles = {
-  business: new Set(["business_admin", "challenge_manager"]),
+  business: new Set(["business_admin", "challenge_manager", "reviewer", "credential_issuer"]),
   university: new Set(["university_admin", "reviewer", "credential_issuer"]),
 };
 
