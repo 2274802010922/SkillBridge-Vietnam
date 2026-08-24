@@ -63,7 +63,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       `).bind(crypto.randomUUID(), id, fund.id, fund.sender_wallet, fund.asset, amountAtomic, signature, user.id, now),
       env.DB.prepare("UPDATE challenge_funds SET refunded_atomic = ?, status = 'refunded', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
         .bind(amountAtomic, fund.id),
-      env.DB.prepare("UPDATE challenges SET funding_status = 'refunded', status = 'closed', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+      env.DB.prepare("UPDATE challenges SET funding_status = 'refunded', status = CASE WHEN status = 'draft' THEN 'draft' ELSE 'closed' END, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
         .bind(id),
       auditStatement(env.DB, {
         actorUserId: user.id, organizationId: challenge.organization_id, action: "challenge.fund_refunded",

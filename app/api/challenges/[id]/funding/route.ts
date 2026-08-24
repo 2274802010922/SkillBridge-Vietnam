@@ -9,6 +9,8 @@ import { rewardVaultAddress, solanaPayRewardUrl, type RewardAsset } from "../../
 type ChallengeFundingRow = {
   id: string;
   organization_id: string;
+  status: string;
+  deleted_at: string | null;
   reward_type: string | null;
   reward_asset: string | null;
   reward_amount_usdc: string | null;
@@ -41,7 +43,7 @@ type ChallengeFundingRow = {
 
 async function fundingRow(challengeId: string) {
   return env.DB.prepare(`
-    SELECT c.id, c.organization_id, c.reward_type, c.reward_asset, c.reward_amount_usdc,
+    SELECT c.id, c.organization_id, c.status, c.deleted_at, c.reward_type, c.reward_asset, c.reward_amount_usdc,
       c.reward_amount_atomic, c.reward_slots, c.funding_status,
       f.id AS fund_id, f.asset, f.required_display, f.required_atomic, f.funded_atomic,
       f.disbursed_atomic, f.refunded_atomic, f.vault_wallet, f.reference_key,
@@ -109,6 +111,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const challenge = await requireChallengeManager(user.id, id);
     const current = await fundingRow(id);
     if (!current) return Response.json({ error: "Challenge không tồn tại." }, { status: 404 });
+    if (current.deleted_at || current.status !== "draft") return Response.json({ error: "Chỉ bản nháp đang hoạt động mới có thể chuẩn bị quỹ." }, { status: 409 });
     if (current.fund_id) return Response.json({ funding: serializeFunding(current), reused: true });
 
     const rewardType = current.reward_type === "sol" ? "sol" : current.reward_type === "usdc" ? "usdc" : "badge";

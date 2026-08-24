@@ -37,8 +37,10 @@ export async function GET(request: Request) {
         AND owner.role IN ('business_admin', 'challenge_manager')
       LEFT JOIN participations p ON p.challenge_id = c.id AND p.student_user_id = ?
       LEFT JOIN challenge_funds f ON f.challenge_id = c.id
-      WHERE (c.status = 'published' AND c.access_type = 'public')
+      WHERE c.deleted_at IS NULL AND (
+        (c.status = 'published' AND c.access_type = 'public')
         OR owner.user_id IS NOT NULL OR p.id IS NOT NULL
+      )
       ORDER BY c.created_at DESC
     `).bind(user.id, user.id).all();
     return Response.json({ challenges: rows.results }, { headers: { "cache-control": "no-store" } });

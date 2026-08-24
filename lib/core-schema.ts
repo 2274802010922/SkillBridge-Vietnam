@@ -98,6 +98,8 @@ const statements = [
     version TEXT NOT NULL DEFAULT '1',
     published_at TEXT,
     closes_at TEXT,
+    deleted_at TEXT,
+    deleted_by_user_id TEXT REFERENCES users(id),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
@@ -517,6 +519,8 @@ export async function ensureCoreSchema(db: D1Database) {
     ["funding_amount_atomic", "TEXT"],
     ["funding_vault_wallet", "TEXT"],
     ["funded_at", "TEXT"],
+    ["deleted_at", "TEXT"],
+    ["deleted_by_user_id", "TEXT"],
   ] as const) {
     if (challengeColumns.results.some((column) => column.name === definition[0])) continue;
     try {
@@ -525,6 +529,7 @@ export async function ensureCoreSchema(db: D1Database) {
       if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
     }
   }
+  await db.prepare("CREATE INDEX IF NOT EXISTS idx_challenges_deleted_at ON challenges(deleted_at)").run();
   await db.prepare("UPDATE challenges SET reward_type = 'usdc' WHERE reward_type = 'badge' AND reward_amount_atomic IS NOT NULL").run();
   await db.prepare("UPDATE challenges SET reward_asset = reward_type WHERE reward_asset IS NULL AND reward_type IN ('usdc', 'sol')").run();
   const payoutColumns = await db.prepare("PRAGMA table_info(challenge_payouts)").all<{ name: string }>();

@@ -145,6 +145,8 @@ export const challenges = sqliteTable(
     version: text("version").notNull().default("1"),
     publishedAt: text("published_at"),
     closesAt: text("closes_at"),
+    deletedAt: text("deleted_at"),
+    deletedByUserId: text("deleted_by_user_id").references(() => users.id),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },

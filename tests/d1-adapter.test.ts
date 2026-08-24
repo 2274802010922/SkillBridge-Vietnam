@@ -39,6 +39,8 @@ test("core schema migrates existing challenges to invite-only access", async () 
   const columns = await db.prepare("PRAGMA table_info(challenges)").all<{ name: string }>();
   assert.equal(columns.results.some((column) => column.name === "access_type"), true);
   assert.equal(columns.results.some((column) => column.name === "content_json"), true);
+  assert.equal(columns.results.some((column) => column.name === "deleted_at"), true);
+  assert.equal(columns.results.some((column) => column.name === "deleted_by_user_id"), true);
   const legacy = await db.prepare("SELECT access_type FROM challenges WHERE id = 'legacy'").first<{ access_type: string }>();
   assert.deepEqual(legacy, { access_type: "invite_only" });
   const legacyContent = await db.prepare("SELECT content_json FROM challenges WHERE id = 'legacy'").first<{ content_json: string }>();

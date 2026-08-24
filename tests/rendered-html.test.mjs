@@ -130,9 +130,10 @@ test("supports internal business and independent organization review provenance"
   assert.match(reviewUi, /review-provenance/);
 });
 
-test("presents challenges as structured, responsive content", async () => {
-  const [challengeRoute, challengeUi, detailUi, detailPage, styles] = await Promise.all([
+test("presents challenges as structured, responsive content and manages drafts safely", async () => {
+  const [challengeRoute, challengeMutationRoute, challengeUi, detailUi, detailPage, styles] = await Promise.all([
     readFile(new URL("../app/api/challenges/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/challenges/[id]/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/challenges-workspace.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/challenge-detail-workspace.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/app/challenges/[id]/page.tsx", import.meta.url), "utf8"),
@@ -143,10 +144,19 @@ test("presents challenges as structured, responsive content", async () => {
   assert.match(challengeUi, /challenge-content-form/);
   assert.match(challengeUi, /challenge-content-preview/);
   assert.match(challengeUi, /challenge-details-link/);
+  assert.match(challengeUi, /<dl className="challenge-summary-meta">/);
+  assert.match(challengeUi, /editDraft/);
+  assert.match(challengeUi, /deleteDraft/);
+  assert.match(challengeMutationRoute, /update_draft/);
+  assert.match(challengeMutationRoute, /draftDeletionDecision/);
+  assert.match(challengeMutationRoute, /deleted_at/);
   assert.match(detailUi, /challenge-detail-layout/);
   assert.match(detailUi, /parseChallengeContent/);
   assert.match(detailPage, /ChallengeDetailWorkspace/);
   assert.match(styles, /challenge-summary-meta/);
+  assert.match(styles, /challenge-card-managed/);
+  assert.match(styles, /@container challenge-summary/);
+  assert.match(styles, /button-danger-text/);
   assert.match(styles, /challenge-wizard \.review-mode-option input\[type="radio"\]/);
 });
 
