@@ -357,6 +357,9 @@ const statements = [
     bank_code TEXT NOT NULL,
     account_last4 TEXT NOT NULL,
     account_holder_masked TEXT NOT NULL,
+    payout_method TEXT NOT NULL DEFAULT 'bank',
+    payout_provider TEXT NOT NULL DEFAULT 'sandbox',
+    verification_state TEXT NOT NULL DEFAULT 'sandbox_verified',
     status TEXT NOT NULL DEFAULT 'sandbox_verified',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -372,6 +375,10 @@ const statements = [
     fee_vnd TEXT NOT NULL,
     net_vnd TEXT NOT NULL,
     provider TEXT NOT NULL DEFAULT 'skillbridge_sandbox',
+    payout_method TEXT NOT NULL DEFAULT 'bank',
+    payout_provider TEXT NOT NULL DEFAULT 'sandbox',
+    execution_mode TEXT NOT NULL DEFAULT 'devnet_sandbox',
+    payout_status TEXT NOT NULL DEFAULT 'not_started',
     status TEXT NOT NULL DEFAULT 'quote_ready',
     provider_reference TEXT NOT NULL,
     rate_vnd TEXT,
@@ -605,9 +612,23 @@ export async function ensureCoreSchema(db: D1Database) {
     catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
   }
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_challenge_funds_submitted_tx ON challenge_funds(submitted_tx)").run();
+  const beneficiaryColumns = await db.prepare("PRAGMA table_info(cashout_beneficiaries)").all<{ name: string }>();
+  for (const definition of [
+    ["payout_method", "TEXT NOT NULL DEFAULT 'bank'"],
+    ["payout_provider", "TEXT NOT NULL DEFAULT 'sandbox'"],
+    ["verification_state", "TEXT NOT NULL DEFAULT 'sandbox_verified'"],
+  ] as const) {
+    if (beneficiaryColumns.results.some((column) => column.name === definition[0])) continue;
+    try { await db.prepare(`ALTER TABLE cashout_beneficiaries ADD COLUMN ${definition[0]} ${definition[1]}`).run(); }
+    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+  }
   const cashoutColumns = await db.prepare("PRAGMA table_info(cashout_sessions)").all<{ name: string }>();
   for (const definition of [
     ["beneficiary_id", "TEXT REFERENCES cashout_beneficiaries(id)"],
+    ["payout_method", "TEXT NOT NULL DEFAULT 'bank'"],
+    ["payout_provider", "TEXT NOT NULL DEFAULT 'sandbox'"],
+    ["execution_mode", "TEXT NOT NULL DEFAULT 'devnet_sandbox'"],
+    ["payout_status", "TEXT NOT NULL DEFAULT 'not_started'"],
     ["rate_vnd", "TEXT"],
     ["provider_fee_vnd", "TEXT"],
     ["network_fee_vnd", "TEXT"],

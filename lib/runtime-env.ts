@@ -22,6 +22,25 @@ export type RuntimeEnvironment = Cloudflare.Env & {
   CASHOUT_QUOTE_TTL_SECONDS?: string;
   CASHOUT_DEVNET_SETTLEMENT_WALLET?: string;
   CASHOUT_WEBHOOK_SECRET?: string;
+  CASHOUT_MODE?: string;
+  REAL_CASHOUT_ENABLED?: string;
+  OFFRAMP_PROVIDER?: string;
+  OFFRAMP_API_BASE_URL?: string;
+  OFFRAMP_API_KEY?: string;
+  PAYOUT_PROVIDERS?: string;
+  PAYOS_CLIENT_ID?: string;
+  PAYOS_API_KEY?: string;
+  PAYOS_CHECKSUM_KEY?: string;
+  PAYOS_PAYOUT_CHECKSUM_KEY?: string;
+  MOMO_PARTNER_CODE?: string;
+  MOMO_ACCESS_KEY?: string;
+  MOMO_SECRET_KEY?: string;
+  MOMO_PUBLIC_KEY?: string;
+  MOMO_STORE_ID?: string;
+  ZALOPAY_APP_ID?: string;
+  ZALOPAY_MAC_KEY?: string;
+  ZALOPAY_PRIVATE_KEY?: string;
+  ZALOPAY_MERCHANT_WALLET_ID?: string;
 };
 
 export const env = {
@@ -52,5 +71,24 @@ export const env = {
   get CASHOUT_QUOTE_TTL_SECONDS() { return process.env.CASHOUT_QUOTE_TTL_SECONDS; },
   get CASHOUT_DEVNET_SETTLEMENT_WALLET() { return process.env.CASHOUT_DEVNET_SETTLEMENT_WALLET; },
   get CASHOUT_WEBHOOK_SECRET() { return process.env.CASHOUT_WEBHOOK_SECRET; },
+  get CASHOUT_MODE() { return process.env.CASHOUT_MODE; },
+  get REAL_CASHOUT_ENABLED() { return process.env.REAL_CASHOUT_ENABLED; },
+  get OFFRAMP_PROVIDER() { return process.env.OFFRAMP_PROVIDER; },
+  get OFFRAMP_API_BASE_URL() { return process.env.OFFRAMP_API_BASE_URL; },
+  get OFFRAMP_API_KEY() { return process.env.OFFRAMP_API_KEY; },
+  get PAYOUT_PROVIDERS() { return process.env.PAYOUT_PROVIDERS; },
+  get PAYOS_CLIENT_ID() { return process.env.PAYOS_CLIENT_ID; },
+  get PAYOS_API_KEY() { return process.env.PAYOS_API_KEY; },
+  get PAYOS_CHECKSUM_KEY() { return process.env.PAYOS_CHECKSUM_KEY; },
+  get PAYOS_PAYOUT_CHECKSUM_KEY() { return process.env.PAYOS_PAYOUT_CHECKSUM_KEY; },
+  get MOMO_PARTNER_CODE() { return process.env.MOMO_PARTNER_CODE; },
+  get MOMO_ACCESS_KEY() { return process.env.MOMO_ACCESS_KEY; },
+  get MOMO_SECRET_KEY() { return process.env.MOMO_SECRET_KEY; },
+  get MOMO_PUBLIC_KEY() { return process.env.MOMO_PUBLIC_KEY; },
+  get MOMO_STORE_ID() { return process.env.MOMO_STORE_ID; },
+  get ZALOPAY_APP_ID() { return process.env.ZALOPAY_APP_ID; },
+  get ZALOPAY_MAC_KEY() { return process.env.ZALOPAY_MAC_KEY; },
+  get ZALOPAY_PRIVATE_KEY() { return process.env.ZALOPAY_PRIVATE_KEY; },
+  get ZALOPAY_MERCHANT_WALLET_ID() { return process.env.ZALOPAY_MERCHANT_WALLET_ID; },
   get SOLANA_USDC_MINT() { return process.env.SOLANA_USDC_MINT || "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"; },
 } as RuntimeEnvironment;

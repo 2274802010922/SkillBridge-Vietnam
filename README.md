@@ -30,6 +30,15 @@ the connected wallet, and verifies the finalized transaction on Solana Devnet.
 The on-chain leg is real Devnet activity; the bank/VND leg remains an explicit
 sandbox and never claims a real payout.
 
+The reward-receiving workspace now lets a recipient choose between keeping
+USDC in the connected wallet, receiving VND to a bank account, or using a
+MoMo/ZaloPay destination. These are intentionally separate concerns: a future
+licensed off-ramp converts USDC to VND, while a payout provider delivers that
+VND. The current Devnet flow tokenizes only a masked test destination, binds
+the USDC payment to a Solana reference, verifies finalization, and records an
+idempotent sandbox reconciliation. Provider API credentials do not by
+themselves enable live money movement.
+
 The `/workspace` route is an isolated role simulator for judges and product
 walkthroughs. The authenticated `/app` routes are the production pilot surface:
 wallet-based Sign In With Solana binds each user to server-enforced student,
@@ -108,7 +117,15 @@ to the Vercel project:
    labelled sandbox. Do not enable Mainnet or claim real bank payout until a
    licensed off-ramp provider supplies the Vietnam/VND corridor, KYC flow,
    executable quotes and signed webhooks.
-5. Deploy a Preview, test every wallet role, AI assessment, human approval,
+5. The multi-rail receiving UI works immediately with the Devnet sandbox. Keep
+   `CASHOUT_MODE=devnet_sandbox`, `REAL_CASHOUT_ENABLED=false` and
+   `OFFRAMP_PROVIDER=devnet_sandbox`. `PAYOS_*`, `MOMO_*`, and `ZALOPAY_*`
+   variables are server-only preparation for approved payout products; adding
+   those keys must not be described as enabling USDC-to-VND conversion. A
+   concrete, licensed off-ramp adapter, provider certification, webhook
+   verification, reconciliation and a restricted canary are still required
+   before any real VND transfer can be switched on.
+6. Deploy a Preview, test every wallet role, AI assessment, human approval,
    Devnet issuance/revocation, and opportunity verification, then promote that
    exact deployment to Production.
 

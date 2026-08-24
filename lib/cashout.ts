@@ -14,6 +14,21 @@ import { rewardVaultAddress } from "./reward-vault.ts";
 export const CASHOUT_PROVIDER = "skillbridge_devnet_offramp";
 export const CASHOUT_NETWORK = "solana:devnet";
 
+/**
+ * A receiving method is deliberately separate from the off-ramp provider.
+ * Solana moves USDC, an off-ramp converts it to VND, and a payout provider
+ * delivers that VND to the destination selected by the recipient.
+ */
+export const CASHOUT_PAYOUT_METHODS = ["bank", "momo", "zalopay"] as const;
+export type CashoutPayoutMethod = (typeof CASHOUT_PAYOUT_METHODS)[number];
+export type CashoutMethodCapability = {
+  id: CashoutPayoutMethod;
+  payoutProvider: string;
+  availability: "sandbox" | "setup_required";
+  requiresBankCode: boolean;
+  requiresPhoneNumber: boolean;
+};
+
 export type CashoutEnvironment = {
   SOLANA_RPC_URL?: string;
   SOLANA_USDC_MINT?: string;
@@ -24,6 +39,25 @@ export type CashoutEnvironment = {
   CASHOUT_PROVIDER_FEE_BPS?: string;
   CASHOUT_NETWORK_FEE_VND?: string;
   CASHOUT_QUOTE_TTL_SECONDS?: string;
+  CASHOUT_MODE?: string;
+  REAL_CASHOUT_ENABLED?: string;
+  OFFRAMP_PROVIDER?: string;
+  PAYOUT_PROVIDERS?: string;
+  OFFRAMP_API_BASE_URL?: string;
+  OFFRAMP_API_KEY?: string;
+  PAYOS_CLIENT_ID?: string;
+  PAYOS_API_KEY?: string;
+  PAYOS_CHECKSUM_KEY?: string;
+  PAYOS_PAYOUT_CHECKSUM_KEY?: string;
+  MOMO_PARTNER_CODE?: string;
+  MOMO_ACCESS_KEY?: string;
+  MOMO_SECRET_KEY?: string;
+  MOMO_PUBLIC_KEY?: string;
+  MOMO_STORE_ID?: string;
+  ZALOPAY_APP_ID?: string;
+  ZALOPAY_MAC_KEY?: string;
+  ZALOPAY_PRIVATE_KEY?: string;
+  ZALOPAY_MERCHANT_WALLET_ID?: string;
 };
 
 export type CashoutQuote = {
@@ -45,6 +79,51 @@ function positiveInteger(value: string | undefined, fallback: number, maximum: n
   const parsed = Number.parseInt(value || "", 10);
   if (!Number.isFinite(parsed) || parsed < 0) return fallback;
   return Math.min(parsed, maximum);
+}
+
+function configuredPayoutProviders(environment: CashoutEnvironment) {
+  const configured = environment.PAYOUT_PROVIDERS?.split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  return new Set(configured?.length ? configured : ["payos", "momo", "zalopay"]);
+}
+
+function hasProductionCredentials(environment: CashoutEnvironment, provider: string) {
+  if (provider === "payos") return Boolean(environment.PAYOS_CLIENT_ID && environment.PAYOS_API_KEY && environment.PAYOS_PAYOUT_CHECKSUM_KEY);
+  if (provider === "momo") return Boolean(environment.MOMO_PARTNER_CODE && environment.MOMO_ACCESS_KEY && environment.MOMO_SECRET_KEY && environment.MOMO_PUBLIC_KEY);
+  if (provider === "zalopay") return Boolean(environment.ZALOPAY_APP_ID && environment.ZALOPAY_MAC_KEY && environment.ZALOPAY_PRIVATE_KEY && environment.ZALOPAY_MERCHANT_WALLET_ID);
+  return false;
+}
+
+export function payoutProviderForMethod(method: CashoutPayoutMethod, environment: CashoutEnvironment) {
+  const enabled = configuredPayoutProviders(environment);
+  if (method === "bank") return enabled.has("payos") ? "payos" : enabled.has("momo") ? "momo" : enabled.has("zalopay") ? "zalopay" : "sandbox";
+  return method;
+}
+
+/**
+ * This function exposes configuration honestly. Provider credentials alone do
+ * not enable real USDC-to-VND conversion: that requires a contracted,
+ * licensed off-ramp adapter. Until then every available path stays sandboxed.
+ */
+export function cashoutMethodCapabilities(environment: CashoutEnvironment): CashoutMethodCapability[] {
+  const productionRequested = environment.CASHOUT_MODE === "production" && environment.REAL_CASHOUT_ENABLED === "true";
+  const hasContractedOffRamp = Boolean(
+    environment.OFFRAMP_PROVIDER && environment.OFFRAMP_PROVIDER !== "devnet_sandbox" &&
+    environment.OFFRAMP_API_BASE_URL && environment.OFFRAMP_API_KEY,
+  );
+  return CASHOUT_PAYOUT_METHODS.map((id) => {
+    const payoutProvider = payoutProviderForMethod(id, environment);
+    const providerConfigured = hasProductionCredentials(environment, payoutProvider);
+    return {
+      id,
+      payoutProvider,
+      // There is intentionally no "live" result until a concrete provider
+      // adapter has passed certification. This avoids a credential-only switch
+      // ever triggering a real transfer.
+      availability: productionRequested && hasContractedOffRamp && providerConfigured ? "setup_required" : "sandbox",
+      requiresBankCode: id === "bank",
+      requiresPhoneNumber: id === "momo" || id === "zalopay",
+    };
+  });
 }
 
 /** A deterministic, time-limited test quote. A licensed provider replaces this adapter on Mainnet. */
@@ -80,6 +159,7 @@ export async function cashoutSettlementWallet(environment: CashoutEnvironment) {
 export async function cashoutCapabilities(environment: CashoutEnvironment) {
   try {
     const settlementWallet = await cashoutSettlementWallet(environment);
+    const methods = cashoutMethodCapabilities(environment);
     return {
       provider: CASHOUT_PROVIDER,
       network: CASHOUT_NETWORK,
@@ -90,6 +170,9 @@ export async function cashoutCapabilities(environment: CashoutEnvironment) {
       bankPayoutMode: "sandbox_only" as const,
       quoteKind: "time_limited_test_quote" as const,
       settlementWallet,
+      methods,
+      realPayoutEnabled: false,
+      productionMessage: "USDC-to-VND production remains disabled until a licensed off-ramp adapter is certified.",
     };
   } catch (error) {
     return {
@@ -102,6 +185,9 @@ export async function cashoutCapabilities(environment: CashoutEnvironment) {
       bankPayoutMode: "unavailable" as const,
       quoteKind: "time_limited_test_quote" as const,
       settlementWallet: null,
+      methods: cashoutMethodCapabilities(environment),
+      realPayoutEnabled: false,
+      productionMessage: "USDC-to-VND production remains disabled until a licensed off-ramp adapter is certified.",
       configurationError: error instanceof Error ? error.message : "Off-ramp Devnet chưa được cấu hình.",
     };
   }

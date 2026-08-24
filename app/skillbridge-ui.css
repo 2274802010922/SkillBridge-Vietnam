@@ -153,7 +153,28 @@
 .product-app .cashout-notice,
 .product-app .cashout-error { position: sticky; z-index: 5; bottom: 14px; margin: 0; box-shadow: 0 8px 24px rgba(7,19,36,.14); }
 
+/* Multi-rail reward receiving: methods are readable before any technical form appears. */
+.product-app .cashout-method-panel { display: grid; gap: 18px; }
+.product-app .cashout-method-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.product-app .cashout-method-card { display: grid; min-height: 166px; align-content: start; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.64); color: var(--ink); cursor: pointer; text-align: left; transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+.product-app .cashout-method-card:hover { border-color: var(--blue); background: #f7faff; transform: translateY(-1px); }
+.product-app .cashout-method-card:focus-visible { outline: 3px solid rgba(45,94,209,.3); outline-offset: 2px; }
+.product-app .cashout-method-card.active { border-color: var(--ink); background: var(--paper); box-shadow: 3px 3px 0 var(--lime-strong); }
+.product-app .cashout-method-card-top { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.product-app .cashout-method-card-top strong { font-size: 15px; line-height: 1.25; }
+.product-app .cashout-method-card-top small { flex: none; padding: 4px 6px; border: 1px solid var(--line); border-radius: 999px; color: var(--blue); font: 750 8px/1.2 var(--font-geist-mono), monospace; letter-spacing: .03em; text-transform: uppercase; }
+.product-app .cashout-method-card > span:not(.cashout-method-card-top) { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.product-app .cashout-method-card em { margin-top: auto; color: var(--ink-soft); font: 700 9px/1.4 var(--font-geist-mono), monospace; font-style: normal; letter-spacing: .03em; overflow-wrap: anywhere; }
+.product-app .cashout-retain-panel { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(220px, .7fr); gap: 24px; align-items: center; }
+.product-app .cashout-retain-panel h2 { margin: 6px 0 9px; font-size: clamp(25px, 3vw, 36px); line-height: 1.05; letter-spacing: -.045em; }
+.product-app .cashout-retain-panel p { max-width: 63ch; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.product-app .cashout-retain-balance { display: grid; gap: 9px; padding: 18px; border: 1px solid #b9d967; border-radius: 12px; background: #f7ffed; }
+.product-app .cashout-retain-balance span { color: #496238; font: 750 9px/1.4 var(--font-geist-mono), monospace; letter-spacing: .06em; text-transform: uppercase; }
+.product-app .cashout-retain-balance strong { color: var(--ink); font-size: clamp(24px, 3vw, 34px); letter-spacing: -.055em; overflow-wrap: anywhere; }
+
 @media (max-width: 900px) {
+  .product-app .cashout-method-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .product-app .cashout-retain-panel { grid-template-columns: minmax(0, 1fr); }
   .product-app .cashout-flow-grid,
   .product-app .cashout-quote,
   .product-app .cashout-wallet-layout { grid-template-columns: minmax(0, 1fr); }
@@ -171,6 +192,9 @@
 }
 
 @media (max-width: 520px) {
+  .product-app .cashout-method-grid { grid-template-columns: minmax(0, 1fr); }
+  .product-app .cashout-method-card { min-height: 0; }
+  .product-app .cashout-method-card-top { align-items: center; }
   .product-app .cashout-workspace { gap: 16px; }
   .product-app .cashout-safety-banner { padding: 13px; }
   .product-app .cashout-stepper li { min-height: 50px; padding: 9px; }

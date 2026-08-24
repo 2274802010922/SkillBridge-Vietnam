@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import bs58 from "bs58";
-import { cashoutCapabilities, createCashoutReference, createDevnetCashoutQuote, solanaPayCashoutUrl } from "../lib/cashout.ts";
+import { cashoutCapabilities, createCashoutReference, createDevnetCashoutQuote, payoutProviderForMethod, solanaPayCashoutUrl } from "../lib/cashout.ts";
 
 test("Devnet cash-out quote uses atomic math, explicit fees and a fixed expiry", () => {
   const quote = createDevnetCashoutQuote({
@@ -37,4 +37,14 @@ test("capabilities never represent the Devnet lab as a real bank payout", async 
   assert.equal(capabilities.devnetTransferEnabled, true);
   assert.equal(capabilities.directSolanaPay, true);
   assert.equal(capabilities.bankPayoutMode, "sandbox_only");
+  assert.equal(capabilities.realPayoutEnabled, false);
+  assert.deepEqual(capabilities.methods.map((method) => method.id), ["bank", "momo", "zalopay"]);
+  assert.equal(capabilities.methods.find((method) => method.id === "bank")?.payoutProvider, "payos");
+});
+
+test("receiving choices map to payout providers without exposing a real-money switch", () => {
+  assert.equal(payoutProviderForMethod("bank", {}), "payos");
+  assert.equal(payoutProviderForMethod("momo", {}), "momo");
+  assert.equal(payoutProviderForMethod("zalopay", {}), "zalopay");
+  assert.equal(payoutProviderForMethod("bank", { PAYOUT_PROVIDERS: "momo,zalopay" }), "momo");
 });

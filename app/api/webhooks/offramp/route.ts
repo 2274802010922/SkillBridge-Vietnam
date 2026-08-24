@@ -50,9 +50,9 @@ export async function POST(request: Request) {
     const eventType = payload.status === "completed" ? "bank.provider_completed" : "bank.provider_failed";
     await env.DB.batch([
       env.DB.prepare(`
-        UPDATE cashout_sessions SET status = ?, bank_reference = COALESCE(?, bank_reference),
+        UPDATE cashout_sessions SET status = ?, payout_status = ?, bank_reference = COALESCE(?, bank_reference),
           last_error_code = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'bank_processing'
-      `).bind(nextStatus, payload.bankReference || null, payload.errorCode || null, payload.orderId),
+      `).bind(nextStatus, payload.status === "completed" ? "provider_completed" : "provider_failed", payload.bankReference || null, payload.errorCode || null, payload.orderId),
       env.DB.prepare("INSERT OR IGNORE INTO cashout_events (id, cashout_session_id, event_key, event_type, status, metadata_json) VALUES (?, ?, ?, ?, ?, ?)")
         .bind(crypto.randomUUID(), payload.orderId, `webhook:${eventId}`, eventType, nextStatus, JSON.stringify({ eventId, bankReference: payload.bankReference || null, errorCode: payload.errorCode || null })),
       env.DB.prepare("UPDATE cashout_webhook_events SET status = 'processed', processed_at = CURRENT_TIMESTAMP WHERE id = ?").bind(webhookId),

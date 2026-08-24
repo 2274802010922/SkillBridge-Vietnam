@@ -197,7 +197,8 @@ test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", a
   assert.match(cashoutVerify, /requireFinalized: true/);
   assert.match(cashoutVerify, /TX_ALREADY_USED/);
   assert.match(cashoutUi, /WalletPaymentButton cashoutId/);
-  assert.match(cashoutUi, /No real VND was transferred/);
+  assert.match(cashoutUi, /Keep USDC in wallet/);
+  assert.match(cashoutUi, /no real VND has moved/);
   assert.match(cashoutUi, /private key or seed phrase/);
   assert.match(webhookRoute, /x-skillbridge-signature/);
   assert.match(webhookRoute, /provider_event_id/);

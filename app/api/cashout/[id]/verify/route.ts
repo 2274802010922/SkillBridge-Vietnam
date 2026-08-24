@@ -54,7 +54,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       });
       await env.DB.batch([
         env.DB.prepare(`
-          UPDATE cashout_sessions SET status = 'bank_processing', submitted_tx = ?, payment_tx = ?, payment_observed_at = ?,
+          UPDATE cashout_sessions SET status = 'bank_processing', payout_status = 'awaiting_provider', submitted_tx = ?, payment_tx = ?, payment_observed_at = ?,
             verification_state = 'verified', last_error_code = NULL, updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND user_id = ? AND submitted_tx = ?
         `).bind(signature, signature, payment.observedAt, id, user.id, signature),

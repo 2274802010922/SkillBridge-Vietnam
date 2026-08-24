@@ -48,7 +48,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (session.status !== "bank_processing" || !session.payment_tx) return Response.json({ error: "Chưa có giao dịch USDC finalized để đối soát." }, { status: 409 });
       const bankReference = session.bank_reference || `VND-SANDBOX-${id.slice(0, 8).toUpperCase()}`;
       await env.DB.batch([
-        env.DB.prepare("UPDATE cashout_sessions SET status = 'sandbox_completed', bank_reference = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND status = 'bank_processing'")
+        env.DB.prepare("UPDATE cashout_sessions SET status = 'sandbox_completed', payout_status = 'sandbox_completed', bank_reference = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND status = 'bank_processing'")
           .bind(bankReference, id, user.id),
         env.DB.prepare("INSERT OR IGNORE INTO cashout_events (id, cashout_session_id, event_key, event_type, status, metadata_json) VALUES (?, ?, ?, 'bank.sandbox_reconciled', 'sandbox_completed', ?)")
           .bind(crypto.randomUUID(), id, `${id}:bank.sandbox_reconciled`, JSON.stringify({ bankReference, realBankTransfer: false })),
