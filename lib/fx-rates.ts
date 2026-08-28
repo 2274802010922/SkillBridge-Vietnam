@@ -291,7 +291,7 @@ export async function getFxReference(
   if (cached && cached.expiresAt > Date.now()) return cached.value;
   const maxAge = positiveInteger(
     environment.FX_MAX_STALENESS_SECONDS,
-    86_400,
+    300,
     172_800,
   );
   const [coinGecko, exchangeRate, pyth, oxr] = await Promise.all([

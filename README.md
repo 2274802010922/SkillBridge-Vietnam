@@ -120,7 +120,7 @@ to the Vercel project:
 5. The cash-out screen retrieves a USDC/USD market reference and a USD/VND
    reference server-side, stores the source snapshots alongside each quote, and
    labels freshness/fallback clearly. `FX_CACHE_TTL_SECONDS=20` is the display
-   cache, while `FX_MAX_STALENESS_SECONDS=86400` rejects data that is too old
+   cache, while `FX_MAX_STALENESS_SECONDS=300` rejects data that is too old
    for a reference quote. `PYTH_HERMES_API_KEY`, `EXCHANGE_RATE_API_KEY`, and
    `OPEN_EXCHANGE_RATES_APP_ID` are optional server-only upgrades; do not put
    them in browser variables. A reference price is not an executable VND rate.
