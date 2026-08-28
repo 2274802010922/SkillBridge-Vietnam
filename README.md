@@ -117,7 +117,14 @@ to the Vercel project:
    labelled sandbox. Do not enable Mainnet or claim real bank payout until a
    licensed off-ramp provider supplies the Vietnam/VND corridor, KYC flow,
    executable quotes and signed webhooks.
-5. The multi-rail receiving UI works immediately with the Devnet sandbox. Keep
+5. The cash-out screen retrieves a USDC/USD market reference and a USD/VND
+   reference server-side, stores the source snapshots alongside each quote, and
+   labels freshness/fallback clearly. `FX_CACHE_TTL_SECONDS=20` is the display
+   cache, while `FX_MAX_STALENESS_SECONDS=86400` rejects data that is too old
+   for a reference quote. `PYTH_HERMES_API_KEY`, `EXCHANGE_RATE_API_KEY`, and
+   `OPEN_EXCHANGE_RATES_APP_ID` are optional server-only upgrades; do not put
+   them in browser variables. A reference price is not an executable VND rate.
+6. The multi-rail receiving UI works immediately with the Devnet sandbox. Keep
    `CASHOUT_MODE=devnet_sandbox`, `REAL_CASHOUT_ENABLED=false` and
    `OFFRAMP_PROVIDER=devnet_sandbox`. `PAYOS_*`, `MOMO_*`, and `ZALOPAY_*`
    variables are server-only preparation for approved payout products; adding
@@ -125,7 +132,7 @@ to the Vercel project:
    concrete, licensed off-ramp adapter, provider certification, webhook
    verification, reconciliation and a restricted canary are still required
    before any real VND transfer can be switched on.
-6. Deploy a Preview, test every wallet role, AI assessment, human approval,
+7. Deploy a Preview, test every wallet role, AI assessment, human approval,
    Devnet issuance/revocation, and opportunity verification, then promote that
    exact deployment to Production.
 

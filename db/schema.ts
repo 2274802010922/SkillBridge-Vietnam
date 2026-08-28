@@ -1,22 +1,38 @@
 import { sql } from "drizzle-orm";
-import { index, integer, text, uniqueIndex, sqliteTable } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  text,
+  uniqueIndex,
+  sqliteTable,
+} from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   displayName: text("display_name"),
   profileKind: text("profile_kind").notNull().default("student"),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const wallets = sqliteTable(
   "wallets",
   {
     address: text("address").primaryKey(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     chain: text("chain").notNull().default("solana:devnet"),
-    verifiedAt: text("verified_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    lastSignedInAt: text("last_signed_in_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    verifiedAt: text("verified_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    lastSignedInAt: text("last_signed_in_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [index("idx_wallets_user_id").on(table.userId)],
 );
@@ -35,11 +51,16 @@ export const authNonces = sqliteTable(
     issuedAt: text("issued_at").notNull(),
     expiresAt: text("expires_at").notNull(),
     usedAt: text("used_at"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_auth_nonces_nonce").on(table.nonce),
-    index("idx_auth_nonces_wallet_expires").on(table.walletAddress, table.expiresAt),
+    index("idx_auth_nonces_wallet_expires").on(
+      table.walletAddress,
+      table.expiresAt,
+    ),
   ],
 );
 
@@ -47,12 +68,18 @@ export const sessions = sqliteTable(
   "sessions",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     tokenHash: text("token_hash").notNull(),
     expiresAt: text("expires_at").notNull(),
     revokedAt: text("revoked_at"),
-    lastSeenAt: text("last_seen_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastSeenAt: text("last_seen_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_sessions_token_hash").on(table.tokenHash),
@@ -69,10 +96,18 @@ export const organizations = sqliteTable(
     kind: text("kind").notNull(),
     description: text("description"),
     website: text("website"),
-    verificationStatus: text("verification_status").notNull().default("unverified"),
-    createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    verificationStatus: text("verification_status")
+      .notNull()
+      .default("unverified"),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [uniqueIndex("idx_organizations_slug").on(table.slug)],
 );
@@ -81,14 +116,24 @@ export const memberships = sqliteTable(
   "memberships",
   {
     id: text("id").primaryKey(),
-    organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     role: text("role").notNull(),
     status: text("status").notNull().default("active"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
-    uniqueIndex("idx_memberships_org_user_role").on(table.organizationId, table.userId, table.role),
+    uniqueIndex("idx_memberships_org_user_role").on(
+      table.organizationId,
+      table.userId,
+      table.role,
+    ),
     index("idx_memberships_user_status").on(table.userId, table.status),
   ],
 );
@@ -97,19 +142,28 @@ export const invitations = sqliteTable(
   "invitations",
   {
     id: text("id").primaryKey(),
-    organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
     role: text("role").notNull(),
     tokenHash: text("token_hash").notNull(),
     targetWallet: text("target_wallet"),
-    createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
     expiresAt: text("expires_at").notNull(),
     acceptedAt: text("accepted_at"),
     acceptedByUserId: text("accepted_by_user_id").references(() => users.id),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_invitations_token_hash").on(table.tokenHash),
-    index("idx_invitations_org_expires").on(table.organizationId, table.expiresAt),
+    index("idx_invitations_org_expires").on(
+      table.organizationId,
+      table.expiresAt,
+    ),
   ],
 );
 
@@ -117,9 +171,15 @@ export const challenges = sqliteTable(
   "challenges",
   {
     id: text("id").primaryKey(),
-    organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
-    reviewerOrganizationId: text("reviewer_organization_id").references(() => organizations.id),
-    createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    reviewerOrganizationId: text("reviewer_organization_id").references(
+      () => organizations.id,
+    ),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
     title: text("title").notNull(),
     brief: text("brief").notNull(),
     contentJson: text("content_json").notNull().default("{}"),
@@ -147,8 +207,12 @@ export const challenges = sqliteTable(
     closesAt: text("closes_at"),
     deletedAt: text("deleted_at"),
     deletedByUserId: text("deleted_by_user_id").references(() => users.id),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("idx_challenges_org_status").on(table.organizationId, table.status),
@@ -160,19 +224,28 @@ export const challengeInvitations = sqliteTable(
   "challenge_invitations",
   {
     id: text("id").primaryKey(),
-    challengeId: text("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenges.id, { onDelete: "cascade" }),
     tokenHash: text("token_hash").notNull(),
     targetWallet: text("target_wallet"),
     status: text("status").notNull().default("active"),
     expiresAt: text("expires_at").notNull(),
     acceptedAt: text("accepted_at"),
     acceptedByUserId: text("accepted_by_user_id").references(() => users.id),
-    createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_challenge_invitations_token_hash").on(table.tokenHash),
-    index("idx_challenge_invitations_challenge_status").on(table.challengeId, table.status),
+    index("idx_challenge_invitations_challenge_status").on(
+      table.challengeId,
+      table.status,
+    ),
   ],
 );
 
@@ -180,15 +253,29 @@ export const participations = sqliteTable(
   "participations",
   {
     id: text("id").primaryKey(),
-    challengeId: text("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
-    studentUserId: text("student_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenges.id, { onDelete: "cascade" }),
+    studentUserId: text("student_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     state: text("state").notNull().default("accepted"),
-    joinedAt: text("joined_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    joinedAt: text("joined_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
-    uniqueIndex("idx_participations_challenge_student").on(table.challengeId, table.studentUserId),
-    index("idx_participations_student_state").on(table.studentUserId, table.state),
+    uniqueIndex("idx_participations_challenge_student").on(
+      table.challengeId,
+      table.studentUserId,
+    ),
+    index("idx_participations_student_state").on(
+      table.studentUserId,
+      table.state,
+    ),
   ],
 );
 
@@ -196,30 +283,44 @@ export const submissions = sqliteTable(
   "submissions",
   {
     id: text("id").primaryKey(),
-    participationId: text("participation_id").notNull().references(() => participations.id, { onDelete: "cascade" }),
+    participationId: text("participation_id")
+      .notNull()
+      .references(() => participations.id, { onDelete: "cascade" }),
     state: text("state").notNull().default("draft"),
     reflection: text("reflection").notNull().default(""),
     evidenceJson: text("evidence_json").notNull().default("[]"),
     submittedAt: text("submitted_at"),
     lockedAt: text("locked_at"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [uniqueIndex("idx_submissions_participation").on(table.participationId)],
+  (table) => [
+    uniqueIndex("idx_submissions_participation").on(table.participationId),
+  ],
 );
 
 export const submissionFiles = sqliteTable(
   "submission_files",
   {
     id: text("id").primaryKey(),
-    submissionId: text("submission_id").notNull().references(() => submissions.id, { onDelete: "cascade" }),
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
     r2Key: text("r2_key").notNull(),
     originalName: text("original_name").notNull(),
     contentType: text("content_type").notNull(),
     sizeBytes: text("size_bytes").notNull(),
     sha256: text("sha256").notNull(),
-    uploadedByUserId: text("uploaded_by_user_id").notNull().references(() => users.id),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    uploadedByUserId: text("uploaded_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_submission_files_r2_key").on(table.r2Key),
@@ -231,18 +332,30 @@ export const evidenceChunks = sqliteTable(
   "evidence_chunks",
   {
     id: text("id").primaryKey(),
-    submissionId: text("submission_id").notNull().references(() => submissions.id, { onDelete: "cascade" }),
-    fileId: text("file_id").notNull().references(() => submissionFiles.id, { onDelete: "cascade" }),
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
+    fileId: text("file_id")
+      .notNull()
+      .references(() => submissionFiles.id, { onDelete: "cascade" }),
     fileHash: text("file_hash").notNull(),
     locator: text("locator").notNull(),
     ordinal: integer("ordinal").notNull(),
     content: text("content").notNull(),
     tokenEstimate: integer("token_estimate").notNull(),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
-    uniqueIndex("idx_evidence_chunks_file_ordinal").on(table.fileId, table.ordinal),
-    index("idx_evidence_chunks_submission_hash").on(table.submissionId, table.fileHash),
+    uniqueIndex("idx_evidence_chunks_file_ordinal").on(
+      table.fileId,
+      table.ordinal,
+    ),
+    index("idx_evidence_chunks_submission_hash").on(
+      table.submissionId,
+      table.fileHash,
+    ),
   ],
 );
 
@@ -250,7 +363,9 @@ export const assessments = sqliteTable(
   "assessments",
   {
     id: text("id").primaryKey(),
-    submissionId: text("submission_id").notNull().references(() => submissions.id, { onDelete: "cascade" }),
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
     provider: text("provider").notNull(),
     model: text("model").notNull(),
     schemaVersion: text("schema_version").notNull(),
@@ -262,8 +377,12 @@ export const assessments = sqliteTable(
     inputTokenEstimate: integer("input_token_estimate"),
     outputTokenEstimate: integer("output_token_estimate"),
     finalResultHash: text("final_result_hash"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_assessments_submission").on(table.submissionId),
@@ -275,17 +394,30 @@ export const reviews = sqliteTable(
   "reviews",
   {
     id: text("id").primaryKey(),
-    assessmentId: text("assessment_id").notNull().references(() => assessments.id, { onDelete: "cascade" }),
-    reviewerUserId: text("reviewer_user_id").notNull().references(() => users.id),
+    assessmentId: text("assessment_id")
+      .notNull()
+      .references(() => assessments.id, { onDelete: "cascade" }),
+    reviewerUserId: text("reviewer_user_id")
+      .notNull()
+      .references(() => users.id),
     decision: text("decision").notNull(),
     reviewJson: text("review_json").notNull(),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_reviews_assessment_created").on(table.assessmentId, table.createdAt)],
+  (table) => [
+    index("idx_reviews_assessment_created").on(
+      table.assessmentId,
+      table.createdAt,
+    ),
+  ],
 );
 
 export const credentialIssuers = sqliteTable("credential_issuers", {
-  organizationId: text("organization_id").primaryKey().references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id")
+    .primaryKey()
+    .references(() => organizations.id, { onDelete: "cascade" }),
   credentialName: text("credential_name").notNull(),
   credentialAddress: text("credential_address").notNull(),
   schemaName: text("schema_name").notNull(),
@@ -293,18 +425,28 @@ export const credentialIssuers = sqliteTable("credential_issuers", {
   authorizedSignerAddress: text("authorized_signer_address").notNull(),
   bootstrapTx: text("bootstrap_tx").notNull(),
   status: text("status").notNull().default("active"),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const skillCredentials = sqliteTable(
   "skill_credentials",
   {
     id: text("id").primaryKey(),
-    assessmentId: text("assessment_id").notNull().references(() => assessments.id),
-    challengeId: text("challenge_id").notNull().references(() => challenges.id),
-    studentUserId: text("student_user_id").notNull().references(() => users.id),
+    assessmentId: text("assessment_id")
+      .notNull()
+      .references(() => assessments.id),
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenges.id),
+    studentUserId: text("student_user_id")
+      .notNull()
+      .references(() => users.id),
     studentWallet: text("student_wallet").notNull(),
-    issuerOrganizationId: text("issuer_organization_id").notNull().references(() => organizations.id),
+    issuerOrganizationId: text("issuer_organization_id")
+      .notNull()
+      .references(() => organizations.id),
     nonceAddress: text("nonce_address").notNull(),
     attestationAddress: text("attestation_address").notNull(),
     schemaAddress: text("schema_address").notNull(),
@@ -317,13 +459,22 @@ export const skillCredentials = sqliteTable(
     expiresAt: text("expires_at").notNull(),
     issuedAt: text("issued_at"),
     revokedAt: text("revoked_at"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_skill_credentials_assessment").on(table.assessmentId),
-    uniqueIndex("idx_skill_credentials_attestation").on(table.attestationAddress),
-    index("idx_skill_credentials_wallet_status").on(table.studentWallet, table.status),
+    uniqueIndex("idx_skill_credentials_attestation").on(
+      table.attestationAddress,
+    ),
+    index("idx_skill_credentials_wallet_status").on(
+      table.studentWallet,
+      table.status,
+    ),
   ],
 );
 
@@ -331,28 +482,47 @@ export const opportunities = sqliteTable(
   "opportunities",
   {
     id: text("id").primaryKey(),
-    organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
-    createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
     title: text("title").notNull(),
     description: text("description").notNull(),
-    requiredIssuerOrganizationId: text("required_issuer_organization_id").notNull().references(() => organizations.id),
+    requiredIssuerOrganizationId: text("required_issuer_organization_id")
+      .notNull()
+      .references(() => organizations.id),
     minimumScore: text("minimum_score").notNull().default("0"),
     policyAddress: text("policy_address"),
     policyTx: text("policy_tx"),
     status: text("status").notNull().default("active"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_opportunities_org_status").on(table.organizationId, table.status)],
+  (table) => [
+    index("idx_opportunities_org_status").on(
+      table.organizationId,
+      table.status,
+    ),
+  ],
 );
 
 export const accessGrants = sqliteTable(
   "access_grants",
   {
     id: text("id").primaryKey(),
-    opportunityId: text("opportunity_id").notNull().references(() => opportunities.id, { onDelete: "cascade" }),
+    opportunityId: text("opportunity_id")
+      .notNull()
+      .references(() => opportunities.id, { onDelete: "cascade" }),
     credentialId: text("credential_id").references(() => skillCredentials.id),
-    userId: text("user_id").notNull().references(() => users.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
     walletAddress: text("wallet_address").notNull(),
     decision: text("decision").notNull(),
     reason: text("reason").notNull(),
@@ -360,10 +530,15 @@ export const accessGrants = sqliteTable(
     receiptAddress: text("receipt_address"),
     recordTx: text("record_tx"),
     verificationDigest: text("verification_digest"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
-    index("idx_access_grants_opportunity_wallet").on(table.opportunityId, table.walletAddress),
+    index("idx_access_grants_opportunity_wallet").on(
+      table.opportunityId,
+      table.walletAddress,
+    ),
     index("idx_access_grants_user_created").on(table.userId, table.createdAt),
   ],
 );
@@ -372,7 +547,9 @@ export const invoices = sqliteTable(
   "invoices",
   {
     id: text("id").primaryKey(),
-    creatorUserId: text("creator_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    creatorUserId: text("creator_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     clientName: text("client_name").notNull(),
     clientEmail: text("client_email"),
     description: text("description").notNull(),
@@ -391,8 +568,12 @@ export const invoices = sqliteTable(
     paidAtomic: text("paid_atomic").notNull().default("0"),
     paidAt: text("paid_at"),
     paidTx: text("paid_tx"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("idx_invoices_creator_status").on(table.creatorUserId, table.status),
@@ -404,7 +585,10 @@ export const challengeFunds = sqliteTable(
   "challenge_funds",
   {
     id: text("id").primaryKey(),
-    challengeId: text("challenge_id").notNull().unique().references(() => challenges.id, { onDelete: "cascade" }),
+    challengeId: text("challenge_id")
+      .notNull()
+      .unique()
+      .references(() => challenges.id, { onDelete: "cascade" }),
     asset: text("asset").notNull(),
     requiredDisplay: text("required_display").notNull(),
     requiredAtomic: text("required_atomic").notNull(),
@@ -421,21 +605,36 @@ export const challengeFunds = sqliteTable(
     termsSignerWallet: text("terms_signer_wallet"),
     termsAcceptedAt: text("terms_accepted_at"),
     lockedAt: text("locked_at"),
-    refundPolicyState: text("refund_policy_state").notNull().default("pre_publish"),
+    refundPolicyState: text("refund_policy_state")
+      .notNull()
+      .default("pre_publish"),
     fundingTx: text("funding_tx").unique(),
     fundedAt: text("funded_at"),
-    createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdByUserId: text("created_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_challenge_funds_challenge_status").on(table.challengeId, table.status)],
+  (table) => [
+    index("idx_challenge_funds_challenge_status").on(
+      table.challengeId,
+      table.status,
+    ),
+  ],
 );
 
 export const challengeFundingEvents = sqliteTable(
   "challenge_funding_events",
   {
     id: text("id").primaryKey(),
-    challengeFundId: text("challenge_fund_id").notNull().references(() => challengeFunds.id, { onDelete: "cascade" }),
+    challengeFundId: text("challenge_fund_id")
+      .notNull()
+      .references(() => challengeFunds.id, { onDelete: "cascade" }),
     signature: text("signature").notNull().unique(),
     senderWallet: text("sender_wallet"),
     recipientWallet: text("recipient_wallet").notNull(),
@@ -443,55 +642,102 @@ export const challengeFundingEvents = sqliteTable(
     asset: text("asset").notNull(),
     observedAt: text("observed_at").notNull(),
     rawJson: text("raw_json").notNull().default("{}"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_challenge_funding_events_fund_created").on(table.challengeFundId, table.createdAt)],
+  (table) => [
+    index("idx_challenge_funding_events_fund_created").on(
+      table.challengeFundId,
+      table.createdAt,
+    ),
+  ],
 );
 
 export const challengeRefunds = sqliteTable(
   "challenge_refunds",
   {
     id: text("id").primaryKey(),
-    challengeId: text("challenge_id").notNull().unique().references(() => challenges.id, { onDelete: "cascade" }),
-    challengeFundId: text("challenge_fund_id").notNull().references(() => challengeFunds.id, { onDelete: "cascade" }),
+    challengeId: text("challenge_id")
+      .notNull()
+      .unique()
+      .references(() => challenges.id, { onDelete: "cascade" }),
+    challengeFundId: text("challenge_fund_id")
+      .notNull()
+      .references(() => challengeFunds.id, { onDelete: "cascade" }),
     recipientWallet: text("recipient_wallet").notNull(),
     asset: text("asset").notNull(),
     amountAtomic: text("amount_atomic").notNull(),
     status: text("status").notNull().default("pending"),
     paymentTx: text("payment_tx").unique(),
-    requestedByUserId: text("requested_by_user_id").notNull().references(() => users.id),
+    requestedByUserId: text("requested_by_user_id")
+      .notNull()
+      .references(() => users.id),
     refundedAt: text("refunded_at"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_challenge_refunds_challenge_status").on(table.challengeId, table.status)],
+  (table) => [
+    index("idx_challenge_refunds_challenge_status").on(
+      table.challengeId,
+      table.status,
+    ),
+  ],
 );
 
 export const cashoutBeneficiaries = sqliteTable(
   "cashout_beneficiaries",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     providerBeneficiaryId: text("provider_beneficiary_id").notNull().unique(),
     bankCode: text("bank_code").notNull(),
+    bankBin: text("bank_bin"),
+    bankName: text("bank_name"),
     accountLast4: text("account_last4").notNull(),
     accountHolderMasked: text("account_holder_masked").notNull(),
     payoutMethod: text("payout_method").notNull().default("bank"),
     payoutProvider: text("payout_provider").notNull().default("sandbox"),
-    verificationState: text("verification_state").notNull().default("sandbox_verified"),
+    verificationState: text("verification_state")
+      .notNull()
+      .default("sandbox_verified"),
+    verificationProvider: text("verification_provider")
+      .notNull()
+      .default("sandbox_directory"),
+    verificationReference: text("verification_reference"),
+    verifiedAt: text("verified_at"),
     status: text("status").notNull().default("sandbox_verified"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_cashout_beneficiaries_user_created").on(table.userId, table.createdAt)],
+  (table) => [
+    index("idx_cashout_beneficiaries_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
 );
 
 export const cashoutSessions = sqliteTable(
   "cashout_sessions",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-    beneficiaryId: text("beneficiary_id").references(() => cashoutBeneficiaries.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    beneficiaryId: text("beneficiary_id").references(
+      () => cashoutBeneficiaries.id,
+    ),
     walletAddress: text("wallet_address").notNull(),
     amountUsdc: text("amount_usdc").notNull(),
     amountAtomic: text("amount_atomic").notNull(),
@@ -510,34 +756,89 @@ export const cashoutSessions = sqliteTable(
     networkFeeVnd: text("network_fee_vnd"),
     quoteExpiresAt: text("quote_expires_at"),
     rateSource: text("rate_source").notNull().default("configured_test_rate"),
+    quoteId: text("quote_id"),
+    referenceRateVnd: text("reference_rate_vnd"),
+    usdcUsdRate: text("usdc_usd_rate"),
+    usdVndRate: text("usd_vnd_rate"),
+    referenceUpdatedAt: text("reference_updated_at"),
+    referenceFreshness: text("reference_freshness"),
+    spreadBps: text("spread_bps"),
+    quotePayloadHash: text("quote_payload_hash"),
     settlementWallet: text("settlement_wallet"),
     referenceKey: text("reference_key").unique(),
     submittedTx: text("submitted_tx"),
     paymentTx: text("payment_tx").unique(),
     paymentObservedAt: text("payment_observed_at"),
-    verificationState: text("verification_state").notNull().default("awaiting_signature"),
+    verificationState: text("verification_state")
+      .notNull()
+      .default("awaiting_signature"),
     lastErrorCode: text("last_error_code"),
     bankReference: text("bank_reference"),
     termsAcceptedAt: text("terms_accepted_at"),
     metadataJson: text("metadata_json").notNull().default("{}"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_cashout_sessions_user_created").on(table.userId, table.createdAt)],
+  (table) => [
+    index("idx_cashout_sessions_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const fxRateSnapshots = sqliteTable(
+  "fx_rate_snapshots",
+  {
+    id: text("id").primaryKey(),
+    cashoutSessionId: text("cashout_session_id").references(
+      () => cashoutSessions.id,
+      { onDelete: "cascade" },
+    ),
+    provider: text("provider").notNull(),
+    pair: text("pair").notNull(),
+    rate: text("rate").notNull(),
+    sourceUpdatedAt: text("source_updated_at").notNull(),
+    freshness: text("freshness").notNull(),
+    confidence: text("confidence"),
+    payloadHash: text("payload_hash").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("idx_fx_rate_snapshots_cashout_created").on(
+      table.cashoutSessionId,
+      table.createdAt,
+    ),
+  ],
 );
 
 export const cashoutEvents = sqliteTable(
   "cashout_events",
   {
     id: text("id").primaryKey(),
-    cashoutSessionId: text("cashout_session_id").notNull().references(() => cashoutSessions.id, { onDelete: "cascade" }),
+    cashoutSessionId: text("cashout_session_id")
+      .notNull()
+      .references(() => cashoutSessions.id, { onDelete: "cascade" }),
     eventKey: text("event_key").notNull().unique(),
     eventType: text("event_type").notNull(),
     status: text("status").notNull(),
     metadataJson: text("metadata_json").notNull().default("{}"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("idx_cashout_events_session_created").on(table.cashoutSessionId, table.createdAt)],
+  (table) => [
+    index("idx_cashout_events_session_created").on(
+      table.cashoutSessionId,
+      table.createdAt,
+    ),
+  ],
 );
 
 export const cashoutWebhookEvents = sqliteTable("cashout_webhook_events", {
@@ -547,7 +848,9 @@ export const cashoutWebhookEvents = sqliteTable("cashout_webhook_events", {
   signatureValid: integer("signature_valid").notNull().default(0),
   payloadHash: text("payload_hash").notNull(),
   status: text("status").notNull().default("received"),
-  receivedAt: text("received_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  receivedAt: text("received_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
   processedAt: text("processed_at"),
 });
 
@@ -555,7 +858,9 @@ export const paymentEvents = sqliteTable(
   "payment_events",
   {
     id: text("id").primaryKey(),
-    invoiceId: text("invoice_id").notNull().references(() => invoices.id, { onDelete: "cascade" }),
+    invoiceId: text("invoice_id")
+      .notNull()
+      .references(() => invoices.id, { onDelete: "cascade" }),
     signature: text("signature").notNull(),
     senderWallet: text("sender_wallet"),
     recipientWallet: text("recipient_wallet").notNull(),
@@ -563,11 +868,16 @@ export const paymentEvents = sqliteTable(
     status: text("status").notNull().default("confirmed"),
     observedAt: text("observed_at").notNull(),
     rawJson: text("raw_json").notNull().default("{}"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_payment_events_signature").on(table.signature),
-    index("idx_payment_events_invoice_created").on(table.invoiceId, table.createdAt),
+    index("idx_payment_events_invoice_created").on(
+      table.invoiceId,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -575,9 +885,15 @@ export const challengePayouts = sqliteTable(
   "challenge_payouts",
   {
     id: text("id").primaryKey(),
-    challengeId: text("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
-    submissionId: text("submission_id").notNull().references(() => submissions.id, { onDelete: "cascade" }),
-    recipientUserId: text("recipient_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenges.id, { onDelete: "cascade" }),
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
+    recipientUserId: text("recipient_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     recipientWallet: text("recipient_wallet").notNull(),
     amountUsdc: text("amount_usdc").notNull(),
     amountAtomic: text("amount_atomic").notNull(),
@@ -586,13 +902,20 @@ export const challengePayouts = sqliteTable(
     paymentTx: text("payment_tx"),
     paidAt: text("paid_at"),
     verifiedByUserId: text("verified_by_user_id").references(() => users.id),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_challenge_payouts_submission").on(table.submissionId),
     uniqueIndex("idx_challenge_payouts_tx").on(table.paymentTx),
-    index("idx_challenge_payouts_recipient_status").on(table.recipientUserId, table.status),
+    index("idx_challenge_payouts_recipient_status").on(
+      table.recipientUserId,
+      table.status,
+    ),
   ],
 );
 
@@ -607,11 +930,17 @@ export const auditEvents = sqliteTable(
     targetId: text("target_id").notNull(),
     requestId: text("request_id").notNull(),
     metadataJson: text("metadata_json").notNull().default("{}"),
-    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("idx_audit_actor_created").on(table.actorUserId, table.createdAt),
-    index("idx_audit_target_created").on(table.targetType, table.targetId, table.createdAt),
+    index("idx_audit_target_created").on(
+      table.targetType,
+      table.targetId,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -631,8 +960,12 @@ export const demoRuns = sqliteTable("demo_runs", {
   id: text("id").primaryKey(),
   stage: text("stage").notNull().default("invited"),
   eventsJson: text("events_json").notNull().default("[]"),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const demoAssessments = sqliteTable("demo_assessments", {
@@ -644,8 +977,12 @@ export const demoAssessments = sqliteTable("demo_assessments", {
   provider: text("provider").notNull(),
   model: text("model").notNull(),
   status: text("status").notNull().default("draft"),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const roleWorkspaces = sqliteTable("role_workspaces", {
@@ -657,8 +994,12 @@ export const roleWorkspaces = sqliteTable("role_workspaces", {
   credentialJson: text("credential_json"),
   opportunityJson: text("opportunity_json").notNull(),
   eventsJson: text("events_json").notNull().default("[]"),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const workspaceAssessments = sqliteTable("workspace_assessments", {
@@ -668,6 +1009,10 @@ export const workspaceAssessments = sqliteTable("workspace_assessments", {
   assessmentJson: text("assessment_json").notNull(),
   reviewJson: text("review_json"),
   status: text("status").notNull().default("draft"),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });

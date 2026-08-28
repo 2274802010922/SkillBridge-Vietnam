@@ -355,11 +355,16 @@ const statements = [
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider_beneficiary_id TEXT NOT NULL UNIQUE,
     bank_code TEXT NOT NULL,
+    bank_bin TEXT,
+    bank_name TEXT,
     account_last4 TEXT NOT NULL,
     account_holder_masked TEXT NOT NULL,
     payout_method TEXT NOT NULL DEFAULT 'bank',
     payout_provider TEXT NOT NULL DEFAULT 'sandbox',
     verification_state TEXT NOT NULL DEFAULT 'sandbox_verified',
+    verification_provider TEXT NOT NULL DEFAULT 'sandbox_directory',
+    verification_reference TEXT,
+    verified_at TEXT,
     status TEXT NOT NULL DEFAULT 'sandbox_verified',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -386,6 +391,14 @@ const statements = [
     network_fee_vnd TEXT,
     quote_expires_at TEXT,
     rate_source TEXT NOT NULL DEFAULT 'configured_test_rate',
+    quote_id TEXT,
+    reference_rate_vnd TEXT,
+    usdc_usd_rate TEXT,
+    usd_vnd_rate TEXT,
+    reference_updated_at TEXT,
+    reference_freshness TEXT,
+    spread_bps TEXT,
+    quote_payload_hash TEXT,
     settlement_wallet TEXT,
     reference_key TEXT UNIQUE,
     submitted_tx TEXT,
@@ -398,6 +411,18 @@ const statements = [
     metadata_json TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS fx_rate_snapshots (
+    id TEXT PRIMARY KEY,
+    cashout_session_id TEXT REFERENCES cashout_sessions(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    pair TEXT NOT NULL,
+    rate TEXT NOT NULL,
+    source_updated_at TEXT NOT NULL,
+    freshness TEXT NOT NULL,
+    confidence TEXT,
+    payload_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS cashout_events (
     id TEXT PRIMARY KEY,
@@ -531,6 +556,7 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS idx_cashout_beneficiaries_user_created ON cashout_beneficiaries(user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_cashout_sessions_user_created ON cashout_sessions(user_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_cashout_events_session_created ON cashout_events(cashout_session_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_fx_rate_snapshots_cashout_created ON fx_rate_snapshots(cashout_session_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_talent_profiles_visibility ON talent_profiles(visibility, updated_at)`,
   `CREATE INDEX IF NOT EXISTS idx_external_attestations_recipient ON external_attestations(recipient_user_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_contracts_org_status ON freelance_contracts(organization_id, status)`,
@@ -545,20 +571,42 @@ let initialized = false;
 export async function ensureCoreSchema(db: D1Database) {
   if (initialized) return;
   await db.batch(statements.map((statement) => db.prepare(statement)));
-  const challengeColumns = await db.prepare("PRAGMA table_info(challenges)").all<{ name: string }>();
-  if (!challengeColumns.results.some((column) => column.name === "access_type")) {
+  const challengeColumns = await db
+    .prepare("PRAGMA table_info(challenges)")
+    .all<{ name: string }>();
+  if (
+    !challengeColumns.results.some((column) => column.name === "access_type")
+  ) {
     try {
-      await db.prepare("ALTER TABLE challenges ADD COLUMN access_type TEXT NOT NULL DEFAULT 'invite_only'").run();
+      await db
+        .prepare(
+          "ALTER TABLE challenges ADD COLUMN access_type TEXT NOT NULL DEFAULT 'invite_only'",
+        )
+        .run();
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
     }
   }
-  for (const column of ["reward_amount_usdc", "reward_amount_atomic", "reward_mint"]) {
+  for (const column of [
+    "reward_amount_usdc",
+    "reward_amount_atomic",
+    "reward_mint",
+  ]) {
     if (challengeColumns.results.some((item) => item.name === column)) continue;
     try {
-      await db.prepare(`ALTER TABLE challenges ADD COLUMN ${column} TEXT`).run();
+      await db
+        .prepare(`ALTER TABLE challenges ADD COLUMN ${column} TEXT`)
+        .run();
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
     }
   }
   for (const definition of [
@@ -577,22 +625,60 @@ export async function ensureCoreSchema(db: D1Database) {
     ["deleted_at", "TEXT"],
     ["deleted_by_user_id", "TEXT"],
   ] as const) {
-    if (challengeColumns.results.some((column) => column.name === definition[0])) continue;
+    if (
+      challengeColumns.results.some((column) => column.name === definition[0])
+    )
+      continue;
     try {
-      await db.prepare(`ALTER TABLE challenges ADD COLUMN ${definition[0]} ${definition[1]}`).run();
+      await db
+        .prepare(
+          `ALTER TABLE challenges ADD COLUMN ${definition[0]} ${definition[1]}`,
+        )
+        .run();
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
     }
   }
-  await db.prepare("CREATE INDEX IF NOT EXISTS idx_challenges_deleted_at ON challenges(deleted_at)").run();
-  await db.prepare("UPDATE challenges SET reward_type = 'usdc' WHERE reward_type = 'badge' AND reward_amount_atomic IS NOT NULL").run();
-  await db.prepare("UPDATE challenges SET reward_asset = reward_type WHERE reward_asset IS NULL AND reward_type IN ('usdc', 'sol')").run();
-  const payoutColumns = await db.prepare("PRAGMA table_info(challenge_payouts)").all<{ name: string }>();
+  await db
+    .prepare(
+      "CREATE INDEX IF NOT EXISTS idx_challenges_deleted_at ON challenges(deleted_at)",
+    )
+    .run();
+  await db
+    .prepare(
+      "UPDATE challenges SET reward_type = 'usdc' WHERE reward_type = 'badge' AND reward_amount_atomic IS NOT NULL",
+    )
+    .run();
+  await db
+    .prepare(
+      "UPDATE challenges SET reward_asset = reward_type WHERE reward_asset IS NULL AND reward_type IN ('usdc', 'sol')",
+    )
+    .run();
+  const payoutColumns = await db
+    .prepare("PRAGMA table_info(challenge_payouts)")
+    .all<{ name: string }>();
   if (!payoutColumns.results.some((column) => column.name === "asset")) {
-    try { await db.prepare("ALTER TABLE challenge_payouts ADD COLUMN asset TEXT NOT NULL DEFAULT 'usdc'").run(); }
-    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+    try {
+      await db
+        .prepare(
+          "ALTER TABLE challenge_payouts ADD COLUMN asset TEXT NOT NULL DEFAULT 'usdc'",
+        )
+        .run();
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
+    }
   }
-  const fundingColumns = await db.prepare("PRAGMA table_info(challenge_funds)").all<{ name: string }>();
+  const fundingColumns = await db
+    .prepare("PRAGMA table_info(challenge_funds)")
+    .all<{ name: string }>();
   for (const definition of [
     ["submitted_tx", "TEXT"],
     ["verification_state", "TEXT NOT NULL DEFAULT 'awaiting_signature'"],
@@ -607,22 +693,61 @@ export async function ensureCoreSchema(db: D1Database) {
     ["locked_at", "TEXT"],
     ["refund_policy_state", "TEXT NOT NULL DEFAULT 'pre_publish'"],
   ] as const) {
-    if (fundingColumns.results.some((column) => column.name === definition[0])) continue;
-    try { await db.prepare(`ALTER TABLE challenge_funds ADD COLUMN ${definition[0]} ${definition[1]}`).run(); }
-    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+    if (fundingColumns.results.some((column) => column.name === definition[0]))
+      continue;
+    try {
+      await db
+        .prepare(
+          `ALTER TABLE challenge_funds ADD COLUMN ${definition[0]} ${definition[1]}`,
+        )
+        .run();
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
+    }
   }
-  await db.prepare("CREATE INDEX IF NOT EXISTS idx_challenge_funds_submitted_tx ON challenge_funds(submitted_tx)").run();
-  const beneficiaryColumns = await db.prepare("PRAGMA table_info(cashout_beneficiaries)").all<{ name: string }>();
+  await db
+    .prepare(
+      "CREATE INDEX IF NOT EXISTS idx_challenge_funds_submitted_tx ON challenge_funds(submitted_tx)",
+    )
+    .run();
+  const beneficiaryColumns = await db
+    .prepare("PRAGMA table_info(cashout_beneficiaries)")
+    .all<{ name: string }>();
   for (const definition of [
     ["payout_method", "TEXT NOT NULL DEFAULT 'bank'"],
     ["payout_provider", "TEXT NOT NULL DEFAULT 'sandbox'"],
     ["verification_state", "TEXT NOT NULL DEFAULT 'sandbox_verified'"],
+    ["bank_bin", "TEXT"],
+    ["bank_name", "TEXT"],
+    ["verification_provider", "TEXT NOT NULL DEFAULT 'sandbox_directory'"],
+    ["verification_reference", "TEXT"],
+    ["verified_at", "TEXT"],
   ] as const) {
-    if (beneficiaryColumns.results.some((column) => column.name === definition[0])) continue;
-    try { await db.prepare(`ALTER TABLE cashout_beneficiaries ADD COLUMN ${definition[0]} ${definition[1]}`).run(); }
-    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
+    if (
+      beneficiaryColumns.results.some((column) => column.name === definition[0])
+    )
+      continue;
+    try {
+      await db
+        .prepare(
+          `ALTER TABLE cashout_beneficiaries ADD COLUMN ${definition[0]} ${definition[1]}`,
+        )
+        .run();
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
+    }
   }
-  const cashoutColumns = await db.prepare("PRAGMA table_info(cashout_sessions)").all<{ name: string }>();
+  const cashoutColumns = await db
+    .prepare("PRAGMA table_info(cashout_sessions)")
+    .all<{ name: string }>();
   for (const definition of [
     ["beneficiary_id", "TEXT REFERENCES cashout_beneficiaries(id)"],
     ["payout_method", "TEXT NOT NULL DEFAULT 'bank'"],
@@ -634,6 +759,14 @@ export async function ensureCoreSchema(db: D1Database) {
     ["network_fee_vnd", "TEXT"],
     ["quote_expires_at", "TEXT"],
     ["rate_source", "TEXT NOT NULL DEFAULT 'configured_test_rate'"],
+    ["quote_id", "TEXT"],
+    ["reference_rate_vnd", "TEXT"],
+    ["usdc_usd_rate", "TEXT"],
+    ["usd_vnd_rate", "TEXT"],
+    ["reference_updated_at", "TEXT"],
+    ["reference_freshness", "TEXT"],
+    ["spread_bps", "TEXT"],
+    ["quote_payload_hash", "TEXT"],
     ["settlement_wallet", "TEXT"],
     ["reference_key", "TEXT"],
     ["submitted_tx", "TEXT"],
@@ -645,24 +778,77 @@ export async function ensureCoreSchema(db: D1Database) {
     ["terms_accepted_at", "TEXT"],
     ["metadata_json", "TEXT NOT NULL DEFAULT '{}'"],
   ] as const) {
-    if (cashoutColumns.results.some((column) => column.name === definition[0])) continue;
-    try { await db.prepare(`ALTER TABLE cashout_sessions ADD COLUMN ${definition[0]} ${definition[1]}`).run(); }
-    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
-  }
-  await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_cashout_sessions_reference ON cashout_sessions(reference_key)").run();
-  await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_cashout_sessions_payment_tx ON cashout_sessions(payment_tx)").run();
-  await db.prepare("CREATE INDEX IF NOT EXISTS idx_cashout_sessions_submitted_tx ON cashout_sessions(submitted_tx)").run();
-  const assessmentColumns = await db.prepare("PRAGMA table_info(assessments)").all<{ name: string }>();
-  const credentialColumns = await db.prepare("PRAGMA table_info(skill_credentials)").all<{ name: string }>();
-  if (!credentialColumns.results.some((column) => column.name === "skills_json")) {
-    try { await db.prepare("ALTER TABLE skill_credentials ADD COLUMN skills_json TEXT NOT NULL DEFAULT '[]'").run(); }
-    catch (error) { if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error; }
-  }
-  if (!assessmentColumns.results.some((column) => column.name === "assessment_mode")) {
+    if (cashoutColumns.results.some((column) => column.name === definition[0]))
+      continue;
     try {
-      await db.prepare("ALTER TABLE assessments ADD COLUMN assessment_mode TEXT NOT NULL DEFAULT 'ai_assisted'").run();
+      await db
+        .prepare(
+          `ALTER TABLE cashout_sessions ADD COLUMN ${definition[0]} ${definition[1]}`,
+        )
+        .run();
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
+    }
+  }
+  await db
+    .prepare(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_cashout_sessions_reference ON cashout_sessions(reference_key)",
+    )
+    .run();
+  await db
+    .prepare(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_cashout_sessions_payment_tx ON cashout_sessions(payment_tx)",
+    )
+    .run();
+  await db
+    .prepare(
+      "CREATE INDEX IF NOT EXISTS idx_cashout_sessions_submitted_tx ON cashout_sessions(submitted_tx)",
+    )
+    .run();
+  const assessmentColumns = await db
+    .prepare("PRAGMA table_info(assessments)")
+    .all<{ name: string }>();
+  const credentialColumns = await db
+    .prepare("PRAGMA table_info(skill_credentials)")
+    .all<{ name: string }>();
+  if (
+    !credentialColumns.results.some((column) => column.name === "skills_json")
+  ) {
+    try {
+      await db
+        .prepare(
+          "ALTER TABLE skill_credentials ADD COLUMN skills_json TEXT NOT NULL DEFAULT '[]'",
+        )
+        .run();
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
+    }
+  }
+  if (
+    !assessmentColumns.results.some(
+      (column) => column.name === "assessment_mode",
+    )
+  ) {
+    try {
+      await db
+        .prepare(
+          "ALTER TABLE assessments ADD COLUMN assessment_mode TEXT NOT NULL DEFAULT 'ai_assisted'",
+        )
+        .run();
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
     }
   }
   for (const definition of [
@@ -670,11 +856,22 @@ export async function ensureCoreSchema(db: D1Database) {
     ["input_token_estimate", "INTEGER"],
     ["output_token_estimate", "INTEGER"],
   ] as const) {
-    if (assessmentColumns.results.some((column) => column.name === definition[0])) continue;
+    if (
+      assessmentColumns.results.some((column) => column.name === definition[0])
+    )
+      continue;
     try {
-      await db.prepare(`ALTER TABLE assessments ADD COLUMN ${definition[0]} ${definition[1]}`).run();
+      await db
+        .prepare(
+          `ALTER TABLE assessments ADD COLUMN ${definition[0]} ${definition[1]}`,
+        )
+        .run();
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.toLowerCase().includes("duplicate column")) throw error;
+      if (
+        !(error instanceof Error) ||
+        !error.message.toLowerCase().includes("duplicate column")
+      )
+        throw error;
     }
   }
   initialized = true;
