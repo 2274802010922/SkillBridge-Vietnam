@@ -1,25 +1,40 @@
 import { env } from "@/lib/runtime-env";
-import { assertSameOrigin, jsonError, requireSessionUser } from "../../../lib/auth";
+import { assertSameOrigin, jsonError, requireSessionUser } from "@/lib/auth";
+import { readWalletProfile, saveWalletProfile } from "@/lib/wallet-profile";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
-export async function PATCH(request: Request) {
+export async function GET(request: Request) {
   try {
-    assertSameOrigin(request);
     const user = await requireSessionUser(request);
-    const body = (await request.json()) as { displayName?: string; profileKind?: string };
-    const displayName = body.displayName?.trim() ?? "";
-    const profileKind = body.profileKind ?? "student";
-    if (displayName.length < 2 || displayName.length > 80) {
-      return Response.json({ error: "Tên hiển thị cần từ 2 đến 80 ký tự." }, { status: 400 });
-    }
-    if (!(["student", "professional"] as const).includes(profileKind as "student" | "professional")) {
-      return Response.json({ error: "Loại hồ sơ không hợp lệ." }, { status: 400 });
-    }
-    await env.DB.prepare(`
-      UPDATE users SET display_name = ?, profile_kind = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
-    `).bind(displayName, profileKind, user.id).run();
-    return Response.json({ user: { ...user, displayName, profileKind } });
+    return Response.json(
+      { profile: await readWalletProfile(env.DB, user.walletAddress, user.id) },
+      { headers: { "cache-control": "private, no-store" } },
+    );
   } catch (error) {
     return jsonError(error);
   }
 }
-
+export async function PATCH(request: Request) {
+  try {
+    assertSameOrigin(request);
+    const user = await requireSessionUser(request);
+    await consumeRateLimit(env.DB, "profile_update", user.id, 60, 3600);
+    const raw = await request.text();
+    if (raw.length > 125000)
+      return Response.json({ error: "PROFILE_INVALID:size" }, { status: 413 });
+    const profile = await saveWalletProfile(env.DB, user.id, JSON.parse(raw));
+    return Response.json(
+      {
+        profile,
+        user: {
+          ...user,
+          displayName: profile?.displayName,
+          profileKind: profile?.profileKind,
+        },
+      },
+      { headers: { "cache-control": "no-store" } },
+    );
+  } catch (error) {
+    return jsonError(error);
+  }
+}

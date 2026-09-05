@@ -1,3 +1,5 @@
+import { PROFILE_SCHEMA } from './wallet-profile.ts';
+
 const statements = [
   `CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -13,6 +15,7 @@ const statements = [
     verified_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_signed_in_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  PROFILE_SCHEMA,
   `CREATE TABLE IF NOT EXISTS auth_nonces (
     id TEXT PRIMARY KEY,
     nonce TEXT NOT NULL,

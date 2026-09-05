@@ -1,0 +1,331 @@
+.profile-workspace,
+.profile-view {
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+  color: var(--ink);
+}
+.profile-page-heading h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.12;
+  margin: 10px 0;
+  letter-spacing: -0.035em;
+}
+.profile-workspace p,
+.profile-view p {
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.profile-toolbar,
+.profile-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.profile-toolbar button[aria-pressed="true"] {
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--lime);
+}
+.profile-editor {
+  display: grid;
+  gap: 24px;
+}
+.profile-editor .app-panel {
+  display: grid;
+  gap: 20px;
+}
+.profile-editor h2,
+.profile-view h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.3;
+}
+.profile-editor h3,
+.profile-view h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.profile-editor label {
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 0;
+}
+.profile-editor input:not([type="checkbox"]),
+.profile-editor select,
+.profile-editor textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  box-sizing: border-box;
+}
+.profile-editor input,
+.profile-editor textarea {
+  font-family: inherit;
+  font-size: 16px;
+}
+.profile-editor textarea {
+  resize: vertical;
+}
+.profile-fields,
+.profile-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--lime);
+}
+.profile-initials {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font-size: 30px;
+  font-weight: 800;
+}
+.profile-avatar-editor {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.profile-avatar-editor > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.profile-editor small {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.profile-portfolio-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+.profile-editor .profile-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  padding: 10px 0;
+}
+.profile-editor .profile-check input {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  margin: 2px 0;
+}
+.profile-save-bar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 0 24px;
+}
+.profile-intro {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+.profile-intro h1 {
+  margin: 8px 0;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.profile-headline {
+  margin: 0 0 12px;
+}
+.profile-availability {
+  display: inline-block;
+  background: #f1fadf;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #304b13;
+  font-size: 14px;
+}
+.profile-wallet {
+  grid-column: 1/-1;
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.profile-wallet code {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.profile-wallet small {
+  font-size: 13px;
+  color: var(--muted);
+}
+.profile-prose {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.profile-links a,
+.profile-menu-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: var(--blue);
+  overflow-wrap: anywhere;
+}
+.profile-facts > div {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.profile-facts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.profile-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.profile-section-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.profile-section-title > a {
+  min-height: 44px;
+  align-self: center;
+}
+.profile-proofs {
+  display: grid;
+  gap: 0;
+}
+.profile-proofs article {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+.profile-proofs article > div {
+  min-width: 0;
+}
+.profile-proofs article > div:last-child {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  min-width: 110px;
+}
+.profile-proofs strong {
+  font-size: 28px;
+}
+.profile-proofs small {
+  font-size: 13px;
+  color: var(--muted);
+}
+.profile-proofs a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--blue);
+}
+.profile-public {
+  padding: 0 max(16px, calc((100vw - 1100px) / 2)) 48px;
+  min-height: 100vh;
+}
+.profile-public-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+}
+.wallet-profile-name {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.wallet-summary-trigger .profile-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .product-app .wallet-summary-trigger .wallet-profile-name,
+  .product-app .wallet-summary-trigger .wallet-address,
+  .product-app .wallet-summary-trigger .wallet-status-dot,
+  .product-app .wallet-summary-trigger > span[aria-hidden="true"] { display: none; }
+  .product-app .wallet-summary-trigger { padding: 7px; min-width: 44px; min-height: 44px; }
+  .product-app .wallet-summary-trigger > .profile-avatar { display: grid !important; }
+}
+.profile-workspace :focus-visible,
+.profile-public :focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+  scroll-margin-top: 120px;
+}
+@media (max-width: 760px) {
+  .profile-fields,
+  .profile-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .profile-portfolio-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .profile-toolbar .button {
+    flex: 1 1 140px;
+  }
+  .profile-avatar-editor {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .profile-proofs article {
+    flex-direction: column;
+  }
+  .profile-intro {
+    gap: 16px;
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+  .profile-intro .profile-avatar {
+    width: 72px;
+    height: 72px;
+  }
+  .profile-public-header .wordmark {
+    font-size: 22px;
+  }
+  .wallet-profile-name {
+    max-width: 68px;
+  }
+}

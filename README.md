@@ -89,6 +89,13 @@ npm run db:generate
 
 ## Vercel deployment
 
+Wallet profiles are available at `/app/profile`, with share URLs at `/u/<wallet>`.
+The additive `wallet_profiles` table is initialized automatically alongside the
+core schema; no extra Vercel environment variables or database reset are needed.
+See [wallet profile plan](docs/wallet-profile-plan.md) for privacy rules and the
+two-wallet manual checklist. `node tests/wallet-profile-http.mjs` tests the full
+SIWS/profile API flow against a local isolated server at `localhost:3091` only.
+
 The application now runs on standard Next.js and is ready for Vercel Preview
 deployments. Before testing authenticated roles, connect two storage resources
 to the Vercel project:

@@ -19,6 +19,12 @@ export const users = sqliteTable("users", {
     .default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const walletProfiles = sqliteTable('wallet_profiles', {
+  userId: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  detailsJson: text('details_json').notNull().default('{}'),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const wallets = sqliteTable(
   "wallets",
   {
