@@ -192,7 +192,7 @@ test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", a
   assert.match(challengeRoute, /funding_status !== "funded"/);
   assert.match(fundingRoute, /verifySolPayment/);
   assert.match(fundingRoute, /verifyUsdcPayment/);
-  assert.match(payoutRoute, /sendRewardVaultTransfer/);
+  assert.match(payoutRoute, /journaledVaultTransfer/);
   assert.match(cashoutRoute, /createDevnetCashoutQuote/);
   assert.match(cashoutRoute, /getFxReference/);
   assert.match(cashoutRoute, /fx_rate_snapshots/);

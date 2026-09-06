@@ -6,9 +6,11 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
+challenge_escrow = "HBasPxF9R83pCFdeuvvXW5Hpt7hSMTXghLRSzeAEGpDB"
 opportunity_gate = "AuXFxfT41YMsG53euEB1tFjyUiMLKxfucQnYX4jhekCE"
 
 [programs.localnet]
+challenge_escrow = "HBasPxF9R83pCFdeuvvXW5Hpt7hSMTXghLRSzeAEGpDB"
 opportunity_gate = "AuXFxfT41YMsG53euEB1tFjyUiMLKxfucQnYX4jhekCE"
 
 [provider]

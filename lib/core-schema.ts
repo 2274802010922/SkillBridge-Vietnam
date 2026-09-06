@@ -1,4 +1,5 @@
 import { PROFILE_SCHEMA } from './wallet-profile.ts';
+import { ESCROW_SCHEMA, ESCROW_TRIGGERS } from './escrow-schema.ts';
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS users (
@@ -16,6 +17,7 @@ const statements = [
     last_signed_in_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   PROFILE_SCHEMA,
+  ...ESCROW_SCHEMA,
   `CREATE TABLE IF NOT EXISTS auth_nonces (
     id TEXT PRIMARY KEY,
     nonce TEXT NOT NULL,
@@ -574,6 +576,7 @@ let initialized = false;
 export async function ensureCoreSchema(db: D1Database) {
   if (initialized) return;
   await db.batch(statements.map((statement) => db.prepare(statement)));
+  await db.batch(ESCROW_TRIGGERS.map((statement) => db.prepare(statement)));
   const challengeColumns = await db
     .prepare("PRAGMA table_info(challenges)")
     .all<{ name: string }>();

@@ -1,0 +1,1070 @@
+{
+  "address": "HBasPxF9R83pCFdeuvvXW5Hpt7hSMTXghLRSzeAEGpDB",
+  "metadata": {
+    "name": "challenge_escrow",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "accept_role",
+      "discriminator": [
+        52,
+        25,
+        7,
+        231,
+        196,
+        235,
+        119,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "allocate_award",
+      "discriminator": [
+        100,
+        43,
+        111,
+        13,
+        177,
+        3,
+        74,
+        9
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          },
+          "relations": [
+            "submission"
+          ]
+        },
+        {
+          "name": "submission",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  98,
+                  109,
+                  105,
+                  115,
+                  115,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow"
+              },
+              {
+                "kind": "account",
+                "path": "submission.student",
+                "account": "Submission"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_empty",
+      "discriminator": [
+        144,
+        119,
+        220,
+        68,
+        208,
+        44,
+        26,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_award",
+      "discriminator": [
+        171,
+        180,
+        56,
+        47,
+        60,
+        0,
+        25,
+        205
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          },
+          "relations": [
+            "submission"
+          ]
+        },
+        {
+          "name": "submission",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  98,
+                  109,
+                  105,
+                  115,
+                  115,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow"
+              },
+              {
+                "kind": "account",
+                "path": "submission.student",
+                "account": "Submission"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "finalize_results",
+      "discriminator": [
+        207,
+        226,
+        108,
+        46,
+        149,
+        229,
+        100,
+        127
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "fund",
+      "discriminator": [
+        218,
+        188,
+        111,
+        221,
+        152,
+        113,
+        174,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "funder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "funder"
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "terms",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "reviewer",
+          "type": "pubkey"
+        },
+        {
+          "name": "backup",
+          "type": "pubkey"
+        },
+        {
+          "name": "registrar",
+          "type": "pubkey"
+        },
+        {
+          "name": "mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "slots",
+          "type": "u16"
+        },
+        {
+          "name": "submit_deadline",
+          "type": "i64"
+        },
+        {
+          "name": "review_deadline",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "publish",
+      "discriminator": [
+        129,
+        177,
+        182,
+        160,
+        184,
+        224,
+        219,
+        5
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "record_result",
+      "discriminator": [
+        208,
+        243,
+        63,
+        218,
+        63,
+        116,
+        76,
+        80
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          },
+          "relations": [
+            "submission"
+          ]
+        },
+        {
+          "name": "submission",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  98,
+                  109,
+                  105,
+                  115,
+                  115,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow"
+              },
+              {
+                "kind": "account",
+                "path": "submission.student",
+                "account": "Submission"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "eligible",
+          "type": "bool"
+        },
+        {
+          "name": "result_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refund_unused",
+      "discriminator": [
+        239,
+        108,
+        1,
+        110,
+        2,
+        81,
+        44,
+        174
+      ],
+      "accounts": [
+        {
+          "name": "actor",
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_submission",
+      "discriminator": [
+        55,
+        137,
+        111,
+        27,
+        8,
+        157,
+        187,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "student",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "registrar",
+          "signer": true
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.funder",
+                "account": "Escrow"
+              },
+              {
+                "kind": "account",
+                "path": "escrow.id",
+                "account": "Escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "submission",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  98,
+                  109,
+                  105,
+                  115,
+                  115,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow"
+              },
+              {
+                "kind": "account",
+                "path": "student"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "submission_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "evidence_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Escrow",
+      "discriminator": [
+        31,
+        213,
+        123,
+        187,
+        186,
+        22,
+        218,
+        155
+      ]
+    },
+    {
+      "name": "Submission",
+      "discriminator": [
+        58,
+        194,
+        159,
+        158,
+        75,
+        102,
+        178,
+        197
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidConfig",
+      "msg": "Invalid configuration"
+    },
+    {
+      "code": 6001,
+      "name": "WrongMint",
+      "msg": "Wrong asset"
+    },
+    {
+      "code": 6002,
+      "name": "Unauthorized",
+      "msg": "Unauthorized wallet"
+    },
+    {
+      "code": 6003,
+      "name": "WrongState",
+      "msg": "Operation is not allowed in this state"
+    },
+    {
+      "code": 6004,
+      "name": "NotReady",
+      "msg": "Funding and reviewer consent required"
+    },
+    {
+      "code": 6005,
+      "name": "Deadline",
+      "msg": "Deadline does not allow this action"
+    },
+    {
+      "code": 6006,
+      "name": "AlreadyResolved",
+      "msg": "Result already recorded"
+    },
+    {
+      "code": 6007,
+      "name": "NotEligible",
+      "msg": "Not selected for this reward"
+    },
+    {
+      "code": 6008,
+      "name": "AlreadyPaid",
+      "msg": "Reward already paid"
+    },
+    {
+      "code": 6009,
+      "name": "WrongRecipient",
+      "msg": "Wrong recipient"
+    },
+    {
+      "code": 6010,
+      "name": "Unresolved",
+      "msg": "Reviews are unresolved"
+    },
+    {
+      "code": 6011,
+      "name": "Locked",
+      "msg": "Reward fund is locked"
+    },
+    {
+      "code": 6012,
+      "name": "NoFunds",
+      "msg": "Insufficient unallocated reward budget"
+    },
+    {
+      "code": 6013,
+      "name": "WrongTokenAccount",
+      "msg": "Invalid token account"
+    },
+    {
+      "code": 6014,
+      "name": "Arithmetic",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "Escrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "funder",
+            "type": "pubkey"
+          },
+          {
+            "name": "reviewer",
+            "type": "pubkey"
+          },
+          {
+            "name": "backup",
+            "type": "pubkey"
+          },
+          {
+            "name": "registrar",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "terms",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "slots",
+            "type": "u16"
+          },
+          {
+            "name": "submit_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "review_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "state",
+            "type": "u8"
+          },
+          {
+            "name": "accepted",
+            "type": "u8"
+          },
+          {
+            "name": "funded",
+            "type": "u64"
+          },
+          {
+            "name": "allocated",
+            "type": "u64"
+          },
+          {
+            "name": "paid",
+            "type": "u64"
+          },
+          {
+            "name": "refunded",
+            "type": "u64"
+          },
+          {
+            "name": "submissions",
+            "type": "u32"
+          },
+          {
+            "name": "resolved",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Submission",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "student",
+            "type": "pubkey"
+          },
+          {
+            "name": "submission_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidence_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "result_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "decision",
+            "type": "u8"
+          },
+          {
+            "name": "paid",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -39,12 +39,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { id } = await params;
     const submission = await ownedSubmission(user.id, id);
     if (!submission) return Response.json({ error: "Bài nộp không tồn tại." }, { status: 404 });
+    if (await env.DB.prepare("SELECT submission_id FROM escrow_submission_locks WHERE submission_id=?").bind(id).first()) return Response.json({error:"Bản bài nộp đã được khóa để ký on-chain. Mở Quỹ thưởng để hoàn tất."},{status:409});
     if (submission.state !== "draft" && submission.state !== "changes_requested") return Response.json({ error: "Bài nộp đã khóa." }, { status: 409 });
     const body = (await request.json()) as { note?: string; reflection?: string; evidence?: unknown; action?: "save" | "submit" };
     const reflection = (body.note ?? body.reflection ?? "").trim();
     const evidence = body.evidence === undefined ? [] : validateEvidence(body.evidence);
     if (reflection.length > 2000 || evidence === null) return Response.json({ error: "Ghi chú hoặc evidence không hợp lệ." }, { status: 400 });
     if (body.action === "submit") {
+      const escrow = await env.DB.prepare("SELECT e.challenge_id FROM challenge_escrows e JOIN participations p ON p.challenge_id=e.challenge_id JOIN submissions s ON s.participation_id=p.id WHERE s.id=?").bind(id).first<{challenge_id:string}>();
+      if(escrow){await env.DB.prepare("UPDATE submissions SET reflection=?, evidence_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND state='draft'").bind(reflection,JSON.stringify(evidence),id).run();return Response.json({requiresEscrowSignature:true,escrowUrl:"/app/escrow?challenge="+escrow.challenge_id});}
       const files = await env.DB.prepare("SELECT COUNT(*) AS count FROM submission_files WHERE submission_id = ?").bind(id).first<{ count: number }>();
       if (Number(files?.count ?? 0) === 0) return Response.json({ error: "Cần ít nhất một file trước khi nộp bài." }, { status: 400 });
       await env.DB.batch([

@@ -1,0 +1,13 @@
+export const ESCROW_SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS legacy_fund_locks(fund_id TEXT PRIMARY KEY,operation_key TEXT NOT NULL UNIQUE)`,
+  `CREATE TABLE IF NOT EXISTS legacy_vault_operations(operation_key TEXT PRIMARY KEY,payload_hash TEXT NOT NULL,transaction_b64 TEXT,signature TEXT UNIQUE,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+  `CREATE TABLE IF NOT EXISTS challenge_escrows(challenge_id TEXT PRIMARY KEY REFERENCES challenges(id),program_id TEXT NOT NULL,escrow_address TEXT NOT NULL UNIQUE,config_json TEXT NOT NULL,chain_state_json TEXT,chain_slot INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+  `CREATE TABLE IF NOT EXISTS escrow_submission_locks(submission_id TEXT PRIMARY KEY REFERENCES submissions(id),challenge_id TEXT NOT NULL REFERENCES challenges(id),student_wallet TEXT NOT NULL,evidence_hash TEXT NOT NULL,chain_json TEXT,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+  `CREATE TABLE IF NOT EXISTS escrow_operations(id TEXT PRIMARY KEY,challenge_id TEXT NOT NULL,actor_user_id TEXT NOT NULL,action TEXT NOT NULL,submission_id TEXT,signature TEXT UNIQUE,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+];
+export const ESCROW_TRIGGERS = [
+ `CREATE TRIGGER IF NOT EXISTS escrow_files_insert BEFORE INSERT ON submission_files WHEN EXISTS(SELECT 1 FROM escrow_submission_locks WHERE submission_id=NEW.submission_id) BEGIN SELECT RAISE(ABORT,'Escrow submission is immutable'); END`,
+ `CREATE TRIGGER IF NOT EXISTS escrow_files_delete BEFORE DELETE ON submission_files WHEN EXISTS(SELECT 1 FROM escrow_submission_locks WHERE submission_id=OLD.submission_id) BEGIN SELECT RAISE(ABORT,'Escrow submission is immutable'); END`,
+ `CREATE TRIGGER IF NOT EXISTS escrow_files_update BEFORE UPDATE ON submission_files WHEN EXISTS(SELECT 1 FROM escrow_submission_locks WHERE submission_id IN(OLD.submission_id,NEW.submission_id)) BEGIN SELECT RAISE(ABORT,'Escrow submission is immutable'); END`,
+ `CREATE TRIGGER IF NOT EXISTS escrow_note_update BEFORE UPDATE OF reflection,evidence_json ON submissions WHEN EXISTS(SELECT 1 FROM escrow_submission_locks WHERE submission_id=OLD.id) BEGIN SELECT RAISE(ABORT,'Escrow submission is immutable'); END`,
+];

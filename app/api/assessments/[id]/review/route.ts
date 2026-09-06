@@ -35,6 +35,7 @@ export async function POST(request:Request, { params }:{params:Promise<{id:strin
       return Response.json({error:"Decision không hợp lệ."},{status:400});
     }
     const stored = JSON.parse(row.assessment_json) as {draft:AssessmentDraft};
+    if(body.decision==="changes_requested" && await env.DB.prepare("SELECT submission_id FROM escrow_submission_locks WHERE submission_id=?").bind(row.submission_id).first()) return Response.json({error:"Bài đã ký gắn với quỹ có phiên bản cố định. Hãy phê duyệt hoặc từ chối kèm nhận xét."},{status:409});
     if (body.decision === "approved" && !body.finalDraft) {
       return Response.json({error:"Reviewer phải nhập và xác nhận điểm chính thức trước khi phê duyệt."},{status:400});
     }

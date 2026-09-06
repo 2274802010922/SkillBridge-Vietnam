@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     const row = await contextFor(body.submissionId, body.assessmentId);
     if (!row) return Response.json({ error: "Bài nộp không tồn tại." }, { status: 404 });
     await requireChallengeReviewer(user.id, row.reviewer_organization_id);
+    if(body.decision==="changes_requested" && await env.DB.prepare("SELECT submission_id FROM escrow_submission_locks WHERE submission_id=?").bind(row.submission_id).first()) return Response.json({error:"Bài đã ký gắn với quỹ có phiên bản cố định. Hãy phê duyệt hoặc từ chối kèm nhận xét."},{status:409});
     if (!["submitted", "in_review", "changes_requested"].includes(row.submission_state)) {
       return Response.json({ error: "Bài nộp không ở trạng thái có thể đánh giá." }, { status: 409 });
     }

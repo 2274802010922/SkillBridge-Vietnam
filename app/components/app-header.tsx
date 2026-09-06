@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LanguageSwitcher, useLanguage, type MessageKey } from "./i18n";
 import { ProfileAvatar } from './wallet-profile-view';
 
-export type WorkspaceId = "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "talent" | "contracts" | "audit" | "payments" | "cashout" | "profile";
+export type WorkspaceId = "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "talent" | "contracts" | "audit" | "payments" | "cashout" | "profile" | "escrow";
 type Membership = { role: string; organization_kind: string };
 export type WorkspaceRole = "student" | "business" | "university";
 type NavItem = [WorkspaceId, string, MessageKey];
@@ -17,7 +17,7 @@ const primaryNavigation: Record<WorkspaceRole, NavItem[]> = {
   university: [["overview", "/app", "nav.overview"], ["reviews", "/app/reviews", "nav.reviews"], ["submissions", "/app/submissions", "nav.submissions"], ["passport", "/app/passport", "nav.passport"], ["audit", "/app/audit", "nav.audit"]],
 };
 
-const allNavigation: NavItem[] = [["profile", "/app/profile", "nav.profile"],["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["reviews", "/app/reviews", "nav.reviews"], ["opportunities", "/app/opportunities", "nav.opportunities"], ["passport", "/app/passport", "nav.passport"], ["invoices", "/app/invoices", "nav.invoices"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"], ["payments", "/app/payments", "nav.payments"], ["cashout", "/app/cashout", "nav.cashout"], ["audit", "/app/audit", "nav.audit"]];
+const allNavigation: NavItem[] = [["escrow", "/app/escrow", "nav.escrow"],["profile", "/app/profile", "nav.profile"],["overview", "/app", "nav.overview"], ["challenges", "/app/challenges", "nav.challenges"], ["submissions", "/app/submissions", "nav.submissions"], ["reviews", "/app/reviews", "nav.reviews"], ["opportunities", "/app/opportunities", "nav.opportunities"], ["passport", "/app/passport", "nav.passport"], ["invoices", "/app/invoices", "nav.invoices"], ["payouts", "/app/payouts", "nav.payouts"], ["talent", "/app/talent", "nav.talent"], ["contracts", "/app/contracts", "nav.contracts"], ["payments", "/app/payments", "nav.payments"], ["cashout", "/app/cashout", "nav.cashout"], ["audit", "/app/audit", "nav.audit"]];
 const roleOrder: WorkspaceRole[] = ["student", "business", "university"];
 const roleLabels: Record<WorkspaceRole, MessageKey> = { student: "role.student", business: "role.business", university: "role.university" };
 

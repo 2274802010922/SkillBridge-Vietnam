@@ -89,6 +89,16 @@ npm run db:generate
 
 ## Vercel deployment
 
+Monetary challenges without an existing legacy funding record now use the
+dedicated [challenge escrow program](docs/escrow-runbook.md) via `/app/escrow`.
+The program is deployed on Solana Devnet; [transaction evidence](docs/escrow-devnet-proof.json)
+records deposit, publication, submission, award, claim and refund.
+Use the existing `SOLANA_AUTHORIZED_SIGNER_SECRET` as the submission registrar
+and keep `SOLANA_RPC_URL` on Devnet. Reviewers (including a distinct backup)
+must join the reviewing organization and accept on-chain before publication.
+Legacy vault keys remain necessary for previously funded challenges and cash-out.
+The additive escrow schema initializes automatically; no database reset is needed.
+
 Wallet profiles are available at `/app/profile`, with share URLs at `/u/<wallet>`.
 The additive `wallet_profiles` table is initialized automatically alongside the
 core schema; no extra Vercel environment variables or database reset are needed.

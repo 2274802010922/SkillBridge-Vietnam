@@ -25,6 +25,18 @@ export const walletProfiles = sqliteTable('wallet_profiles', {
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const challengeEscrows = sqliteTable('challenge_escrows', {
+  challengeId:text('challenge_id').primaryKey(),programId:text('program_id').notNull(),escrowAddress:text('escrow_address').notNull().unique(),configJson:text('config_json').notNull(),chainStateJson:text('chain_state_json'),chainSlot:integer('chain_slot').notNull().default(0),createdAt:text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),updatedAt:text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+export const escrowSubmissionLocks = sqliteTable('escrow_submission_locks', {
+  submissionId:text('submission_id').primaryKey(),challengeId:text('challenge_id').notNull(),studentWallet:text('student_wallet').notNull(),evidenceHash:text('evidence_hash').notNull(),chainJson:text('chain_json'),updatedAt:text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+export const escrowOperations = sqliteTable('escrow_operations', {
+  id:text('id').primaryKey(),challengeId:text('challenge_id').notNull(),actorUserId:text('actor_user_id').notNull(),action:text('action').notNull(),submissionId:text('submission_id'),signature:text('signature').unique(),createdAt:text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+export const legacyFundLocks = sqliteTable('legacy_fund_locks',{fundId:text('fund_id').primaryKey(),operationKey:text('operation_key').notNull().unique()});
+export const legacyVaultOperations = sqliteTable('legacy_vault_operations',{operationKey:text('operation_key').primaryKey(),payloadHash:text('payload_hash').notNull(),transactionB64:text('transaction_b64'),signature:text('signature').unique(),createdAt:text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)});
+
 export const wallets = sqliteTable(
   "wallets",
   {

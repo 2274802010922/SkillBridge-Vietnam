@@ -1,0 +1,122 @@
+.escrow-workspace {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.escrow-workspace .app-panel {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.escrow-workspace h2,
+.escrow-workspace h3 {
+  margin: 0;
+  line-height: 1.4;
+}
+.escrow-workspace p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--ink-soft);
+}
+.escrow-workspace label {
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+}
+.escrow-workspace input:not([type="checkbox"]),
+.escrow-workspace select {
+  min-height: 46px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.escrow-grid,
+.escrow-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.escrow-ledger {
+  margin: 0;
+}
+.escrow-ledger > div {
+  padding: 16px;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+}
+.escrow-ledger dt {
+  font-size: 14px;
+  color: var(--muted);
+}
+.escrow-ledger dd {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.escrow-ledger small {
+  font-size: 13px;
+}
+.escrow-action {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.escrow-workspace .profile-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  line-height: 1.5;
+}
+.escrow-entry {
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+}
+.escrow-workspace code,
+.escrow-terms {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-size: 12px;
+}
+.escrow-workspace summary {
+  min-height: 44px;
+  cursor: pointer;
+  display: list-item;
+}
+.escrow-workspace details > p {
+  margin: 12px 0;
+}
+.escrow-workspace .button {
+  min-height: 44px;
+  white-space: normal;
+}
+.escrow-workspace :focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .escrow-grid,
+  .escrow-ledger {
+    grid-template-columns: 1fr;
+  }
+  .escrow-workspace .wallet-payment-control {
+    flex-wrap: wrap;
+  }
+  .escrow-workspace .wallet-payment-control > * {
+    max-width: 100%;
+  }
+}

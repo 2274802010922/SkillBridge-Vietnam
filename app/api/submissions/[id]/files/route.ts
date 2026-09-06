@@ -88,11 +88,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (row.state !== "draft" && row.state !== "changes_requested") {
       return Response.json({ error: "Bài nộp đã khóa." }, { status: 409 });
     }
-    await deleteEvidence(row.r2_key);
     await env.DB.batch([
       env.DB.prepare("DELETE FROM submission_files WHERE id = ?").bind(fileId),
       auditStatement(env.DB, { actorUserId:user.id,action:"evidence.deleted",targetType:"submission_file",targetId:fileId,metadata:{submissionId:id} }),
     ]);
+    await deleteEvidence(row.r2_key);
     return Response.json({ ok: true });
   } catch (error) {
     return jsonError(error);

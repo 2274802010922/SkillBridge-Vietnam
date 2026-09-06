@@ -71,7 +71,8 @@ export function SubmissionsWorkspace() {
     }
     setBusy(true); setNotice(null);
     const response = await fetch(`/api/submissions/${selected}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ note, action }) });
-    const data = await response.json() as { error?: string };
+    const data = await response.json() as { error?: string; requiresEscrowSignature?: boolean; escrowUrl?: string };
+    if(response.ok && data.requiresEscrowSignature && data.escrowUrl){window.location.assign(data.escrowUrl);return;}
     setNotice(response.ok ? (action === "submit" ? t("submission.submitted") : t("submission.saved")) : data.error ?? t("submission.uploadError"));
     if (response.ok) await loadList();
     setBusy(false);
@@ -94,7 +95,7 @@ export function SubmissionsWorkspace() {
       } else {
         const form = new FormData(); form.set("file", file);
         const response = await fetch(`/api/submissions/${selected}/files`, { method: "POST", body: form });
-        const data = await response.json() as { error?: string };
+        const data = await response.json() as { error?: string; requiresEscrowSignature?: boolean; escrowUrl?: string };
         setNotice(response.ok ? t("submission.uploaded") : data.error ?? t("submission.uploadError"));
       }
       await open(selected);
@@ -124,7 +125,7 @@ export function SubmissionsWorkspace() {
   const submissionSteps = ["draft", "submitted", "in_review", "approved"] as const;
   const currentStep = active ? Math.max(0, submissionSteps.indexOf(active.state as (typeof submissionSteps)[number])) : 0;
 
-  return <div className="workspace-product-content">
+  return <div className="workspace-product-content"><a className="profile-menu-link" href="/app/escrow">{t("nav.escrow")} →</a>
     <div className="app-welcome"><div><span>{t("submission.kicker")}</span><h1>{t("submission.title")}</h1><p>{t("submission.description")}</p></div><div className="identity-card"><small>{t("submission.count")}</small><strong className="metric-number">{items.length}</strong><b>{items.filter((item) => item.state === "submitted").length} {t("submission.waitingReview")}</b></div></div>
     {items.length === 0 ? <section className="app-panel empty-product"><h2>{t("submission.noChallenge")}</h2><p>{t("submission.noChallengeDescription")}</p><Link className="button button-dark" href="/app/challenges">{t("submission.viewChallenges")}</Link></section> : <div className="submission-layout">
       <aside className="submission-list">{items.map((item) => <button className={selected === item.id ? "active" : ""} onClick={() => open(item.id)} key={item.id}><small>{item.organization_name}</small><strong>{item.challenge_title}</strong><span>{translateStatus(t, item.state)} · {item.file_count} {t("submission.fileCount")}</span></button>)}</aside>

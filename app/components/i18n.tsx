@@ -7,6 +7,7 @@ export type Locale = "vi" | "en";
 const messages = {
   vi: {
     "nav.profile": "Hồ sơ của tôi",
+    "nav.escrow": "Quỹ thưởng",
     "common.logout": "Đăng xuất",
     "common.home": "Trang chủ",
     "common.copy": "Sao chép",
@@ -779,6 +780,7 @@ const messages = {
   },
   en: {
     "nav.profile": "My profile",
+    "nav.escrow": "Reward funds",
     "common.logout": "Log out",
     "common.home": "Home",
     "common.copy": "Copy",

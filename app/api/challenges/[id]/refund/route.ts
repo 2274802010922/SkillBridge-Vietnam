@@ -3,7 +3,8 @@ import { assertSameOrigin, jsonError, requireSessionUser } from "../../../../../
 import { requireChallengeManager } from "../../../../../lib/authorization";
 import { auditStatement } from "../../../../../lib/audit";
 import { explorerTransaction } from "../../../../../lib/payments";
-import { sendRewardVaultTransfer, type RewardAsset } from "../../../../../lib/reward-vault";
+import { type RewardAsset } from "../../../../../lib/reward-vault";
+import { journaledVaultTransfer } from "../../../../../lib/legacy-vault-journal";
 
 type RefundFund = {
   id: string;
@@ -25,6 +26,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const user = await requireSessionUser(request);
     const { id } = await params;
     const challenge = await requireChallengeManager(user.id, id);
+    if (await env.DB.prepare("SELECT challenge_id FROM challenge_escrows WHERE challenge_id=?").bind(id).first()) return Response.json({error:"Hoàn quỹ theo điều kiện on-chain trong mục Quỹ thưởng."},{status:409});
     const fund = await env.DB.prepare(`
       SELECT f.*, c.status AS challenge_status
       FROM challenge_funds f JOIN challenges c ON c.id = f.challenge_id
@@ -53,9 +55,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (refundExists) return Response.json({ error: "Challenge này đã có yêu cầu hoàn quỹ." }, { status: 409 });
     const amountAtomic = (BigInt(fund.funded_atomic) - BigInt(fund.disbursed_atomic) - BigInt(fund.refunded_atomic)).toString();
     if (BigInt(amountAtomic) <= BigInt(0)) return Response.json({ error: "Không còn số dư để hoàn." }, { status: 409 });
-    const signature = String(await sendRewardVaultTransfer(env, { recipientWallet: fund.sender_wallet, asset: fund.asset, amountAtomic }));
+    const signature = String(await journaledVaultTransfer(env, fund.id, "refund:"+id, { recipientWallet: fund.sender_wallet, asset: fund.asset, amountAtomic }));
     const now = new Date().toISOString();
     await env.DB.batch([
+      env.DB.prepare("DELETE FROM legacy_fund_locks WHERE fund_id=? AND operation_key=?").bind(fund.id, "refund:"+id),
       env.DB.prepare(`
         INSERT INTO challenge_refunds
           (id, challenge_id, challenge_fund_id, recipient_wallet, asset, amount_atomic, status, payment_tx, requested_by_user_id, refunded_at)

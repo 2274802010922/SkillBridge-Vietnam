@@ -93,6 +93,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const challengeConfig = await loadChallengeConfig(id);
     if (!challengeConfig || challengeConfig.deleted_at) return Response.json({ error: "Challenge không tồn tại." }, { status: 404 });
     const body = (await request.json()) as ChallengeMutation;
+    if (await env.DB.prepare("SELECT challenge_id FROM challenge_escrows WHERE challenge_id=?").bind(id).first()) return Response.json({error:"Điều khoản đã gắn với quỹ on-chain. Công bố, chốt và hoàn quỹ trong mục Quỹ thưởng.",code:"ESCROW_LOCKED"},{status:409});
 
     if (body.action === "update_draft") {
       if (challengeConfig.status !== "draft") return Response.json({ error: "Chỉ bản nháp mới có thể chỉnh sửa." }, { status: 409 });
@@ -210,6 +211,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const config = await loadChallengeConfig(id);
     if (!config) return Response.json({ error: "Challenge không tồn tại." }, { status: 404 });
     if (config.deleted_at) return Response.json({ ok: true, alreadyDeleted: true });
+    if (await env.DB.prepare("SELECT challenge_id FROM challenge_escrows WHERE challenge_id=?").bind(id).first()) return Response.json({error:"Giữ lại thử thách có hồ sơ quỹ on-chain để đối soát. Hãy hủy hoặc chốt quỹ thay vì xóa."},{status:409});
     const decision = draftDeletionDecision({ challengeStatus: config.status, fundStatus: config.fund_status, fundingTx: config.funding_tx, verificationState: config.verification_state, fundedAtomic: config.funded_atomic, disbursedAtomic: config.disbursed_atomic });
     if (!decision.allowed) {
       const messages = {

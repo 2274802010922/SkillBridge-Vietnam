@@ -1,0 +1,24 @@
+{
+  "network": "Solana Devnet",
+  "program": "HBasPxF9R83pCFdeuvvXW5Hpt7hSMTXghLRSzeAEGpDB",
+  "upgradeAuthority": "5zDXaZk7HWcdzEZRKfTQ8atG8XE6P6CyYT7Gf8xHU4LT",
+  "escrow": "FxA49n5QTcdmyDqaCVE6UhHe66RkeLmyrNjTdcfnJvCT",
+  "asset": "SOL Devnet",
+  "fundedLamports": "2000000",
+  "paidLamports": "1000000",
+  "refundedLamports": "1000000",
+  "transactions": {
+    "initializeAndFund": "5KcbrbDFkLesq9ieAWAkLproq2fkddDeytByZmUMZMGRKo53b5D8LrWTCGtnUHjE9fueE1Px4DATpazk7EKsKeQu",
+    "acceptPrimary": "3zzc5HPy7BEtSs3fEmh5nUpz327o3tfEkDWXYHo3qdcPZ6CA6asjFwDJiUayPM1C1Lpkyi3YdW1kRJRKbWn3VLGQ",
+    "acceptBackup": "2v3K5yqqbxKXKrNfQJy1gnsCyGqdBWn8FtALBqkp7xbhR8Ybw1hE9CdVZP8pgtEg1H6BmRqwoTzzkjTSXiBJn3KL",
+    "publish": "4tLHhHpQ7fUucKHShGFwz314SXY1z37URkb2yAmAYFJt8VU5TfH9RBKdHVL9mdvr4xEMvMuTSXviKF5nt6wFDSZC",
+    "registerSubmission": "4QJRQrHv7qeYBW1SLuFXvCzNQTBZ3W96T6jWA9yNGdqw4NFWHBPJJv37kwwyjT2tSEvtP1LreqihpaVZcrYQoYkp",
+    "recordResult": "LF4KXzECxwMGZL3MkpPhtm4cuWLPSSFY4wcraKwUcukhRVXNRRd4Ts1BhrrH9HN1hdkiBxZJCMKFeTnhc3dN2iN",
+    "allocateAward": "3XXTVjpLZaVnj461Sw1eM1YepuDMTJrjhx7Q3QqvHvN7axUxepxZzj2NVk6CjtwN3Xhgfg91jFxsUPznPeAX2Mi2",
+    "claim": "5eaEosy3C2aXp8se5jtp3Ts83otnqhzS4ze5wpgmeWYHTYVUGMy5bHUVRjtxAyqFQi3UTYU5ExyH1G44yMhpWpE8",
+    "finalize": "5eUiwg4qdJdafmZdLfgVDzuEaYupEpZhnvQ9i2ZH9k7jgC7yfJ8nnA8h668gLunziakgN4wTNbcqnR2dhRoBJmDU",
+    "refundUnused": "4oFdocsJAfvvgUXHccmeYSHAJtHFB5av554ZF8kqvKMTJLfqVa1kvdNp2oxG6bpS9HE8XK6kCexjZHjCXQBo4bJE"
+  },
+  "verifiedAt": "2026-09-06T13:20:14.037Z",
+  "scope": "Real Devnet SOL lifecycle via program client. SOL and synthetic USDC negative cases additionally tested on local SBF validator."
+}

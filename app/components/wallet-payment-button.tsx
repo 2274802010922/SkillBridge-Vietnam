@@ -35,12 +35,13 @@ function findSolanaAccount(accounts: readonly WalletAccount[]) {
     ?? accounts.find((item) => item.chains.some((chain) => chain.startsWith("solana:")));
 }
 
-export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; onSubmitted: (signature: string) => Promise<WalletPaymentResult | void> | WalletPaymentResult | void; label?: string }) {
-  const { t } = useLanguage();
+export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, escrowRequest, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; escrowRequest?: {challengeId:string;action:string;submissionId?:string}; onSubmitted: (signature: string, operationId?: string) => Promise<WalletPaymentResult | void> | WalletPaymentResult | void; label?: string }) {
+  const { t, locale } = useLanguage();
   const [wallets, setWallets] = useState<readonly PaymentWallet[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingKey,setPendingKey]=useState<string|null>(null);
   const [stage, setStage] = useState<"idle" | "signing" | "broadcasting" | "verifying" | "success" | "pending">("idle");
   useEffect(() => {
     const registry = getWallets();
@@ -56,8 +57,12 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
       let account: WalletAccount | undefined = findSolanaAccount(wallet.accounts);
       if (!account) account = findSolanaAccount((await wallet.features[StandardConnect].connect()).accounts);
       if (!account) throw new Error("Ví không cung cấp tài khoản Solana.");
-      const buildResponse = await fetch("/api/payments/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, senderWallet: account.address }) });
-      const built = await buildResponse.json() as { transaction?: string; error?: string };
+      const savedKey=escrowRequest ? "skillbridge-escrow:"+escrowRequest.challengeId+":"+escrowRequest.action+":"+(escrowRequest.submissionId||"")+":"+account.address : null;
+      setPendingKey(savedKey);
+      const prior=savedKey ? window.localStorage.getItem(savedKey) : null;
+      if(prior){const saved=JSON.parse(prior) as {signature:string;operationId?:string};setStage("verifying");const result=await onSubmitted(saved.signature,saved.operationId);setStage(result?.status==="pending"?"pending":"success");if(result?.status==="funded" && savedKey)window.localStorage.removeItem(savedKey);return;}
+      const buildResponse = await fetch(escrowRequest ? "/api/challenges/"+escrowRequest.challengeId+"/escrow" : "/api/payments/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, ...escrowRequest, senderWallet: account.address }) });
+      const built = await buildResponse.json() as { transaction?: string; error?: string; operationId?:string };
       if (!buildResponse.ok || !built.transaction) throw new Error(built.error ?? "Không thể tạo giao dịch thanh toán.");
       const transaction = fromBase64(built.transaction);
       let signature: string | null = null;
@@ -70,6 +75,7 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
         signature = bs58.encode(output.signature);
       } else if (signOnly?.supportedTransactionVersions.includes("legacy")) {
         const [output] = await signOnly.signTransaction({ account, chain: DEVNET_CHAIN, transaction, options: { preflightCommitment: "confirmed" } });
+        if(savedKey){const tx=output.signedTransaction;window.localStorage.setItem(savedKey,JSON.stringify({signature:bs58.encode(tx.slice(1,65)),operationId:built.operationId}));}
         setStage("broadcasting");
         const sendResponse = await fetch("/api/solana/send", {
           method: "POST",
@@ -82,8 +88,10 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
       }
 
       if (!signature) throw new Error(t("wallet.paymentUnsupported"));
+      if(savedKey)window.localStorage.setItem(savedKey,JSON.stringify({signature,operationId:built.operationId}));
       setStage("verifying");
-      const result = await onSubmitted(signature);
+      const result = await onSubmitted(signature,built.operationId);
+      if(savedKey && result?.status==="funded")window.localStorage.removeItem(savedKey);
       setStage(result?.status === "pending" ? "pending" : "success");
     } catch (paymentError) {
       setStage("idle");
@@ -103,6 +111,7 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
     {wallets.length > 1 && <select aria-label="Ví thanh toán" value={selected} onChange={(event) => setSelected(event.target.value)}>{wallets.map((item) => <option value={item.name} key={item.name}>{item.name}</option>)}</select>}
     <button className="button button-primary" type="button" disabled={busy || !wallet} onClick={() => void pay()}>{busy ? t("wallet.paymentWaiting") : label}</button>
     {status && <p className="wallet-payment-status" role="status" aria-live="polite">{status}</p>}
+    {escrowRequest&&pendingKey&&error&&<button type="button" className="button button-secondary" disabled={busy} onClick={()=>{window.localStorage.removeItem(pendingKey);setError(null);setStage('idle');}}>{locale==='vi'?'Tạo yêu cầu ký mới (kiểm tra lại quỹ)':'New signing request (recheck fund)'}</button>}
     {!wallets.length && <small>{t("wallet.paymentNoCompatible")}</small>}
     {error && <p className="demo-error" role="alert">{error}</p>}
   </div>;

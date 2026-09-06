@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   try {
     const user = await requireSessionUser(request);
     const rows = await env.DB.prepare(`
-      SELECT DISTINCT c.id, c.organization_id, o.name AS organization_name,
+      SELECT DISTINCT e.escrow_address, c.id, c.organization_id, o.name AS organization_name,
         c.reviewer_organization_id, reviewer.name AS reviewer_organization_name,
         reviewer.kind AS reviewer_organization_kind,
         CASE WHEN c.reviewer_organization_id IS NULL OR c.organization_id = c.reviewer_organization_id THEN 'self' ELSE 'independent' END AS review_mode,
@@ -37,6 +37,7 @@ export async function GET(request: Request) {
         AND owner.role IN ('business_admin', 'challenge_manager')
       LEFT JOIN participations p ON p.challenge_id = c.id AND p.student_user_id = ?
       LEFT JOIN challenge_funds f ON f.challenge_id = c.id
+      LEFT JOIN challenge_escrows e ON e.challenge_id=c.id
       WHERE c.deleted_at IS NULL AND (
         (c.status = 'published' AND c.access_type = 'public')
         OR owner.user_id IS NOT NULL OR p.id IS NOT NULL
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
     await env.DB.batch([env.DB.prepare(`
       INSERT INTO challenges
         (id, organization_id, reviewer_organization_id, created_by_user_id, title, brief, content_json, skills_json, rubric_json, reward, reward_type, reward_asset, reward_metadata_json, reward_slots, minimum_score, reward_amount_usdc, reward_amount_atomic, reward_mint, access_type, closes_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(id, body.organizationId, reviewerOrganizationId, user.id, title, brief, JSON.stringify(content), JSON.stringify(skills), JSON.stringify(RUBRIC), reward, rewardType, rewardType === "badge" ? null : rewardType, JSON.stringify(rewardMetadata), rewardSlots, minimumScore, rewardAmount?.display ?? null, rewardAmount?.atomic ?? null, rewardType === "usdc" ? env.SOLANA_USDC_MINT : null, accessType, body.closesAt || null),auditStatement(env.DB,{actorUserId:user.id,organizationId:body.organizationId,action:"challenge.created",targetType:"challenge",targetId:id,metadata:{title,reviewerOrganizationId,reviewMode:normalizedReviewMode,reviewerOrganizationKind:reviewerOrganization.kind,accessType,rewardType,rewardAmount:rewardAmount?.display ?? null}})]);
     return Response.json({ challenge: { id, organizationId: body.organizationId, reviewerOrganizationId, reviewerOrganizationKind: reviewerOrganization.kind, reviewMode: normalizedReviewMode, title, brief, content, skills, rubric: RUBRIC, reward, rewardType, rewardAsset: rewardType === "badge" ? null : rewardType, rewardMetadata, rewardSlots, minimumScore, rewardAmountUsdc: rewardAmount?.display ?? null, rewardAmountAtomic: rewardAmount?.atomic ?? null, accessType, status: "draft" } }, { status: 201 });
   } catch (error) { return jsonError(error); }

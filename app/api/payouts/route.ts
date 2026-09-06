@@ -3,7 +3,8 @@ import { assertSameOrigin, jsonError, requireSessionUser } from "../../../lib/au
 import { requireOrganizationRole } from "../../../lib/authorization";
 import { auditStatement } from "../../../lib/audit";
 import { explorerTransaction, formatSolAtomic, formatUsdcAtomic } from "../../../lib/payments";
-import { sendRewardVaultTransfer, type RewardAsset } from "../../../lib/reward-vault";
+import { type RewardAsset } from "../../../lib/reward-vault";
+import { journaledVaultTransfer } from "../../../lib/legacy-vault-journal";
 
 type PayoutRow = {
   challenge_id: string;
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
       WHERE s.id = ?
     `).bind(submissionId).first<PayoutRow & { fund_asset: RewardAsset | null }>();
     if (!row) return Response.json({ error: "Bài nộp không tồn tại." }, { status: 404 });
+    if (await env.DB.prepare("SELECT challenge_id FROM challenge_escrows WHERE challenge_id=?").bind(row.challenge_id).first()) return Response.json({error:"Phần thưởng được quản lý bởi program. Mở mục Quỹ thưởng để nhận.",escrowUrl:"/app/escrow?challenge="+row.challenge_id},{status:409});
     await requireOrganizationRole(user.id, row.organization_id, ["business_admin", "challenge_manager"], "business");
     if (row.assessment_status !== "approved") return Response.json({ error: "Chỉ có thể giải ngân bài đã được reviewer phê duyệt." }, { status: 409 });
     if (!row.reward_amount_atomic || !row.reward_amount_usdc || !row.fund_id || row.fund_status !== "funded" || !row.fund_asset) return Response.json({ error: "Challenge chưa có quỹ thưởng Devnet đã xác minh." }, { status: 409 });
@@ -96,12 +98,13 @@ export async function POST(request: Request) {
     const amount = BigInt(row.reward_amount_atomic);
     if (available < amount) return Response.json({ error: "Quỹ còn lại không đủ để giải ngân phần thưởng này." }, { status: 409 });
 
-    const signature = String(await sendRewardVaultTransfer(env, {
+    const signature = String(await journaledVaultTransfer(env, row.fund_id!, "payout:"+submissionId, {
       recipientWallet: row.recipient_wallet, asset: row.fund_asset, amountAtomic: row.reward_amount_atomic,
     }));
     const payoutId = crypto.randomUUID();
     const paidAt = new Date().toISOString();
     await env.DB.batch([
+      env.DB.prepare("DELETE FROM legacy_fund_locks WHERE fund_id=? AND operation_key=?").bind(row.fund_id, "payout:"+submissionId),
       env.DB.prepare(`
         INSERT INTO challenge_payouts
           (id, challenge_id, submission_id, recipient_user_id, recipient_wallet, amount_usdc, amount_atomic, asset, status, payment_tx, paid_at, verified_by_user_id)

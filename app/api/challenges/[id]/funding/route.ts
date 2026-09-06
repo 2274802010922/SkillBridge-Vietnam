@@ -113,6 +113,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!current) return Response.json({ error: "Challenge không tồn tại." }, { status: 404 });
     if (current.deleted_at || current.status !== "draft") return Response.json({ error: "Chỉ bản nháp đang hoạt động mới có thể chuẩn bị quỹ." }, { status: 409 });
     if (current.fund_id) return Response.json({ funding: serializeFunding(current), reused: true });
+    if (await env.DB.prepare("SELECT challenge_id FROM challenge_escrows WHERE challenge_id=?").bind(id).first() || ["sol","usdc"].includes(String(current.reward_type))) return Response.json({error:"Tạo quỹ riêng trong mục Quỹ thưởng.",escrowUrl:"/app/escrow?challenge="+id},{status:409});
 
     const rewardType = current.reward_type === "sol" ? "sol" : current.reward_type === "usdc" ? "usdc" : "badge";
     const rewardSlots = Math.max(1, Number(current.reward_slots ?? 1));
