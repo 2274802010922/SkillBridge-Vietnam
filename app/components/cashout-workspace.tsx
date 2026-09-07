@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BANK_DIRECTORY, type BankDirectoryEntry } from "@/lib/bank-directory";
 import { useLanguage } from "./i18n";
+import { ContentSkeleton } from "./loading-ui";
 import { WalletPaymentButton } from "./wallet-payment-button";
 
 type PayoutMethod = "keep_usdc" | "bank" | "momo" | "zalopay";
@@ -220,6 +221,7 @@ export function CashoutWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [destinationError, setDestinationError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [clock, setClock] = useState(0);
 
   const load = useCallback(async (keepActive = true) => {
@@ -266,7 +268,7 @@ export function CashoutWorkspace() {
   }, []);
   useEffect(() => {
     const initial = window.setTimeout(() => {
-      void load(false);
+      void load(false).finally(() => setLoading(false));
     }, 0);
     const refresh = window.setInterval(() => {
       void load(true);
@@ -363,7 +365,9 @@ export function CashoutWorkspace() {
     }
   }
   async function verifyDestination() {
-    if (selectedMethod === "keep_usdc") return;
+    if (loading) return <div id="workspace-main" tabIndex={-1} className="cashout-workspace"><ContentSkeleton delayed variant="finance" /></div>;
+
+  if (selectedMethod === "keep_usdc") return;
     setBusy(true);
     setDestinationError(null);
     setNotice(null);

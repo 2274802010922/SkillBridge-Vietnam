@@ -106,10 +106,17 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
   }
 
   const status = stage === "signing" ? t("wallet.paymentSigning") : stage === "broadcasting" ? t("wallet.paymentBroadcasting") : stage === "verifying" ? t("wallet.paymentVerifying") : stage === "success" ? t("wallet.paymentSuccess") : stage === "pending" ? t("wallet.paymentPending") : null;
+  const progressIndex = stage === "signing" ? 0 : stage === "broadcasting" ? 1 : stage === "verifying" || stage === "pending" ? 2 : stage === "success" ? 3 : -1;
+  const progressLabels = locale === "vi"
+    ? ["Mở ví để ký", "Đã gửi giao dịch", "Đang xác minh", "Hoàn tất"]
+    : ["Open wallet to sign", "Transaction sent", "Verifying", "Complete"];
 
   return <div className="wallet-payment-control">
     {wallets.length > 1 && <select aria-label="Ví thanh toán" value={selected} onChange={(event) => setSelected(event.target.value)}>{wallets.map((item) => <option value={item.name} key={item.name}>{item.name}</option>)}</select>}
-    <button className="button button-primary" type="button" disabled={busy || !wallet} onClick={() => void pay()}>{busy ? t("wallet.paymentWaiting") : label}</button>
+    <button aria-busy={busy} className="button button-primary" type="button" disabled={busy || !wallet} onClick={() => void pay()}>{busy ? t("wallet.paymentWaiting") : label}</button>
+    {progressIndex >= 0 && <ol aria-label={locale === "vi" ? "Tiến độ giao dịch" : "Transaction progress"} className="wallet-payment-progress">
+      {progressLabels.map((item, index) => <li className={index < progressIndex || stage === "success" ? "done" : index === progressIndex ? "active" : ""} key={item}><span aria-hidden="true">{index < progressIndex || stage === "success" ? "✓" : index + 1}</span><b>{item}</b></li>)}
+    </ol>}
     {status && <p className="wallet-payment-status" role="status" aria-live="polite">{status}</p>}
     {escrowRequest&&pendingKey&&error&&<button type="button" className="button button-secondary" disabled={busy} onClick={()=>{window.localStorage.removeItem(pendingKey);setError(null);setStage('idle');}}>{locale==='vi'?'Tạo yêu cầu ký mới (kiểm tra lại quỹ)':'New signing request (recheck fund)'}</button>}
     {!wallets.length && <small>{t("wallet.paymentNoCompatible")}</small>}

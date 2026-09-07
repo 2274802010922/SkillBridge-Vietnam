@@ -7,6 +7,7 @@ import { translateStatus, useLanguage } from "./i18n";
 import { WalletPaymentButton } from "./wallet-payment-button";
 import { WalletTermsSignature } from "./wallet-terms-signature";
 import { parseChallengeContent, type ChallengeContent } from "../../lib/challenge-content";
+import { ContentSkeleton, LoadFailure } from "./loading-ui";
 
 type Membership = { id: string; role: string; organization_id: string; organization_name: string; organization_kind: string };
 type ReviewerOrganization = { id: string; name: string; kind: "business" | "university"; verification_status: string };
@@ -45,6 +46,8 @@ export function ChallengesWorkspace({ memberships, reviewerOrganizations }: { me
   };
   const businessMemberships = memberships.filter((item) => item.organization_kind === "business" && ["business_admin", "challenge_manager"].includes(item.role));
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [organizationId, setOrganizationId] = useState(businessMemberships[0]?.organization_id ?? "");
   const [reviewMode, setReviewMode] = useState<"self" | "independent">("self");
   const [reviewerOrganizationId, setReviewerOrganizationId] = useState(reviewerOrganizations[0]?.id ?? "");
@@ -75,8 +78,10 @@ export function ChallengesWorkspace({ memberships, reviewerOrganizations }: { me
   useEffect(() => {
     let active = true;
     fetch("/api/challenges", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() as Promise<{ challenges: Challenge[] }> : { challenges: [] })
-      .then((data) => { if (active) setChallenges(data.challenges); });
+      .then((response) => response.ok ? response.json() as Promise<{ challenges: Challenge[] }> : Promise.reject(new Error("load")))
+      .then((data) => { if (active) setChallenges(data.challenges); })
+      .catch(() => { if (active) setLoadError(true); })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -147,6 +152,8 @@ export function ChallengesWorkspace({ memberships, reviewerOrganizations }: { me
   }
   async function refund(id: string) { if (!window.confirm(vi ? "Hoàn toàn bộ số dư chưa giải ngân về ví đã nạp quỹ?" : "Return all undistributed funds to the funding wallet?")) return; setBusy(true); const response = await fetch(`/api/challenges/${id}/refund`, { method: "POST" }); const data = await response.json() as { error?: string }; setNotice(response.ok ? copy.refundDone : data.error ?? t("challenge.actionError")); if (response.ok) await load(); setBusy(false); }
 
+  if (loading) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><ContentSkeleton delayed variant="list" /></div>;
+  if (loadError) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><LoadFailure /></div>;
   return <div id="workspace-main" tabIndex={-1} className="workspace-product-content">
     <div className="app-welcome"><div><span>{t("challenge.kicker")}</span><h1>{t("challenge.title")}</h1><p>{t("challenge.description")}</p></div><div className="identity-card"><small>{t("challenge.liveRecords")}</small><strong className="metric-number">{challenges.length}</strong><b>{managed.length} {t("challenge.managed")}</b></div></div>
     {businessMemberships.length > 0 && <section ref={builderRef} className={editingId ? "app-panel challenge-builder challenge-wizard editing-draft" : "app-panel challenge-builder challenge-wizard"}><div><span className="panel-kicker">{editingId ? t("challenge.editKicker") : t("challenge.new")}</span><h2>{editingId ? t("challenge.editTitle") : t("challenge.createBrief")}</h2><p>{editingId ? t("challenge.editDescription") : t("challenge.createDescription")}</p><ol className="wizard-steps" aria-label={t("challenge.wizardProgress")}>{[t("challenge.stepBasics"), t("challenge.stepBrief"), t("challenge.stepReward")].map((label, index) => <li className={formStep === index + 1 ? "active" : formStep > index + 1 ? "complete" : ""} key={label}><span>{formStep > index + 1 ? "✓" : index + 1}</span><strong>{label}</strong></li>)}</ol><p className="wizard-helper">{formStep === 1 ? t("challenge.stepOneHelper") : formStep === 2 ? t("challenge.stepTwoHelper") : copy.fundingHint}</p></div>

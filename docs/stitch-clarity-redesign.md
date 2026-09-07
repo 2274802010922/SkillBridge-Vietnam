@@ -47,3 +47,20 @@ Stitch images are design references, not application data.
 Redeploy the pushed main commit on Vercel. No new environment variables are
 required. Verify role switching, VI/EN, challenge draft editing, manual review,
 account balance refresh and narrow-screen navigation with the existing wallets.
+
+## Loading behavior
+
+- `app/app/layout.tsx` owns the authenticated header and navigation, so route
+  transitions replace the content region without rebuilding the workspace frame.
+- `app/components/loading-ui.tsx` selects a dashboard, list, detail, review,
+  profile or finance skeleton from the destination route.
+- Skeletons appear after 200 ms to avoid flashing on fast responses. After five
+  seconds they add a small slow-network explanation.
+- Skeleton blocks are decorative; one live-region label announces loading.
+  Motion is disabled under `prefers-reduced-motion: reduce`.
+- Client-fetched lists distinguish loading, empty and failed states. Submission
+  detail requests ignore stale responses when the user switches records quickly.
+- Wallet refresh retains the last successful balance, shows refresh state and
+  records the last update time. Transaction UI exposes signing, broadcast,
+  verification and completion states while retaining the existing signature
+  recovery path.

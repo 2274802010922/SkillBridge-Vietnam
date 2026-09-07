@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { WalletProfile } from "@/lib/wallet-profile";
 import { ProfileAvatar, WalletProfileView } from "./wallet-profile-view";
 import { useLanguage } from "./i18n";
+import { ContentSkeleton } from "./loading-ui";
 
 async function resizeAvatar(file: File): Promise<string> {
   if (
@@ -42,6 +43,7 @@ export function ProfileWorkspace() {
   const [preview, setPreview] = useState<WalletProfile | null>(null);
   const [view, setView] = useState<"edit" | "mine" | "visitor">("edit");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const errorRef = useRef<HTMLParagraphElement>(null);
@@ -61,7 +63,7 @@ export function ProfileWorkspace() {
       })
       .catch(() => {
         if (live) setError("load");
-      });
+      }).finally(() => { if (live) setLoading(false); });
     return () => {
       live = false;
     };
@@ -161,6 +163,7 @@ export function ProfileWorkspace() {
         linkedin: "LinkedIn",
         website: "Website",
       };
+  if (loading) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><ContentSkeleton delayed variant="profile" /></div>;
   return (
     <div id="workspace-main" tabIndex={-1} className="workspace-product-content profile-workspace">
       <div className="profile-page-heading">

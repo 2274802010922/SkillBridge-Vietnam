@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLanguage } from "./i18n";
+import { ContentSkeleton } from "./loading-ui";
 type Profile = {
   user_id: string;
   display_name: string;
@@ -16,6 +17,7 @@ export function TalentWorkspace() {
   const vi = locale === "vi";
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     let active = true;
     fetch("/api/talent", { cache: "no-store" })
@@ -26,11 +28,12 @@ export function TalentWorkspace() {
       })
       .catch(() => {
         if (active) setError(true);
-      });
+      }).finally(() => { if (active) setLoading(false); });
     return () => {
       active = false;
     };
   }, []);
+  if (loading) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><ContentSkeleton delayed variant="list" /></div>;
   return (
     <div id="workspace-main" tabIndex={-1} className="workspace-product-content">
       <div className="app-welcome">

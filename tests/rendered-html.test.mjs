@@ -81,9 +81,13 @@ test("server-renders the three-role end-to-end sandbox", async () => {
 });
 
 test("keeps the authenticated workspace responsive without removing language access", async () => {
-  const [header, styles] = await Promise.all([
+  const [header, styles, clarityStyles, workspaceLayout, loadingUi, childPage] = await Promise.all([
     readFile(new URL("../app/components/app-header.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/clarity.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/loading-ui.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/app/reviews/page.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(header, /mobile-workspace-navigation/);
@@ -94,8 +98,22 @@ test("keeps the authenticated workspace responsive without removing language acc
   assert.match(styles, /\.challenge-builder,/);
   assert.match(styles, /@media \(max-width: 767px\)/);
   assert.match(styles, /\.mobile-workspace-navigation\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(workspaceLayout, /<AppHeader[\s\S]*<AppSidebar[\s\S]*\{children\}/);
+  assert.doesNotMatch(childPage, /AppHeader|AppSidebar|product-app/);
+  assert.match(loadingUi, /ContentSkeleton delayed/);
+  assert.match(loadingUi, /5_000/);
+  assert.match(clarityStyles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(clarityStyles, /\.skeleton-block/);
 });
 
+test("preserves wallet transaction recovery while showing meaningful progress", async () => {
+  const payment = await readFile(new URL("../app/components/wallet-payment-button.tsx", import.meta.url), "utf8");
+  assert.match(payment, /skillbridge-escrow:/);
+  assert.match(payment, /localStorage\.getItem\(savedKey\)/);
+  assert.match(payment, /wallet-payment-progress/);
+  assert.match(payment, /Đã gửi giao dịch/);
+  assert.match(payment, /aria-busy=\{busy\}/);
+});
 test("keeps the product navigation role-first and exposes a unified payment hub", async () => {
   const [header, dashboard, payments] = await Promise.all([
     readFile(new URL("../app/components/app-header.tsx", import.meta.url), "utf8"),

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "./i18n";
+import { ContentSkeleton, LoadFailure } from "./loading-ui";
 
 type Invoice = {
   id: string;
@@ -34,6 +35,8 @@ function statusLabel(t: (key: "invoice.paid" | "invoice.sent" | "invoice.cancell
 export function InvoicesWorkspace() {
   const { t } = useLanguage();
   const [items, setItems] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [description, setDescription] = useState("");
@@ -52,7 +55,7 @@ export function InvoicesWorkspace() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/invoices", { cache: "no-store" }).then((response) => response.ok ? response.json() as Promise<{ invoices: Invoice[] }> : { invoices: [] }).then((data) => { if (active) setItems(data.invoices); });
+    fetch("/api/invoices", { cache: "no-store" }).then((response) => response.ok ? response.json() as Promise<{ invoices: Invoice[] }> : Promise.reject(new Error("load"))).then((data) => { if (active) setItems(data.invoices); }).catch(() => { if (active) setLoadError(true); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -92,6 +95,8 @@ export function InvoicesWorkspace() {
 
   const paidCount = useMemo(() => items.filter((item) => item.status === "paid").length, [items]);
 
+  if (loading) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><ContentSkeleton delayed variant="finance" /></div>;
+  if (loadError) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><LoadFailure /></div>;
   return <div id="workspace-main" tabIndex={-1} className="workspace-product-content">
     <div className="app-welcome"><div><span>{t("invoice.kicker")}</span><h1>{t("invoice.title")}</h1><p>{t("invoice.description")}</p></div><div className="identity-card"><small>{t("invoice.count")}</small><strong className="metric-number">{items.length}</strong><b>{paidCount} {t("invoice.paidCount")}</b></div></div>
     <section className="app-panel invoice-builder">

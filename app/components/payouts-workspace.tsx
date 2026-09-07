@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "./i18n";
+import { ContentSkeleton, LoadFailure } from "./loading-ui";
 
 type Payout = {
   challenge_id: string; challenge_title: string; organization_name: string; reward_asset: "usdc" | "sol" | null;
@@ -14,13 +15,15 @@ function shortWallet(value: string) { return `${value.slice(0, 10)}…${value.sl
 export function PayoutsWorkspace() {
   const { t, locale } = useLanguage();
   const vi = locale === "vi";
-  const [items, setItems] = useState<Payout[]>([]); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState<string | null>(null);
+  const [items, setItems] = useState<Payout[]>([]); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState<string | null>(null); const [loading, setLoading] = useState(true); const [loadError, setLoadError] = useState(false);
   async function load() { const response = await fetch("/api/payouts", { cache: "no-store" }); if (response.ok) setItems(((await response.json()) as { payouts: Payout[] }).payouts); }
   useEffect(() => {
     let active = true;
     fetch("/api/payouts", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() as Promise<{ payouts: Payout[] }> : { payouts: [] })
-      .then((data) => { if (active) setItems(data.payouts); });
+      .then((response) => response.ok ? response.json() as Promise<{ payouts: Payout[] }> : Promise.reject(new Error("load")))
+      .then((data) => { if (active) setItems(data.payouts); })
+      .catch(() => { if (active) setLoadError(true); })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
   async function release(item: Payout) {
@@ -32,6 +35,8 @@ export function PayoutsWorkspace() {
     if (response.ok) await load(); setBusy(false);
   }
   const paidCount = useMemo(() => items.filter((item) => item.payout_status === "paid").length, [items]);
+  if (loading) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><ContentSkeleton delayed variant="finance" /></div>;
+  if (loadError) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><LoadFailure /></div>;
   return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><a className="profile-menu-link" href="/app/escrow">{t("nav.escrow")} →</a>
     <div className="app-welcome"><div><span>{vi ? "GIẢI NGÂN CÓ PHÊ DUYỆT" : "HUMAN-APPROVED PAYOUTS"}</span><h1>{vi ? "Người duyệt quyết định. Vault thực hiện." : "A reviewer decides. The vault executes."}</h1><p>{vi ? "AI không tự chuyển tiền. Sau khi bài được con người phê duyệt, doanh nghiệp xác nhận một lần để Reward Vault Devnet giải ngân." : "AI never moves money. Once a human approves a submission, a business reviewer confirms one action to release the Devnet Reward Vault."}</p></div><div className="identity-card"><small>{vi ? "BÀI ĐỦ ĐIỀU KIỆN" : "ELIGIBLE SUBMISSIONS"}</small><strong className="metric-number">{items.length}</strong><b>{paidCount} {vi ? "đã giải ngân" : "paid out"}</b></div></div>
     <div className="app-notice payout-notice">{vi ? "Quỹ được doanh nghiệp nạp trước khi công bố challenge. Mỗi lần giải ngân tạo một transaction Devnet có thể kiểm tra công khai." : "A business funds the vault before publishing a challenge. Each release produces a publicly verifiable Devnet transaction."}</div>

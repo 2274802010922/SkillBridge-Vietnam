@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useLanguage } from "./i18n";
+import { ContentSkeleton } from "./loading-ui";
 import {
   WalletPaymentButton,
   type WalletPaymentResult,
@@ -64,6 +65,7 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
+    [loading, setLoading] = useState(true),
     [clock, setClock] = useState(0);
   const [reviewer, setReviewer] = useState(""),
     [backup, setBackup] = useState(""),
@@ -91,7 +93,7 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
       })
       .catch((e) => {
         if (live) setError(String(e.message));
-      });
+      }).finally(() => { if (live) setLoading(false); });
     return () => {
       live = false;
     };
@@ -171,6 +173,7 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
       />
     );
   }
+  if (loading) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content escrow-workspace"><ContentSkeleton delayed variant="finance" /></div>;
   const c = data?.config,
     s = data?.state;
   const mint = c?.mint || "11111111111111111111111111111111";

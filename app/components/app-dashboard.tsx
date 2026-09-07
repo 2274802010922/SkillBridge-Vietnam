@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AppHeader, AppSidebar, useWorkspaceNavigation } from "./app-header";
+import { useWorkspaceNavigation } from "./app-header";
 import { translateStatus, useLanguage, type MessageKey } from "./i18n";
 
 type Membership = {
@@ -70,11 +70,7 @@ export function AppDashboard({ initialUser, initialMemberships }: { initialUser:
   }
 
   return (
-    <main className="product-app">
-      <AppHeader walletAddress={user.walletAddress} />
-      <div className="app-layout page-shell">
-        <AppSidebar active="overview" />
-        <section className="app-content" id="workspace-main" tabIndex={-1}>
+    <section className="app-content" id="workspace-main" tabIndex={-1}>
           <div className="app-welcome"><div><span>{t("dashboard.welcome")}</span><h1>{user.displayName || t("dashboard.completeIdentity")}</h1><p>{t("dashboard.simpleIntro")}</p></div><div className="identity-card"><small>{t("dashboard.primaryWallet")}</small><code>{user.walletAddress}</code><b>{t("dashboard.signatureVerified")}</b></div></div>
           <section className="next-action-panel">
             <div className="next-action-copy"><span className="panel-kicker">{t("dashboard.nextActionKicker")}</span><h2>{!user.displayName ? t("dashboard.nextProfileTitle") : role === "business" ? t("dashboard.nextBusinessTitle") : role === "university" ? t("dashboard.nextUniversityTitle") : t("dashboard.nextStudentTitle")}</h2><p>{!user.displayName ? t("dashboard.nextProfileDescription") : role === "business" ? t("dashboard.nextBusinessDescription") : role === "university" ? t("dashboard.nextUniversityDescription") : t("dashboard.nextStudentDescription")}</p></div>
@@ -91,8 +87,6 @@ export function AppDashboard({ initialUser, initialMemberships }: { initialUser:
           {adminMemberships.length > 0 && <section className="app-panel invitation-panel"><div><span className="panel-kicker">{t("dashboard.secureInvitation")}</span><h2>{t("dashboard.inviteMember")}</h2><p>{t("dashboard.inviteDescription")}</p></div><div className="stack-form"><select aria-label={t("dashboard.selectOrganization")} value={inviteOrganizationId} onChange={(event) => { const id = event.target.value; setInviteOrganizationId(id); const organization = adminMemberships.find((item) => item.organization_id === id); setInviteRole(organization?.organization_kind === "university" ? "reviewer" : "challenge_manager"); }}><option value="">{t("dashboard.selectOrganization")}</option>{adminMemberships.map((item) => <option value={item.organization_id} key={item.id}>{item.organization_name}</option>)}</select><select aria-label={t("dashboard.invitedRole")} value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>{adminMemberships.find((item) => item.organization_id === inviteOrganizationId)?.organization_kind === "university" ? <><option value="reviewer">{t("dashboard.role.reviewer")}</option><option value="credential_issuer">{t("dashboard.role.credentialIssuer")}</option><option value="university_admin">{t("dashboard.role.universityAdmin")}</option></> : <><option value="challenge_manager">{t("dashboard.role.challengeManager")}</option><option value="reviewer">{t("dashboard.role.reviewer")}</option><option value="credential_issuer">{t("dashboard.role.credentialIssuer")}</option><option value="business_admin">{t("dashboard.role.businessAdmin")}</option></>}</select><input aria-label={t("dashboard.targetWallet")} value={targetWallet} onChange={(event) => setTargetWallet(event.target.value)} placeholder={t("dashboard.targetWallet")} /><button className="button button-dark" disabled={busy || !inviteOrganizationId} onClick={createInvitation}>{t("dashboard.createInvite")}</button>{joinUrl && <div className="join-url"><code>{joinUrl}</code><button onClick={() => navigator.clipboard.writeText(joinUrl)}>{t("dashboard.copyInvite")}</button></div>}</div></section>}
           {notice && <p className="app-notice" role="status">{notice}</p>}
           <section className="app-panel next-build"><span className="panel-kicker">{t("dashboard.productStatus")}</span><h2>{t("dashboard.workflowActive")}</h2><p>{t("dashboard.workflowDescription")}</p><details className="technical-details"><summary>{t("dashboard.technicalDetails")}</summary><p>{t("dashboard.technicalDetailsDescription")}</p></details></section>
-        </section>
-      </div>
-    </main>
+    </section>
   );
 }

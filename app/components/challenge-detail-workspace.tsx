@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { parseChallengeContent, type ChallengeContent } from "../../lib/challenge-content";
 import { translateStatus, useLanguage } from "./i18n";
+import { ContentSkeleton } from "./loading-ui";
 
 type ChallengeDetail = {
   id: string;
@@ -53,7 +54,7 @@ export function ChallengeDetailWorkspace({ challengeId }: { challengeId: string 
   }, [challengeId, t]);
 
   if (error) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><p className="app-notice" role="alert">{error}</p><Link className="button button-secondary" href="/app/challenges">{t("challenge.detailBack")}</Link></div>;
-  if (!challenge || !content) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><p className="app-notice">{t("challenge.detailLoading")}</p></div>;
+  if (!challenge || !content) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><ContentSkeleton delayed variant="detail" /></div>;
 
   const skills = parseSkills(challenge.skills_json);
   const reward = challenge.reward_type === "badge"
