@@ -182,7 +182,7 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
   const mayReview = c && (clock / 1000 > c.reviewDeadline ? standby : primary);
   const legacy = funds.find((f) => f.id === id)?.legacy;
   return (
-    <div className="workspace-product-content escrow-workspace">
+    <div id="workspace-main" tabIndex={-1} className="workspace-product-content escrow-workspace">
       <div className="app-welcome">
         <div>
           <span>

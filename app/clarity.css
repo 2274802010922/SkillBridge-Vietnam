@@ -1,0 +1,193 @@
+/* Stitch Clarity, adapted to SkillBridge's real routes and permissions.
+   Imported last: this is the shared visual contract for public and signed-in pages. */
+:root {
+  --ink: #091426;
+  --ink-soft: #354256;
+  --muted: #526174;
+  --cream: #f7f6f1;
+  --paper: #ffffff;
+  --lime: #b7f34d;
+  --lime-strong: #a4dc3c;
+  --blue: #2456e6;
+  --line: #dce1e7;
+  --surface-muted: #f2f4f7;
+  --shadow-card: 0 2px 8px rgb(9 20 38 / 4%);
+  --shadow-float: 0 12px 36px rgb(9 20 38 / 12%);
+  color-scheme: light;
+}
+body { background: var(--cream); color: var(--ink); font-family: var(--font-geist-sans), sans-serif; }
+body :where(button, input, textarea, select) { font-family: inherit; }
+body :where(p, li, label) { line-height: 1.65; }
+body :where(h1, h2, h3) { text-wrap: balance; }
+body :where(button, a, input, select, textarea, summary):focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+body :where(button, a, input, select, textarea) { scroll-margin-block: 110px 32px; }
+body :where(button, select, summary) { cursor: pointer; }
+body :where(button:disabled) { cursor: not-allowed; }
+body :where(input:not([type=checkbox]):not([type=radio]), select) { min-height: 46px; font-size: 16px; }
+body :where(textarea) { min-height: 120px; resize: vertical; font-size: 16px; line-height: 1.65; }
+body :where(code, .wallet-address, .chain-proof-link) { overflow-wrap: anywhere; }
+body :where(.button, .solana-btn-main, .solana-btn-pill-primary) {
+  min-height: 46px; border-radius: 8px; box-shadow: none;
+  font-size: 14px; line-height: 1.5; letter-spacing: 0; white-space: normal; text-align: center;
+}
+body .button-primary, .solana-landing .solana-btn-main {
+  background: var(--lime); color: var(--ink); border: 1px solid #a4cf55; box-shadow: none;
+}
+body .button-dark {
+  background: var(--paper); color: var(--ink); border: 1px solid var(--line-strong); box-shadow: none;
+}
+body :where(.button-primary, .button-dark):hover:not(:disabled) { transform: none; border-color: var(--ink); box-shadow: 0 2px 5px rgb(9 20 38 / 8%); }
+body .language-switcher { border-radius: 8px; min-height: 44px; }
+body .language-switcher button { min-height: 38px; min-width: 38px; border-radius: 5px; }
+body .language-switcher button[aria-pressed=true] { background: var(--ink); color: white; }
+body :where(.wordmark-mark, .solana-logo-badge) { background: var(--ink); color: var(--lime); box-shadow: none; border-radius: 8px; }
+body :where(.auth-page, .legal-page, .product-app, .solana-landing) { background: var(--cream); background-image: none; }
+.workspace-skip-link {
+  position: absolute; top: 8px; left: 16px; transform: translateY(-200%);
+  padding: 12px 16px; background: white; color: var(--ink); z-index: 110;
+}
+.workspace-skip-link:focus { transform: none; }
+.product-app .app-topbar {
+  width: 100%; max-width: none; top: 0; margin: 0; border: 0; border-bottom: 1px solid var(--line);
+  border-radius: 0; padding: 16px max(24px, calc((100vw - 1440px) / 2)); background: var(--paper); box-shadow: none;
+}
+.product-app .topbar-actions { min-width: 0; flex-wrap: wrap; gap: 12px; }
+.product-app .role-switcher { border-radius: 8px; padding: 0; gap: 8px; background: transparent; border: 0; max-width: none; flex: none; }
+.product-app .role-switcher-label { font: 500 12px/1.5 var(--font-geist-sans), sans-serif; }
+.product-app .role-switcher select { min-width: 175px; max-width: 220px; min-height: 44px; font-size: 14px; border-radius: 8px; }
+.product-app .role-context-badge { border-radius: 6px; background: var(--surface-muted); color: var(--ink-soft); white-space: normal; max-width: none; }
+.product-app .wallet-pill { box-shadow: none; border-radius: 8px; }
+.product-app .wallet-summary-menu { border-radius: 12px; z-index: 100; max-height: calc(100dvh - 120px); overflow-y: auto; }
+.wallet-refresh { padding: 9px 0; border: 0; background: transparent; color: var(--blue); font-size: 13px; text-decoration: underline; }
+.product-app .app-layout { max-width: 1440px; width: calc(100% - 48px); grid-template-columns: 210px minmax(0, 1fr); gap: 32px; padding-top: 32px; }
+.product-app .app-sidebar { top: 104px; padding-right: 16px; max-height: calc(100dvh - 120px); overflow-y: auto; }
+.product-app .app-sidebar > a, .product-app .sidebar-advanced > a {
+  display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 10px 12px;
+  border: 1px solid transparent; border-radius: 8px; font-size: 14px; line-height: 1.5; font-weight: 500;
+}
+.product-app .app-sidebar a.active { background: #eaf0ff; border-color: #d1ddff; color: #1845bc; box-shadow: none; }
+.nav-item-marker { width: 7px; height: 7px; border: 1.5px solid currentColor; border-radius: 2px; flex: none; opacity: .65; }
+.active > .nav-item-marker { background: currentColor; opacity: 1; }
+.product-app .sidebar-context { margin-bottom: 16px; }
+.product-app .sidebar-foot { margin-top: 24px; }
+.product-app :where(.app-content, .workspace-product-content, .app-panel, article, section, form, .file-list) { min-width: 0; }
+.product-app .app-welcome { align-items: start; gap: 24px; margin-bottom: 28px; }
+.product-app .app-welcome h1 { max-width: 28ch; margin: 8px 0 12px; font-size: clamp(28px, 3vw, 42px); line-height: 1.18; letter-spacing: -.035em; }
+.product-app .app-welcome p { font-size: 15px; max-width: 66ch; }
+.product-app .identity-card { box-shadow: none; border-radius: 10px; padding: 18px; }
+.product-app :where(.app-panel, .product-entity, .review-path-card, .assessment-column, .credential-card, .invoice-card, .escrow-card) {
+  border-radius: 10px; border-color: var(--line); box-shadow: none; background: var(--paper); color: var(--ink);
+}
+.product-app .app-panel { padding: clamp(20px, 2.2vw, 30px); }
+.product-app :where(.app-panel h2, .profile-page-heading h1) { line-height: 1.25; letter-spacing: -.025em; }
+.product-app :where(.entity-top, .entity-tags, .file-actions, .review-decisions, .chain-actions) { gap: 10px; flex-wrap: wrap; }
+.product-app :where(.entity-tags span, .entity-top span, .entity-top b) { font-size: 12px; line-height: 1.5; }
+.product-app :where(.app-panel p, .product-entity p, .review-brief, .manual-path-description) { font-size: 15px; line-height: 1.7; }
+.product-app .next-action-panel {
+  background: #f1f7e7; color: var(--ink); border: 1px solid #d8e6c5;
+  border-radius: 12px; box-shadow: none; padding: 28px; gap: 24px;
+}
+.product-app .next-action-panel .panel-kicker { color: #3f621d; }
+.product-app .next-action-panel h2 { color: var(--ink); font-size: clamp(24px, 2.5vw, 32px); line-height: 1.25; letter-spacing: -.03em; }
+.product-app .next-action-panel p { color: var(--ink-soft); font-size: 15px; }
+.product-app .journey-summary { margin: 20px 0 28px; }
+.product-app .journey-summary > div { background: transparent; box-shadow: none; border-color: var(--line); }
+.product-app .journey-summary > div.current { background: white; box-shadow: none; }
+.product-app :where(.stack-form, .inline-form) { gap: 14px; }
+.product-app :where(.stack-form > label, .field-label) { display: grid; gap: 8px; font-size: 14px; }
+.product-app :where(.app-notice, .demo-error) { padding: 16px; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.product-app :where(.file-list article, .membership-list article) { gap: 16px; padding-block: 16px; }
+.product-app .file-actions a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }
+.product-app .file-list strong { overflow-wrap: anywhere; font-size: 14px; }
+.product-app .review-layout { grid-template-columns: 190px minmax(0, 1fr); gap: 20px; align-items: start; }
+.product-app .review-challenge-brief p,
+.product-app .review-editor > blockquote,
+.product-app .challenge-content-preview p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.product-app .submission-list { display: grid; gap: 10px; }
+.product-app .submission-list button { min-width: 0; border-radius: 8px; padding: 16px; text-align: left; box-shadow: none; }
+.product-app .submission-list button.active { border-color: var(--blue); background: #f0f4ff; box-shadow: none; }
+.product-app .submission-list button strong { overflow-wrap: anywhere; font-size: 14px; }
+.product-app .review-path-choice { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; }
+.product-app .manual-path-card { background: #f5faed; border-color: #c8dcb0; }
+.product-app .review-path-card { padding: 20px; cursor: default; }
+.product-app .review-path-card h3 { margin: 8px 0; font-size: 20px; }
+.product-app .review-assessment-columns { display: flex; flex-direction: column; gap: 24px; }
+.product-app .assessment-column { width: 100%; padding: 20px; min-width: 0; }
+.product-app .review-rubric { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.product-app .review-rubric article { padding: 16px; background: #f8f9fb; border: 1px solid var(--line); border-radius: 8px; }
+.product-app .review-rubric textarea, .product-app .review-note { display: block; width: 100%; margin-top: 10px; }
+.product-app .review-decisions { display: flex; align-items: center; padding-top: 20px; border-top: 1px solid var(--line); margin-top: 20px; }
+.product-app .review-decisions button { min-height: 46px; border-radius: 8px; padding: 10px 16px; }
+.product-app .ai-disclosure { border: 1px solid var(--line); border-radius: 10px; background: #f8f9fc; }
+.product-app .ai-disclosure > summary { padding: 18px; font-size: 15px; font-weight: 600; color: var(--ink-soft); min-height: 48px; }
+.product-app .ai-assessment-column { border: 0; background: transparent; }
+.product-app :where(.challenge-draft-card, .challenge-funding-panel, .cashout-quote, .cashout-keep-card, .profile-wallet-card) { box-shadow: none; border-radius: 10px; }
+.product-app :where(.cashout-flow-grid, .dashboard-grid, .onboarding-panel) { gap: 24px; }
+.product-app :where(.cashout-section-heading h2, .cashout-hero h1) { line-height: 1.22; letter-spacing: -.03em; }
+.product-app :where(.cashout-stepper li b, .cashout-beneficiary-form label, .cashout-security-chip, .cashout-status-pill) { font-size: 12px; line-height: 1.5; }
+.product-app :where(.cashout-safety-banner p, .cashout-section-heading p, .cashout-amount-panel p) { font-size: 14px; line-height: 1.65; }
+.product-app dl > div { gap: 12px; }
+.product-app :where(dl dd, .entity-meta strong, .challenge-facts strong) { overflow-wrap: anywhere; }
+.solana-landing .solana-header { max-width: none; width: 100%; background: white; border-bottom: 1px solid var(--line); box-shadow: none; }
+.solana-landing .solana-header-inner { max-width: 1280px; margin-inline: auto; }
+.solana-landing .solana-hero { padding-block: 80px 64px; }
+.solana-landing .solana-hero-title { color: var(--ink); font-size: clamp(36px, 4.5vw, 64px); line-height: 1.14; letter-spacing: -.045em; }
+.solana-landing .solana-title-light { color: var(--ink); background: none; -webkit-text-fill-color: currentColor; }
+.solana-landing .solana-hero-desc { font-size: 17px; line-height: 1.8; max-width: 58ch; color: var(--ink-soft); }
+.solana-landing .solana-hero-proof { background: white; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 32px rgb(9 20 38 / 5%); transform: none; }
+.solana-landing .solana-hero-proof-bar { color: var(--muted); }
+.solana-landing .solana-hero-proof li { padding-block: 20px; }
+.solana-landing .solana-section { padding-block: 64px; }
+.solana-landing .solana-section-title { font-size: clamp(28px, 3.5vw, 46px); line-height: 1.2; letter-spacing: -.035em; }
+.solana-landing :where(.solana-card, .solana-signal-card, .solana-role-card, .solana-feature-card) { background: white; box-shadow: none; border-radius: 10px; border-color: var(--line); }
+.solana-landing :where(.solana-card-text, .solana-flow-desc, .solana-role-desc) { font-size: 16px; line-height: 1.75; color: var(--ink-soft); }
+.solana-landing .solana-network-bar { flex-wrap: wrap; gap: 16px; }
+.solana-landing .solana-net-item { min-width: 0; }
+.solana-landing .solana-net-val { white-space: normal; line-height: 1.5; }
+body .auth-copy h1 { font-size: clamp(32px, 4vw, 54px); line-height: 1.2; letter-spacing: -.04em; }
+body .wallet-login-card { background: white; box-shadow: var(--shadow-card); border-color: var(--line); border-radius: 12px; }
+body .wallet-login-heading h2 { line-height: 1.2; letter-spacing: -.03em; }
+body .consent-check { display: flex; align-items: flex-start; gap: 12px; }
+body .consent-check input { width: 20px; height: 20px; flex: none; margin-top: 3px; }
+body .consent-check span { font-size: 14px; line-height: 1.7; }
+.workspace-load { max-width: 800px; margin: 10vh auto; padding: 32px; background: white; border: 1px solid var(--line); border-radius: 12px; }
+.workspace-load h1 { font-size: 28px; line-height: 1.3; }
+.workspace-load p { color: var(--muted); }
+@media (max-width: 1100px) {
+  .product-app .app-layout { display: block; width: calc(100% - 40px); max-width: 960px; }
+  .product-app .app-sidebar { display: none; }
+  .product-app .mobile-workspace-trigger { display: inline-flex; }
+  .product-app .app-welcome { grid-template-columns: minmax(0, 1fr); }
+  .product-app .app-welcome .identity-card { width: 100%; max-width: none; }
+}
+@media (max-width: 760px) {
+  .product-app .app-topbar { padding: 12px 16px; gap: 16px; flex-wrap: wrap; }
+  .product-app .wordmark { font-size: 20px; }
+  .product-app .app-topbar .wordmark { gap: 10px; }
+  .product-app .app-topbar .wordmark > span:not(.wordmark-mark) { display: inline; }
+  .product-app .app-topbar .language-switcher { position: absolute; right: 16px; top: 12px; display: inline-flex; }
+  .product-app .topbar-actions { width: 100%; display: flex; justify-content: space-between; gap: 8px; }
+  .product-app .role-switcher-label, .product-app .mobile-workspace-trigger span { display: none; }
+  .product-app .role-switcher select { min-width: 148px; width: 148px; max-width: none; font-size: 13px; }
+  .product-app .wallet-summary { margin-left: auto; }
+  .product-app .wallet-summary-trigger { min-height: 44px; }
+  .product-app .wallet-profile-name, .product-app .wallet-summary-trigger .wallet-address { display: none; }
+  .product-app .wallet-summary-menu { position: fixed; top: 136px; left: 16px; right: 16px; width: auto; max-height: calc(100dvh - 152px); }
+  .product-app .app-layout { width: calc(100% - 32px); padding-top: 24px; }
+  .product-app :where(.review-layout, .review-path-choice, .cashout-flow-grid, .dashboard-grid, .onboarding-panel, .invitation-panel) { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .product-app .submission-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+  .product-app .app-panel { padding: 20px; }
+  .product-app .next-action-panel { padding: 20px; }
+  .product-app .app-welcome h1 { font-size: 30px; }
+  .product-app .review-decisions { flex-direction: column; align-items: stretch; }
+  .product-app .journey-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .product-app .journey-summary > div { padding: 10px; }
+  .product-app :where(.file-list article, .membership-list article) { flex-wrap: wrap; }
+  .product-app .file-actions { width: 100%; }
+  .solana-landing .solana-hero { padding-block: 40px; }
+  .solana-landing .solana-header-actions .language-switcher { display: inline-flex; }
+  .solana-landing .solana-section { padding-block: 40px; }
+  .solana-landing .solana-hero-title { font-size: 38px; }
+  .solana-landing .solana-hero-proof { padding: 20px; }
+  body .auth-shell { padding-top: 32px; gap: 28px; }
+}

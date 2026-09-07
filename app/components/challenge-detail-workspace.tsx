@@ -52,15 +52,15 @@ export function ChallengeDetailWorkspace({ challengeId }: { challengeId: string 
     return () => { active = false; };
   }, [challengeId, t]);
 
-  if (error) return <div className="workspace-product-content"><p className="app-notice" role="alert">{error}</p><Link className="button button-secondary" href="/app/challenges">{t("challenge.detailBack")}</Link></div>;
-  if (!challenge || !content) return <div className="workspace-product-content"><p className="app-notice">{t("challenge.detailLoading")}</p></div>;
+  if (error) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><p className="app-notice" role="alert">{error}</p><Link className="button button-secondary" href="/app/challenges">{t("challenge.detailBack")}</Link></div>;
+  if (!challenge || !content) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><p className="app-notice">{t("challenge.detailLoading")}</p></div>;
 
   const skills = parseSkills(challenge.skills_json);
   const reward = challenge.reward_type === "badge"
     ? `${t("challenge.rewardBadge")}: ${badgeName(challenge)}`
     : `${challenge.reward_amount_usdc || "0"} ${challenge.reward_type === "sol" ? t("challenge.detailSol") : "USDC"}`;
 
-  return <div className="workspace-product-content challenge-detail-page">
+  return <div id="workspace-main" tabIndex={-1} className="workspace-product-content challenge-detail-page">
     <Link className="challenge-back-link" href="/app/challenges">← {t("challenge.detailBack")}</Link>
     <div className="app-welcome challenge-detail-heading"><div><span>{t("challenge.detailKicker")}</span><h1>{challenge.title}</h1><p>{content.summary}</p></div><div className="identity-card"><small>{t("challenge.detailStatus")}</small><strong>{translateStatus(t, challenge.status)}</strong><b>{challenge.access_type === "public" ? t("challenge.public") : t("challenge.inviteOnly")}</b></div></div>
     <div className="challenge-detail-layout">

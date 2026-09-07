@@ -624,7 +624,7 @@ export function CashoutWorkspace() {
 
   if (selectedMethod === "keep_usdc")
     return (
-      <div className="cashout-workspace">
+      <div id="workspace-main" tabIndex={-1} className="cashout-workspace">
         <section className="cashout-hero app-panel">
           <span className="panel-kicker">DEVNET USDC</span>
           <h1>{vi ? "Giữ USDC trong ví" : "Keep USDC in your wallet"}</h1>
@@ -649,7 +649,7 @@ export function CashoutWorkspace() {
     );
 
   return (
-    <div className="cashout-workspace">
+    <div id="workspace-main" tabIndex={-1} className="cashout-workspace">
       <section className="cashout-hero app-panel">
         <div>
           <span className="panel-kicker">USDC → VND · SOLANA DEVNET</span>

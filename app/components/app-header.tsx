@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { LanguageSwitcher, useLanguage, type MessageKey } from "./i18n";
 import { ProfileAvatar } from './wallet-profile-view';
@@ -30,13 +30,9 @@ function inferRoles(memberships: Membership[]): WorkspaceRole[] {
 
 function isCurrentWorkspacePath(pathname: string, href: string) { return href === "/app" ? pathname === href : pathname.startsWith(href); }
 
-function useWorkspaceNavigation() {
+export function useWorkspaceNavigation() {
   const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [role, setRoleState] = useState<WorkspaceRole>(() => {
-    if (typeof window === "undefined") return "student";
-    const stored = window.localStorage.getItem("skillbridge-role") as WorkspaceRole | null;
-    return stored && roleOrder.includes(stored) ? stored : "student";
-  });
+  const [role, setRoleState] = useState<WorkspaceRole>("student");
   useEffect(() => {
     let active = true;
     const stored = window.localStorage.getItem("skillbridge-role") as WorkspaceRole | null;
@@ -44,7 +40,7 @@ function useWorkspaceNavigation() {
       if (!active) return;
       setMemberships(data.organizations ?? []);
       const available = inferRoles(data.organizations ?? []);
-      if (!available.includes(stored ?? "student")) setRoleState(available[0] ?? "student");
+      setRoleState(stored && available.includes(stored) ? stored : available[0] ?? "student");
     }).catch(() => { /* Keep the student navigation available during a slow/offline request. */ });
     const onRoleChange = (event: Event) => { const next = (event as CustomEvent<WorkspaceRole>).detail; if (roleOrder.includes(next)) setRoleState(next); };
     window.addEventListener("skillbridge-role-change", onRoleChange);
@@ -69,7 +65,7 @@ function RoleSwitcher({ role, roles, setRole }: { role: WorkspaceRole; roles: Wo
 }
 
 function NavigationLinks({ items, active, t, onNavigate }: { items: NavItem[]; active: WorkspaceId; t: (key: MessageKey) => string; onNavigate?: () => void }) {
-  return <>{items.map(([id, href, key]) => <Link aria-current={active === id ? "page" : undefined} className={active === id ? "active" : ""} href={href} key={id} onClick={onNavigate}>{t(key)}</Link>)}</>;
+  return <>{items.map(([id, href, key]) => <Link aria-current={active === id ? "page" : undefined} className={active === id ? "active" : ""} href={href} key={id} onClick={onNavigate}><span className="nav-item-marker" aria-hidden="true" />{t(key)}</Link>)}</>;
 }
 
 type WalletAssets = { assets: Array<{ symbol: string; display: string }>; explorerUrl: string };
@@ -77,6 +73,26 @@ type WalletAssets = { assets: Array<{ symbol: string; display: string }>; explor
 function WalletSummary({ walletAddress, onLogout }: { walletAddress: string; onLogout: () => void }) {
   const { t, locale } = useLanguage();
   const [open, setOpen] = useState(false);
+  const walletContainer = useRef<HTMLDivElement>(null);
+  const [refresh, setRefresh] = useState(0);
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!walletContainer.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        walletContainer.current?.querySelector("button")?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open]);
   const [identity, setIdentity] = useState<{displayName:string;avatar:string}|null>(null);
   useEffect(() => {
     let active = true;
@@ -96,8 +112,8 @@ function WalletSummary({ walletAddress, onLogout }: { walletAddress: string; onL
       return data;
     }).then((data) => { if (active) setAssets(data); }).catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Không thể đọc số dư ví."); });
     return () => { active = false; };
-  }, [assets, open]);
-  return <div className="wallet-summary"><button type="button" className="wallet-pill wallet-summary-trigger" aria-label={(locale === "vi" ? "Tài khoản: " : "Account: ") + (identity?.displayName || walletAddress)} aria-expanded={open} onClick={() => setOpen((value) => !value)}><ProfileAvatar avatar={identity?.avatar || ""} name={identity?.displayName || walletAddress}/><span className="wallet-status-dot" /><span className="wallet-profile-name">{identity?.displayName || walletAddress.slice(0, 5)}</span><span className="wallet-address">{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}</span><span aria-hidden="true">⌄</span></button>{open && <div className="wallet-summary-menu"><div><span>{locale === "vi" ? "VÍ ĐANG KẾT NỐI" : "CONNECTED WALLET"}</span><strong>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</strong></div><Link className="profile-menu-link" href="/app/profile">{locale === "vi" ? "Hồ sơ của tôi" : "My profile"}</Link><p>{locale === "vi" ? "Số dư trên Solana Devnet" : "Balances on Solana Devnet"}</p>{assets ? <dl>{assets.assets.map((asset) => <div key={asset.symbol}><dt>{asset.symbol}</dt><dd>{asset.display}</dd></div>)}</dl> : <p className="wallet-summary-loading">{error || t("common.loading")}</p>}{assets && <a className="chain-proof-link" target="_blank" rel="noreferrer" href={assets.explorerUrl}>{locale === "vi" ? "Mở Solana Explorer" : "Open Solana Explorer"}</a>}<button type="button" className="wallet-summary-logout" onClick={onLogout}>{t("common.logout")}</button></div>}</div>;
+  }, [assets, open, refresh]);
+  return <div className="wallet-summary" ref={walletContainer}><button type="button" className="wallet-pill wallet-summary-trigger" aria-label={(locale === "vi" ? "Tài khoản: " : "Account: ") + (identity?.displayName || walletAddress)} aria-expanded={open} onClick={() => setOpen((value) => !value)}><ProfileAvatar avatar={identity?.avatar || ""} name={identity?.displayName || walletAddress}/><span className="wallet-status-dot" /><span className="wallet-profile-name">{identity?.displayName || walletAddress.slice(0, 5)}</span><span className="wallet-address">{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}</span><span aria-hidden="true">⌄</span></button>{open && <div className="wallet-summary-menu"><div><span>{locale === "vi" ? "VÍ ĐANG KẾT NỐI" : "CONNECTED WALLET"}</span><strong>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</strong></div><Link className="profile-menu-link" href="/app/profile">{locale === "vi" ? "Hồ sơ của tôi" : "My profile"}</Link><button className="wallet-refresh" type="button" onClick={() => { setAssets(null); setError(null); setRefresh(value => value + 1); }}>{locale === "vi" ? "Làm mới số dư" : "Refresh balances"}</button><p>{locale === "vi" ? "Số dư trên Solana Devnet" : "Balances on Solana Devnet"}</p>{assets ? <dl>{assets.assets.map((asset) => <div key={asset.symbol}><dt>{asset.symbol}</dt><dd>{asset.display}</dd></div>)}</dl> : <p className="wallet-summary-loading">{error || t("common.loading")}</p>}{assets && <a className="chain-proof-link" target="_blank" rel="noreferrer" href={assets.explorerUrl}>{locale === "vi" ? "Mở Solana Explorer" : "Open Solana Explorer"}</a>}<button type="button" className="wallet-summary-logout" onClick={onLogout}>{t("common.logout")}</button></div>}</div>;
 }
 
 export function AppHeader({ walletAddress }: { walletAddress: string }) {
@@ -125,6 +141,7 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
   }
   return (
     <header className="app-topbar page-shell">
+      <a className="workspace-skip-link" href="#workspace-main">{t("home.skipContent")}</a>
       <Link className="wordmark" href="/"><span className="wordmark-mark">S</span><span>SkillBridge</span><small>VIETNAM</small></Link>
       <div className="topbar-actions">
         <RoleSwitcher role={role} roles={roles} setRole={setRole} />
@@ -161,7 +178,7 @@ export function AppSidebar({ active }: { active: WorkspaceId }) {
       <div className="sidebar-context"><span className="sidebar-label">{t("shell.workspace")}</span><strong>{t(roleLabels[role])}</strong></div>
       <span className="sidebar-section-label">{t("shell.primaryActions")}</span>
       <NavigationLinks active={active} items={primary} t={t} />
-      <details className="sidebar-advanced"><summary>{t("shell.advancedTools")}</summary><NavigationLinks active={active} items={secondary} t={t} /></details>
+      <details className="sidebar-advanced" key={`${role}-${active}`} open={secondary.some(([id]) => id === active) || undefined}><summary>{t("shell.advancedTools")}</summary><NavigationLinks active={active} items={secondary} t={t} /></details>
       <div className="sidebar-foot"><span>{t("shell.network")}</span><strong>{t("shell.devnet")}</strong><small>{t("shell.devnetHint")}</small></div>
     </aside>
   );

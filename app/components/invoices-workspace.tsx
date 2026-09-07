@@ -92,7 +92,7 @@ export function InvoicesWorkspace() {
 
   const paidCount = useMemo(() => items.filter((item) => item.status === "paid").length, [items]);
 
-  return <div className="workspace-product-content">
+  return <div id="workspace-main" tabIndex={-1} className="workspace-product-content">
     <div className="app-welcome"><div><span>{t("invoice.kicker")}</span><h1>{t("invoice.title")}</h1><p>{t("invoice.description")}</p></div><div className="identity-card"><small>{t("invoice.count")}</small><strong className="metric-number">{items.length}</strong><b>{paidCount} {t("invoice.paidCount")}</b></div></div>
     <section className="app-panel invoice-builder">
       <div><span className="panel-kicker">{t("invoice.create")}</span><h2>{t("invoice.create")}</h2><p>{t("invoice.createDescription")}</p></div>

@@ -125,7 +125,7 @@ export function SubmissionsWorkspace() {
   const submissionSteps = ["draft", "submitted", "in_review", "approved"] as const;
   const currentStep = active ? Math.max(0, submissionSteps.indexOf(active.state as (typeof submissionSteps)[number])) : 0;
 
-  return <div className="workspace-product-content"><a className="profile-menu-link" href="/app/escrow">{t("nav.escrow")} →</a>
+  return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><a className="profile-menu-link" href="/app/escrow">{t("nav.escrow")} →</a>
     <div className="app-welcome"><div><span>{t("submission.kicker")}</span><h1>{t("submission.title")}</h1><p>{t("submission.description")}</p></div><div className="identity-card"><small>{t("submission.count")}</small><strong className="metric-number">{items.length}</strong><b>{items.filter((item) => item.state === "submitted").length} {t("submission.waitingReview")}</b></div></div>
     {items.length === 0 ? <section className="app-panel empty-product"><h2>{t("submission.noChallenge")}</h2><p>{t("submission.noChallengeDescription")}</p><Link className="button button-dark" href="/app/challenges">{t("submission.viewChallenges")}</Link></section> : <div className="submission-layout">
       <aside className="submission-list">{items.map((item) => <button className={selected === item.id ? "active" : ""} onClick={() => open(item.id)} key={item.id}><small>{item.organization_name}</small><strong>{item.challenge_title}</strong><span>{translateStatus(t, item.state)} · {item.file_count} {t("submission.fileCount")}</span></button>)}</aside>

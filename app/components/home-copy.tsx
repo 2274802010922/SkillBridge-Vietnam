@@ -60,9 +60,9 @@ export function HomeCopy() {
         <header className="solana-header page-shell">
           <div className="solana-header-inner">
             <Link className="solana-wordmark" href="#top" aria-label="SkillBridge Vietnam" data-hover>
-              <span className="solana-logo-badge">SB</span>
+              <span className="solana-logo-badge">S</span>
               <span className="solana-brand-name">SkillBridge</span>
-              <span className="solana-tag">SOLANA</span>
+              <span className="solana-tag">VIETNAM</span>
             </Link>
 
             <nav className="solana-desktop-nav" aria-label={t("home.navHow")}>
@@ -150,13 +150,13 @@ export function HomeCopy() {
             <h1 className="solana-hero-title">
               {isEn ? (
                 <>
-                  Proven Student Work. <br />
-                  <span className="solana-title-light">Never Goes To Waste.</span>
+                  Turn proven skills <br />
+                  <span className="solana-title-light">into real opportunities.</span>
                 </>
               ) : (
                 <>
-                  Bài làm tốt <br />
-                  <span className="solana-title-light">không nên biến mất.</span>
+                  Kỹ năng có bằng chứng. <br />
+                  <span className="solana-title-light">Cơ hội có cơ sở.</span>
                 </>
               )}
             </h1>
@@ -177,16 +177,16 @@ export function HomeCopy() {
             {/* Network Note Bar */}
             <div className="solana-network-bar">
               <div className="solana-net-item">
-                <span className="solana-net-label">NETWORK</span>
+                <span className="solana-net-label">{isEn ? "NETWORK" : "MẠNG"}</span>
                 <span className="solana-net-val">Solana Devnet</span>
               </div>
               <div className="solana-net-item">
-                <span className="solana-net-label">PROTOCOL</span>
-                <span className="solana-net-val">Proof-to-Payout</span>
+                <span className="solana-net-label">{isEn ? "JOURNEY" : "HÀNH TRÌNH"}</span>
+                <span className="solana-net-val">{isEn ? "Proof-to-Payout" : "Kỹ năng đến phần thưởng"}</span>
               </div>
               <div className="solana-net-item">
-                <span className="solana-net-label">ARCHITECTURE</span>
-                <span className="solana-net-val">AI + Human Review</span>
+                <span className="solana-net-label">{isEn ? "REVIEW" : "ĐÁNH GIÁ"}</span>
+                <span className="solana-net-val">{isEn ? "Human decision · optional AI" : "Con người quyết định · AI tùy chọn"}</span>
               </div>
             </div>
             </div>

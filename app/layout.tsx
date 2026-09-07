@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./skillbridge-ui.css";
 import "./profile.css";
 import "./escrow.css";
+import "./clarity.css";
 import { LanguageProvider } from "./components/i18n";
 
-const geistSans = Geist({
+const geistSans = Be_Vietnam_Pro({
   variable: "--font-geist-sans",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin", "vietnamese"],
 });
 

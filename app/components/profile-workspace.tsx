@@ -162,7 +162,7 @@ export function ProfileWorkspace() {
         website: "Website",
       };
   return (
-    <div className="workspace-product-content profile-workspace">
+    <div id="workspace-main" tabIndex={-1} className="workspace-product-content profile-workspace">
       <div className="profile-page-heading">
         <span className="panel-kicker">
           {vi

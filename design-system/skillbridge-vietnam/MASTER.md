@@ -12,23 +12,25 @@ Light Swiss editorial structure with terminal-grade data details. Use generous w
 
 | Role | Value | Usage |
 | --- | --- | --- |
-| Canvas | `#F5F3EC` | Page background |
-| Surface | `#FFFDF8` | Primary content surface |
-| Ink | `#0B1426` | Primary text and hard borders |
-| Ink soft | `#2B3850` | Body text |
-| Muted | `#606B7D` | Supporting text |
-| Lime | `#C7F36B` | Primary CTA and approved states |
+| Canvas | `#F7F6F1` | Page background |
+| Surface | `#FFFFFF` | Primary content surface |
+| Ink | `#091426` | Primary text and hard borders |
+| Ink soft | `#354256` | Body text |
+| Muted | `#526174` | Supporting text |
+| Lime | `#B7F34D` | Primary CTA and approved states |
+| Blue | `#2456E6` | Links and active navigation |
 | Violet | `#7557FF` | Web3/protocol states and focus accents |
 | Coral | `#FF6B4A` | Rare editorial emphasis |
 | Line | `rgba(11, 20, 38, .14)` | Dividers and quiet borders |
 
 ## Typography
 
-- Display and body: Geist Sans already bundled by the application.
+- Display and body: Be Vietnam Pro, self-hosted by Next.js. The legacy
+  `--font-geist-sans` variable now points to this font so all existing routes inherit it.
 - Protocol labels, statuses, hashes, and indices: Geist Mono.
-- Display headings: `clamp()` sizing, tight tracking, 0.94–1.02 line height.
+- Display headings: `clamp()` sizing, restrained tracking, 1.14–1.25 line height.
 - Body: minimum 16px on marketing pages with 1.6–1.75 line height.
-- Labels: minimum 10px, uppercase only for short protocol metadata.
+- Labels: minimum 12px, uppercase only for short protocol metadata.
 
 ## Layout
 
@@ -40,7 +42,7 @@ Light Swiss editorial structure with terminal-grade data details. Use generous w
 
 ## Components
 
-- Primary CTA: lime fill, ink text, crisp dark offset shadow, 48px minimum height.
+- Primary CTA: lime fill, ink text, 8px corners, no offset shadow, 46px minimum height.
 - Secondary CTA: text link with visible underline or arrow.
 - Product proof surface: light terminal canvas with real product states and no fabricated user data.
 - Statuses always include text; color alone never communicates meaning.

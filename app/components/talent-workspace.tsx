@@ -32,7 +32,7 @@ export function TalentWorkspace() {
     };
   }, []);
   return (
-    <div className="workspace-product-content">
+    <div id="workspace-main" tabIndex={-1} className="workspace-product-content">
       <div className="app-welcome">
         <div>
           <span>{t("talent.kicker")}</span>

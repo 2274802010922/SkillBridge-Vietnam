@@ -133,7 +133,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
           </select>
           <label className="consent-check">
             <input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
-            <span>{t("wallet.consent")} <a href="/terms" target="_blank">{t("wallet.terms")}</a> {t("wallet.consent")} <a href="/privacy" target="_blank">{t("wallet.privacy")}</a>.</span>
+            <span>{t("wallet.consent")} <a href="/terms" target="_blank">{t("wallet.terms")}</a> &amp; <a href="/privacy" target="_blank">{t("wallet.privacy")}</a>.</span>
           </label>
           <button className="button button-primary wallet-login-button" disabled={busy || !wallet || !accepted} onClick={signIn}>
             {busy ? t("wallet.signing") : `${t("wallet.continue")} ${wallet?.name ?? "wallet"}`}

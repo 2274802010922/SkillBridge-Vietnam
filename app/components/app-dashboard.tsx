@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AppHeader, AppSidebar } from "./app-header";
+import { AppHeader, AppSidebar, useWorkspaceNavigation } from "./app-header";
 import { translateStatus, useLanguage, type MessageKey } from "./i18n";
 
 type Membership = {
@@ -18,6 +18,7 @@ type DashboardUser = { id: string; walletAddress: string; displayName: string | 
 
 export function AppDashboard({ initialUser, initialMemberships }: { initialUser: DashboardUser; initialMemberships: Membership[] }) {
   const { t } = useLanguage();
+  const { role } = useWorkspaceNavigation();
   const [user, setUser] = useState(initialUser);
   const [memberships, setMemberships] = useState(initialMemberships);
   const [name, setName] = useState(initialUser.displayName ?? "");
@@ -73,14 +74,14 @@ export function AppDashboard({ initialUser, initialMemberships }: { initialUser:
       <AppHeader walletAddress={user.walletAddress} />
       <div className="app-layout page-shell">
         <AppSidebar active="overview" />
-        <section className="app-content">
+        <section className="app-content" id="workspace-main" tabIndex={-1}>
           <div className="app-welcome"><div><span>{t("dashboard.welcome")}</span><h1>{user.displayName || t("dashboard.completeIdentity")}</h1><p>{t("dashboard.simpleIntro")}</p></div><div className="identity-card"><small>{t("dashboard.primaryWallet")}</small><code>{user.walletAddress}</code><b>{t("dashboard.signatureVerified")}</b></div></div>
           <section className="next-action-panel">
-            <div className="next-action-copy"><span className="panel-kicker">{t("dashboard.nextActionKicker")}</span><h2>{!user.displayName ? t("dashboard.nextProfileTitle") : isBusiness ? t("dashboard.nextBusinessTitle") : isUniversity ? t("dashboard.nextUniversityTitle") : t("dashboard.nextStudentTitle")}</h2><p>{!user.displayName ? t("dashboard.nextProfileDescription") : isBusiness ? t("dashboard.nextBusinessDescription") : isUniversity ? t("dashboard.nextUniversityDescription") : t("dashboard.nextStudentDescription")}</p></div>
-            <Link className="button button-primary" href={!user.displayName ? "#profile" : isBusiness ? "/app/challenges" : isUniversity ? "/app/reviews" : "/app/challenges"}>{!user.displayName ? t("dashboard.nextProfileCta") : isBusiness ? t("dashboard.nextBusinessCta") : isUniversity ? t("dashboard.nextUniversityCta") : t("dashboard.nextStudentCta")}</Link>
+            <div className="next-action-copy"><span className="panel-kicker">{t("dashboard.nextActionKicker")}</span><h2>{!user.displayName ? t("dashboard.nextProfileTitle") : role === "business" ? t("dashboard.nextBusinessTitle") : role === "university" ? t("dashboard.nextUniversityTitle") : t("dashboard.nextStudentTitle")}</h2><p>{!user.displayName ? t("dashboard.nextProfileDescription") : role === "business" ? t("dashboard.nextBusinessDescription") : role === "university" ? t("dashboard.nextUniversityDescription") : t("dashboard.nextStudentDescription")}</p></div>
+            <Link className="button button-primary" href={!user.displayName ? "#profile" : role === "business" ? "/app/challenges" : role === "university" ? "/app/reviews" : "/app/challenges"}>{!user.displayName ? t("dashboard.nextProfileCta") : role === "business" ? t("dashboard.nextBusinessCta") : role === "university" ? t("dashboard.nextUniversityCta") : t("dashboard.nextStudentCta")}</Link>
           </section>
           <section className="journey-summary" aria-label={t("dashboard.journeyLabel")}>
-            {["dashboard.journeyChallenge", "dashboard.journeySubmit", "dashboard.journeyReview", "dashboard.journeyProof"].map((key, index) => <div className={index === 0 ? "current" : ""} key={key}><span>{index + 1}</span><strong>{t(key as MessageKey)}</strong></div>)}
+            {["dashboard.journeyChallenge", "dashboard.journeySubmit", "dashboard.journeyReview", "dashboard.journeyProof"].map((key, index) => <div key={key}><span>{index + 1}</span><strong>{t(key as MessageKey)}</strong></div>)}
           </section>
           {!user.displayName && <section className="app-panel onboarding-panel" id="profile"><div><span>{t("dashboard.step1")}</span><h2>{t("dashboard.createProfile")}</h2><p>{t("dashboard.profileDescription")}</p></div><div className="inline-form"><input aria-label={t("dashboard.displayName")} value={name} onChange={(event) => setName(event.target.value)} placeholder={t("dashboard.displayNamePlaceholder")} /><button className="button button-primary" disabled={busy || !name.trim()} onClick={saveProfile}>{t("dashboard.saveProfile")}</button></div></section>}
           <div className="dashboard-grid">
