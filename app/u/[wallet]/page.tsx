@@ -1,4 +1,4 @@
-import { SharedWalletProfile } from "../../components/wallet-profile-view";
+import { SharedWalletProfile } from "../../../frontend/features/profile/wallet-profile-view";
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "SkillBridge — Hồ sơ / Profile",

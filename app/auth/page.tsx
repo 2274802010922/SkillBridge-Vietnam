@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AuthCopy } from "../components/auth-copy";
+import { AuthCopy } from "../../frontend/features/auth/auth-copy";
 
 export const metadata: Metadata = { title: "Đăng nhập bằng ví Solana" };
 

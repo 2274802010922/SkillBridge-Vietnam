@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { env } from "@/lib/runtime-env";
-import { ensureCoreSchema } from "../../../lib/core-schema";
-import { InvoicePayment } from "../../components/invoice-payment";
+import { env } from "@/backend/config/runtime-env";
+import { ensureCoreSchema } from "../../../backend/database/schema/core-schema";
+import { InvoicePayment } from "../../../frontend/features/invoices/invoice-payment";
 
 export const dynamic = "force-dynamic";
 

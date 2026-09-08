@@ -1,4 +1,4 @@
-import { AuditWorkspace } from "../../components/audit-workspace";
+import { AuditWorkspace } from "../../../frontend/features/audit/audit-workspace";
 
 export const dynamic = "force-dynamic";
 

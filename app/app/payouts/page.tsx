@@ -1,4 +1,4 @@
-import { PayoutsWorkspace } from "../../components/payouts-workspace";
+import { PayoutsWorkspace } from "../../../frontend/features/payouts/payouts-workspace";
 
 export const dynamic = "force-dynamic";
 

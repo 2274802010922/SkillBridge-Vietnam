@@ -1,4 +1,4 @@
-import { ChallengeDetailWorkspace } from "../../../components/challenge-detail-workspace";
+import { ChallengeDetailWorkspace } from "../../../../frontend/features/challenge-detail/challenge-detail-workspace";
 
 export const dynamic = "force-dynamic";
 

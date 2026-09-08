@@ -1,0 +1,23 @@
+name: Feature request / Đề xuất
+description: Describe a user problem and a proposed improvement.
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Who needs this and what is difficult today?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      description: Describe what the user should be able to do.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Constraints and alternatives
+      description: Include role, network and deployment considerations.

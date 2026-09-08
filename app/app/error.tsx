@@ -1,6 +1,6 @@
 "use client";
 
-import { useLanguage } from "../components/i18n";
+import { useLanguage } from "../../frontend/i18n/i18n";
 
 export default function WorkspaceError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const { locale } = useLanguage();

@@ -1,4 +1,4 @@
-import { InvoicesWorkspace } from "../../components/invoices-workspace";
+import { InvoicesWorkspace } from "../../../frontend/features/invoices/invoices-workspace";
 
 export const dynamic = "force-dynamic";
 

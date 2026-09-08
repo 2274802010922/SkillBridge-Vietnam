@@ -1,0 +1,28 @@
+name: Bug report / Báo lỗi
+description: Report a reproducible product issue.
+title: "[Bug] "
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Include the page, role and expected result.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Sign in as...\n2. Open...\n3. Click..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, wallet, network and commit/deployment
+      placeholder: "Chrome, Phantom, Devnet, commit..."
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add screenshots or public transaction links. Never paste private keys, seed phrases, API keys or unredacted personal data.

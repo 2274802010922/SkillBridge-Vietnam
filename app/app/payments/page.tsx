@@ -1,4 +1,4 @@
-import { PaymentsWorkspace } from "../../components/payments-workspace";
+import { PaymentsWorkspace } from "../../../frontend/features/payments/payments-workspace";
 
 export const dynamic = "force-dynamic";
 

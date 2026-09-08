@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import "./skillbridge-ui.css";
-import "./profile.css";
-import "./escrow.css";
-import "./clarity.css";
-import { LanguageProvider } from "./components/i18n";
+import "../frontend/styles/globals.css";
+import "../frontend/styles/skillbridge-ui.css";
+import "../frontend/styles/profile.css";
+import "../frontend/styles/escrow.css";
+import "../frontend/styles/clarity.css";
+import { LanguageProvider } from "../frontend/i18n/i18n";
 
 const geistSans = Be_Vietnam_Pro({
   variable: "--font-geist-sans",

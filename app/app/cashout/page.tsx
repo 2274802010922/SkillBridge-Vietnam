@@ -1,4 +1,4 @@
-import { CashoutWorkspace } from "../../components/cashout-workspace";
+import { CashoutWorkspace } from "../../../frontend/features/cashout/cashout-workspace";
 
 export const dynamic = "force-dynamic";
 

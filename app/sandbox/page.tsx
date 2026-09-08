@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { RoleWorkspace } from "../components/role-workspace";
+import { RoleWorkspace } from "../../frontend/features/sandbox/role-workspace";
 
 export const metadata: Metadata = {
   title: "Sandbox mô phỏng ba vai trò",

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { requirePageSession } from "../../lib/page-session";
-import { AppHeader, AppSidebar } from "../components/app-header";
+import { requirePageSession } from "../../backend/auth/page-session";
+import { AppHeader, AppSidebar } from "../../frontend/components/layout/app-header";
 
 export const dynamic = "force-dynamic";
 

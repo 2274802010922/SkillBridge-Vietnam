@@ -42,3 +42,5 @@ yarn-error.log*
 /work/
 *.tsbuildinfo
 /anchor/target/
+/solana/target/
+/.vscode/

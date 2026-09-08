@@ -6,12 +6,14 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "check:repo": "node scripts/check-repo.mjs",
+    "test:anchor": "node --experimental-strip-types tests/solana/escrow-program-smoke.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "vercel-build": "next build",
-    "test": "npm run build && node --experimental-strip-types --test tests/rendered-html.test.mjs tests/d1-adapter.test.ts tests/assessment-contract.test.ts tests/workspace-contract.test.ts tests/siws-auth.test.ts tests/opportunity-gate-contract.test.ts tests/challenge-access.test.ts tests/challenge-draft-policy.test.ts tests/payments.test.ts tests/cashout.test.ts tests/gemini-provider.test.ts tests/wallet-profile.test.ts tests/escrow-contract.test.ts",
-    "test:devnet": "node --experimental-strip-types tests/devnet-product-smoke.ts",
+    "test": "npm run build && node --experimental-strip-types --test tests/integration/rendered-html.test.mjs tests/backend/d1-adapter.test.ts tests/backend/assessment-contract.test.ts tests/backend/workspace-contract.test.ts tests/solana/siws-auth.test.ts tests/solana/opportunity-gate-contract.test.ts tests/backend/challenge-access.test.ts tests/backend/challenge-draft-policy.test.ts tests/solana/payments.test.ts tests/backend/cashout.test.ts tests/backend/gemini-provider.test.ts tests/backend/wallet-profile.test.ts tests/solana/escrow-contract.test.ts",
+    "test:devnet": "node --experimental-strip-types tests/solana/devnet-product-smoke.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

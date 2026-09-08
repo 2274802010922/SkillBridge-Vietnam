@@ -1,161 +1,147 @@
+<div align="center">
+  <img src="public/favicon.svg" width="72" height="72" alt="SkillBridge logo" />
+
 # SkillBridge Vietnam
 
-Proof-of-skill challenge infrastructure connecting Vietnamese students,
-universities, and businesses.
+### Proven skills. Verifiable rewards.
 
-The current MVP demonstrates one complete golden path:
+A Vietnam-first platform connecting students, businesses and reviewing organizations through real work, human assessment and Solana Devnet evidence.
 
-1. A student accepts a business challenge.
-2. The student submits evidence.
-3. AI returns a strict, evidence-linked assessment contract.
-4. The challenge's reviewing organization (the business itself or an invited
-   independent university/business) approves it.
-5. The platform issues a proof-of-skill credential.
-6. The credential unlocks an opportunity.
-7. Revocation removes access.
+[Tiếng Việt](README.vi.md) · **English**
 
-The authenticated product includes two intentionally distinct payment paths.
-Freelancers can create non-custodial USDC Devnet invoice links: clients pay
-directly to the recipient wallet, then the freelancer verifies the signature
-for a receipt and CSV reconciliation report. Challenges use a separate Reward
-Vault: the business funds the full reward amount (or a refundable SOL badge
-bond) on Devnet before the challenge can publish. The challenge creator chooses
-internal review or an independent reviewing organization; only active reviewer
-members can open the queue, while a human reviewer explicitly approves every
-payout. The reviewing organization is shown on the challenge and review
-screens, and the Reward Vault signs that Devnet transaction with a Solana
-Explorer proof. The USDC-to-VND lab now creates a short-lived test quote,
-tokenizes a synthetic beneficiary, builds a reference-bound USDC transfer for
-the connected wallet, and verifies the finalized transaction on Solana Devnet.
-The on-chain leg is real Devnet activity; the bank/VND leg remains an explicit
-sandbox and never claims a real payout.
+[Open the app](https://404-eight-rho.vercel.app/) · [Judge's walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md) · [Devnet evidence](docs/solana/README.md)
 
-The reward-receiving workspace now lets a recipient choose between keeping
-USDC in the connected wallet, receiving VND to a bank account, or using a
-MoMo/ZaloPay destination. These are intentionally separate concerns: a future
-licensed off-ramp converts USDC to VND, while a payout provider delivers that
-VND. The current Devnet flow tokenizes only a masked test destination, binds
-the USDC payment to a Solana reference, verifies finalization, and records an
-idempotent sandbox reconciliation. Provider API credentials do not by
-themselves enable live money movement.
+[![CI](https://github.com/2274802010922/404/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/404/actions/workflows/ci.yml)
+![Next.js](https://img.shields.io/badge/Next.js-16-091426?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-6941C6?logo=solana&logoColor=white)
 
-The `/workspace` route is an isolated role simulator for judges and product
-walkthroughs. The authenticated `/app` routes are the production pilot surface:
-wallet-based Sign In With Solana binds each user to server-enforced student,
-university, or business permissions.
+</div>
 
-Workflow state is persisted in local SQLite during development and Turso on
-Vercel. Evidence files use local private storage during development and a
-Private Vercel Blob store after deployment. Credential
-issuance and revocation use Solana Attestation Service on Devnet. Opportunity
-policies and immutable access receipts use the deployed SkillBridge Opportunity
-Gate program at `AuXFxfT41YMsG53euEB1tFjyUiMLKxfucQnYX4jhekCE`.
+---
 
-The production assessment endpoint uses the OpenAI-compatible TokenRouter API
-with `qwen/qwen3.8-max-free`. Binary evidence is converted to grounded text on
-the server before it reaches the text-only model. AI output must pass the
-schema, exact-quote citation, prompt-injection, and human-review gates before a
-credential can be issued. The judge sandbox uses a fixture only when no AI key
-is configured; a configured provider error is never presented as live AI.
+![SkillBridge landing page](docs/assets/landing.png)
 
-## Local development
+<details>
+<summary>More product screens</summary>
 
-Requires Node.js 22.13 or newer.
+**Wallet sign-in** — Wallet Standard discovery in a browser without an extension.
+
+![Wallet sign-in](docs/assets/sign-in.png)
+
+**Manual assessment** — a local QA fixture, not a claim about real users or traction.
+
+![Manual assessment](docs/assets/manual-review.png)
+
+</details>
+
+## Why SkillBridge?
+
+Students need a way to show what they can do. Businesses need evidence beyond a CV.
+Reviewing organizations need a clear process for assessing work and issuing credentials.
+
+SkillBridge connects that process: a business defines a challenge, students submit files,
+humans assess the work, and verifiable credentials or funded rewards make the result useful.
+
+## The product journey
+
+```mermaid
+flowchart LR
+    A["Create a challenge"] --> B["Fund and publish"]
+    B --> C["Submit evidence"]
+    C --> D["Human assessment"]
+    AI["Optional AI assistance"] -.-> D
+    D --> E["Verifiable credential"]
+    D --> F["Allocate and claim reward"]
+```
+
+- **For students:** discover challenges, submit work, build a wallet profile and share verified achievements.
+- **For businesses:** publish challenges, secure reward budgets, review submissions and find candidates.
+- **For reviewing organizations:** score manually or use evidence-linked AI suggestions; humans own the official decision.
+- **For verifiers:** inspect credential status and transaction evidence through public verification pages.
+
+## What is implemented?
+
+| Area | Current scope |
+| --- | --- |
+| Wallet identity | Sign In With Solana, server-enforced permissions, individual wallet profiles |
+| Challenges | Public/invitation-only access, editable drafts, structured briefs and file submissions |
+| Assessment | Independent manual scoring; optional AI with document extraction, retrieval and caching |
+| Credentials | Issuance, revocation and verification on Solana Devnet |
+| Monetary challenge rewards | Program-controlled escrow for new monetary challenges; human decisions, fixed-recipient claims |
+| Existing rewards / badge bonds | Separate legacy reward-vault path; existing records retain their original rules |
+| USDC invoices | Devnet wallet transfer, signature verification and reconciliation |
+| USDC → VND | Devnet transfer plus **sandbox** VND settlement; no claim of real bank payout |
+
+See the [escrow runbook](docs/solana/escrow-runbook.md) for constraints, deadlines,
+backup reviewers, upgrade authority and the distinction between new and legacy funds.
+
+## Explore the code
+
+```text
+frontend/     Product screens, shared UI, language and styles
+backend/      HTTP handlers, authentication, AI, storage and database
+solana/       Anchor programs, IDL, chain clients and server integrations
+shared/       Pure validation and data shared across layers
+app/          Thin Next.js route and layout entry points
+tests/        Backend, Solana and integration checks
+docs/         Product, architecture, deployment and judging guides
+public/       Public product assets
+tooling/      Archived agent guidance and optional legacy Sites tools
+```
+
+**Start here:** [Frontend](frontend/README.md) · [Backend](backend/README.md) ·
+[Solana](solana/README.md) · [Shared code](shared/README.md) · [Tests](tests/README.md)
+
+Next.js serves both the UI and backend on one Vercel project. Folder separation does
+not introduce a second deployment or change existing URLs.
+
+## Run locally
+
+Requires **Node.js 22.13+** and npm. Run commands from the repository root.
 
 ```bash
-npm install
+npm ci
+```
+
+Copy `.env.example` to `.env.local`, configure the features you want to test, then:
+
+```bash
 npm run dev
 ```
 
-Validation includes assessment contract, evidence-firewall, role authorization,
-server rendering, and complete lifecycle cases:
+Open [localhost:3000](http://localhost:3000). Without Turso settings, development uses
+local SQLite. AI, private file storage and blockchain actions need their corresponding
+configuration; see [deployment and environment setup](docs/deployment/vercel.md).
+
+## Verify changes
 
 ```bash
+npm run check:repo
+npm run lint
 npm test
 ```
 
-With the three Devnet signer secrets and a student public address in the
-environment, the live on-chain lifecycle can also be checked with:
+The default suite builds the app and runs regression checks. Live Devnet and local
+validator scripts are separate: [testing guide](docs/testing/README.md).
 
-```bash
-npm run test:devnet
-```
+## Documentation
 
-Generate a migration after changing `db/schema.ts`:
+| You want to… | Start here |
+| --- | --- |
+| Evaluate the competition entry | [Judge's walkthrough](docs/judging/README.md) |
+| Understand the architecture | [Architecture](docs/architecture/README.md) |
+| Deploy to Vercel | [Deployment guide](docs/deployment/vercel.md) |
+| Test each role | [Manual testing](docs/testing/manual-test-guide.md) |
+| Inspect blockchain proof | [Solana evidence](docs/solana/README.md) |
+| Understand the interface | [Design system](docs/design/system.md) |
+| Contribute a change | [Contributing](CONTRIBUTING.md) |
+| Review notable changes | [Changelog](CHANGELOG.md) |
 
-```bash
-npm run db:generate
-```
+[All documentation →](docs/README.md)
 
-## Vercel deployment
+## Project status and source use
 
-Monetary challenges without an existing legacy funding record now use the
-dedicated [challenge escrow program](docs/escrow-runbook.md) via `/app/escrow`.
-The program is deployed on Solana Devnet; [transaction evidence](docs/escrow-devnet-proof.json)
-records deposit, publication, submission, award, claim and refund.
-Use the existing `SOLANA_AUTHORIZED_SIGNER_SECRET` as the submission registrar
-and keep `SOLANA_RPC_URL` on Devnet. Reviewers (including a distinct backup)
-must join the reviewing organization and accept on-chain before publication.
-Legacy vault keys remain necessary for previously funded challenges and cash-out.
-The additive escrow schema initializes automatically; no database reset is needed.
-
-Wallet profiles are available at `/app/profile`, with share URLs at `/u/<wallet>`.
-The additive `wallet_profiles` table is initialized automatically alongside the
-core schema; no extra Vercel environment variables or database reset are needed.
-See [wallet profile plan](docs/wallet-profile-plan.md) for privacy rules and the
-two-wallet manual checklist. `node tests/wallet-profile-http.mjs` tests the full
-SIWS/profile API flow against a local isolated server at `localhost:3091` only.
-
-The application now runs on standard Next.js and is ready for Vercel Preview
-deployments. Before testing authenticated roles, connect two storage resources
-to the Vercel project:
-
-1. Add the Turso Marketplace integration so Vercel injects
-   `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
-2. Create a Private Blob store so Vercel injects `BLOB_STORE_ID` and uses
-   short-lived OIDC authentication. `BLOB_READ_WRITE_TOKEN` remains supported
-   for legacy or local workflows.
-3. Add `AI_PROVIDER`, the three `TOKENROUTER_*` values, optional Gemini
-   `GEMINI_API_KEY`/`GEMINI_MODEL`, and the `SOLANA_*` values from
-   `.env.example` to both Preview and Production environments. Set
-   `AI_PROVIDER=gemini` to force Gemini, `AI_PROVIDER=tokenrouter` to force
-   TokenRouter, or leave `auto` to prefer Gemini when it is configured. For a
-   newly created Gemini AI Studio key, use `GEMINI_MODEL=gemini-flash-latest`
-   without a `models/` prefix or `:generateContent` suffix. For the Reward
-   Vault, configure a separate `SOLANA_REWARD_VAULT_SECRET` keypair and fund
-   that Devnet wallet with enough SOL for payout fees. Its public address is
-   derived server-side; never expose the secret to the browser.
-4. Configure the Devnet off-ramp lab values from `.env.example`. The default
-   settlement recipient is the public Reward Vault address; set
-   `CASHOUT_DEVNET_SETTLEMENT_WALLET` only when you have a separate public
-   Devnet settlement wallet. `CASHOUT_SANDBOX_VND_RATE` is a time-limited test
-   quote, not a live FX feed. The wallet-signed USDC transfer and Explorer proof
-   are real on Devnet, while the VND bank reconciliation remains a clearly
-   labelled sandbox. Do not enable Mainnet or claim real bank payout until a
-   licensed off-ramp provider supplies the Vietnam/VND corridor, KYC flow,
-   executable quotes and signed webhooks.
-5. The cash-out screen retrieves a USDC/USD market reference and a USD/VND
-   reference server-side, stores the source snapshots alongside each quote, and
-   labels freshness/fallback clearly. `FX_CACHE_TTL_SECONDS=20` is the display
-   cache, while `FX_MAX_STALENESS_SECONDS=300` rejects data that is too old
-   for a reference quote. `PYTH_HERMES_API_KEY`, `EXCHANGE_RATE_API_KEY`, and
-   `OPEN_EXCHANGE_RATES_APP_ID` are optional server-only upgrades; do not put
-   them in browser variables. A reference price is not an executable VND rate.
-6. The multi-rail receiving UI works immediately with the Devnet sandbox. Keep
-   `CASHOUT_MODE=devnet_sandbox`, `REAL_CASHOUT_ENABLED=false` and
-   `OFFRAMP_PROVIDER=devnet_sandbox`. `PAYOS_*`, `MOMO_*`, and `ZALOPAY_*`
-   variables are server-only preparation for approved payout products; adding
-   those keys must not be described as enabling USDC-to-VND conversion. A
-   concrete, licensed off-ramp adapter, provider certification, webhook
-   verification, reconciliation and a restricted canary are still required
-   before any real VND transfer can be switched on.
-7. Deploy a Preview, test every wallet role, AI assessment, human approval,
-   Devnet issuance/revocation, and opportunity verification, then promote that
-   exact deployment to Production.
-
-Never paste secret values into `vercel.json`, source code, screenshots, issue
-trackers, or deployment URLs. Vercel environment changes require a redeploy.
-
-The Solana Devnet program and on-chain addresses are independent of the web
-host, so they do not need to be redeployed solely because the frontend and API
-move to Vercel.
+Built as a UniHackFest project. The target network is Solana **Devnet**.
+The repository does not currently grant an open-source license. Third-party brand
+assets retain their respective ownership; see [asset attribution](public/brands/README.md).

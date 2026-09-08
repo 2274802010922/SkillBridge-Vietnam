@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
-import { getSessionUser } from "../../../lib/auth";
-import { OrganizationInviteCopy } from "../../components/invite-copy";
+import { getSessionUser } from "../../../backend/auth/auth";
+import { OrganizationInviteCopy } from "../../../frontend/features/invitations/invite-copy";
 
 export const dynamic = "force-dynamic";
 
