@@ -17,7 +17,7 @@ Add values in Vercel Environment Variables and redeploy.
 | --- | --- |
 | Database | `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` |
 | Private files | `BLOB_STORE_ID`; client uploads also require `BLOB_READ_WRITE_TOKEN` |
-| Optional AI | `AI_PROVIDER`, Gemini/TokenRouter credentials and model settings |
+| Optional AI | `AI_PROVIDER`, OpenRouter/Gemini/TokenRouter credentials and model settings; [OpenRouter guide](openrouter.md) |
 | Solana Devnet | `SOLANA_RPC_URL`, mint and server signer configuration |
 | Legacy funds / cashout | Dedicated reward-vault and cashout settings |
 | FX references | Optional data-provider credentials and freshness limits |

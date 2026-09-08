@@ -40,6 +40,21 @@ async function render(pathname = "/") {
   return fetch(`${baseUrl}${pathname}`, { headers: { accept: "text/html" } });
 }
 
+test("independent verifier assets are public but private manifests stay authenticated",async()=>{
+  const response=await render("/claim-verifier/index.html");
+  assert.equal(response.status,200);
+  assert.match((await response.text()).replace(/\s+/g," "),/Không cần phiên đăng nhập/);
+  for(const pathname of ["/api/submissions/not-owned/manifest","/api/challenges/not-owned/escrow/manifest"]){
+    const privateResponse=await fetch(baseUrl+pathname);
+    assert.equal(privateResponse.status,401);
+  }
+});
+
+test("AI assistance requires a session before reading or sending content",async()=>{
+  const response=await fetch(baseUrl+"/api/ai/assist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"brief",text:"A sample challenge for access verification."})});
+  assert.equal(response.status,401);
+});
+
 test("server-renders the SkillBridge product page", async () => {
   const response = await render();
   assert.equal(response.status, 200);

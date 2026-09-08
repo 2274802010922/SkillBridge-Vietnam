@@ -16,7 +16,7 @@ const relative=f=>path.relative(root,f).replaceAll("\\","/");
 const configFile=ts.readConfigFile(path.join(root,"tsconfig.json"),ts.sys.readFile);
 if(configFile.error)throw new Error("Unable to read tsconfig");
 const {options}=ts.parseJsonConfigFileContent(configFile.config,ts.sys,root);
-const source=["app","frontend","backend","solana/client","solana/server","shared"].flatMap(d=>walk(path.join(root,d))).filter(f=>/\.(ts|tsx)$/.test(f));
+const source=["app","frontend","backend","solana/client","solana/server","shared","tools/claim-verifier"].flatMap(d=>walk(path.join(root,d))).filter(f=>/\.(ts|tsx)$/.test(f));
 for(const file of source){
   const parsed=ts.createSourceFile(file,fs.readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true);
   for(const statement of parsed.statements){

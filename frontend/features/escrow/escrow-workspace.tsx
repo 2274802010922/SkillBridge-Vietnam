@@ -186,6 +186,13 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
   const legacy = funds.find((f) => f.id === id)?.legacy;
   return (
     <div id="workspace-main" tabIndex={-1} className="workspace-product-content escrow-workspace">
+      <section className="app-panel">
+        <h2>{vi ? "Quyền của bạn có thể kiểm tra độc lập" : "Independently verifiable rights"}</h2>
+        <p>{vi ? "Sau khi được phân bổ, bạn có thể ký nhận thưởng bằng công cụ riêng ngay cả khi API SkillBridge không hoạt động. Chương trình hiện còn quyền nâng cấp." : "Once allocated, rewards can be claimed with a separate tool even when the SkillBridge API is unavailable. The program remains upgradeable."}</p>
+        <p>{vi ? "Nếu reviewer chính và dự phòng đều không xử lý, quỹ tiếp tục chờ. Không tự động hoàn tiền hoặc thay người đánh giá." : "If both reviewers do not act, funds remain pending. There is no automatic refund or reviewer replacement."}</p>
+        <a className="button button-secondary" href="/claim-verifier/index.html" target="_blank" rel="noreferrer">{vi ? "Mở công cụ nhận thưởng độc lập" : "Open independent claim tool"}</a>
+        {id && c && <a className="chain-proof-link" href={`/api/challenges/${id}/escrow/manifest`}>{vi ? "Tải bản cam kết để tự đối chiếu" : "Download the committed terms"}</a>}
+      </section>
       <div className="app-welcome">
         <div>
           <span>

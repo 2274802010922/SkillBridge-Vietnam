@@ -73,7 +73,8 @@ export async function POST(request: Request) {
     const slots = await env.DB.prepare("SELECT reward_slots FROM challenges WHERE id=?").bind(row.challenge_id).first<{ reward_slots: number | null }>();
     const issuedCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM skill_credentials WHERE challenge_id=? AND status IN ('active','issued')").bind(row.challenge_id).first<{ count: number }>();
     if (Number(slots?.reward_slots ?? 1) <= Number(issuedCount?.count ?? 0)) return Response.json({ error: "Challenge đã đủ số lượng phần thưởng." }, { status: 409 });
-    const evidenceHash = await sha256(row.evidence_json);
+    const commitment = await env.DB.prepare("SELECT evidence_hash FROM escrow_submission_locks WHERE submission_id=(SELECT submission_id FROM assessments WHERE id=?)").bind(row.assessment_id).first<{evidence_hash:string}>();
+    const evidenceHash = commitment?.evidence_hash ?? await sha256(row.evidence_json);
     const expiryUnix = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
     const issued = await issueAttestation(env, {
       credentialAddress: row.credential_address,

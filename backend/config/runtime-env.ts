@@ -1,6 +1,9 @@
 import { getDatabase } from "../database/adapters/d1-adapter";
 
 export type RuntimeEnvironment = Cloudflare.Env & {
+  OPENROUTER_API_KEY?: string;
+  OPENROUTER_MODEL?: string;
+  OPENROUTER_BASE_URL?: string;
   AI_PROVIDER?: string;
   TOKENROUTER_API_KEY?: string;
   TOKENROUTER_BASE_URL?: string;
@@ -52,6 +55,9 @@ export type RuntimeEnvironment = Cloudflare.Env & {
 };
 
 export const env = {
+  get OPENROUTER_API_KEY() { return process.env.OPENROUTER_API_KEY; },
+  get OPENROUTER_MODEL() { return process.env.OPENROUTER_MODEL; },
+  get OPENROUTER_BASE_URL() { return process.env.OPENROUTER_BASE_URL; },
   get DB() {
     return getDatabase();
   },

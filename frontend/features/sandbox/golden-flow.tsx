@@ -24,7 +24,7 @@ type AssessmentEnvelope = {
     risk: { promptInjectionDetected: boolean; insufficientEvidence: boolean };
   };
   provenance: {
-    mode: "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback";
+    mode: "openrouter" | "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback";
     provider: string;
     model: string;
     validationPassed: boolean;

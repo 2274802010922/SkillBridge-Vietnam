@@ -53,8 +53,8 @@ export type AssessmentEnvelope = {
     cachedTokens?: number;
   };
   provenance: {
-    mode: "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback" | "manual";
-    provider: "tokenrouter" | "gemini" | "openai" | "skillbridge-fixture" | "human-review";
+    mode: "openrouter" | "tokenrouter" | "gemini" | "openai" | "fixture" | "fixture_fallback" | "manual";
+    provider: "openrouter" | "tokenrouter" | "gemini" | "openai" | "skillbridge-fixture" | "human-review";
     model: string;
     generatedAt: string;
     validationPassed: boolean;

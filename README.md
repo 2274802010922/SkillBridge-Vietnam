@@ -78,6 +78,11 @@ backup reviewers, upgrade authority and the distinction between new and legacy f
 
 ## Explore the code
 
+The [blockchain product contract](docs/product/proof-to-payout.md) explains the
+trust boundary. The [independent verifier](docs/solana/independent-verifier.md)
+can claim allocated rewards without our backend. Optional AI now supports
+[OpenRouter](docs/deployment/openrouter.md); live provider validation requires your key.
+
 ```text
 frontend/     Product screens, shared UI, language and styles
 backend/      HTTP handlers, authentication, AI, storage and database

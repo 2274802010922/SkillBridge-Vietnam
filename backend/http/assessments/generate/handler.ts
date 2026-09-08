@@ -1,3 +1,4 @@
+import { selectedAi } from "../../../ai/provider-selection";
 import { env } from "@/backend/config/runtime-env";
 import type { EvidenceSource } from "../../../../shared/validation/assessment-contract";
 import { chunkDocumentSections, estimateTokenCount, extractDocumentSections, type DocumentChunk } from "../../../ai/document-text";
@@ -78,6 +79,7 @@ async function loadOrCreateChunks(files: FileRow[], submissionId: string) {
 }
 
 export async function POST(request: Request) {
+  let generationId = "", generationLease = "";
   try {
     assertSameOrigin(request);
     const user = await requireSessionUser(request);
@@ -93,6 +95,12 @@ export async function POST(request: Request) {
     `).bind(body.submissionId).first<Context>();
     if (!context || !context.reviewer_organization_id) return Response.json({ error: "Bài nộp hoặc đơn vị review không tồn tại." }, { status: 404 });
     await requireChallengeReviewer(user.id, context.reviewer_organization_id);
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS ai_generation_locks(submission_id TEXT PRIMARY KEY,lease TEXT NOT NULL,expires_at INTEGER NOT NULL)").run();
+    generationLease = crypto.randomUUID();
+    const locked = await env.DB.prepare("INSERT INTO ai_generation_locks(submission_id,lease,expires_at) VALUES (?,?,?) ON CONFLICT(submission_id) DO UPDATE SET lease=excluded.lease,expires_at=excluded.expires_at WHERE ai_generation_locks.expires_at<?")
+      .bind(context.submission_id,generationLease,Date.now()+120000,Date.now()).run();
+    if (!locked.meta.changes) return Response.json({error:"Bài này đang được AI xử lý. Hãy chờ kết quả, không cần gọi lại."},{status:409});
+    generationId = context.submission_id;
     if (!( ["submitted", "in_review"] as const).includes(context.state as "submitted" | "in_review")) return Response.json({ error: "Bài nộp chưa sẵn sàng để AI đánh giá." }, { status: 409 });
 
     const fileRows = await env.DB.prepare("SELECT id, r2_key, original_name, content_type, size_bytes, sha256 FROM submission_files WHERE submission_id = ? ORDER BY created_at").bind(context.submission_id).all<FileRow>();
@@ -110,8 +118,8 @@ export async function POST(request: Request) {
       rubric,
       extractionVersion: "local-chunks-v2",
       promptVersion: "assessment-v2",
-      provider: env.AI_PROVIDER ?? "auto",
-      model: env.GEMINI_MODEL ?? env.TOKENROUTER_MODEL ?? env.OPENAI_ASSESSMENT_MODEL ?? "default",
+      provider: selectedAi(env).provider,
+      model: selectedAi(env).model,
     }));
     const cached = await env.DB.prepare(`
       SELECT id, status, assessment_json, input_token_estimate, output_token_estimate
@@ -126,7 +134,7 @@ export async function POST(request: Request) {
       }, { status: 200 });
     }
 
-    if (!env.TOKENROUTER_API_KEY && !env.GEMINI_API_KEY && !env.OPENAI_API_KEY) return Response.json({ error: "AI production key chưa được cấu hình; hệ thống không dùng fixture cho bài thật." }, { status: 503 });
+    if (!env.OPENROUTER_API_KEY && !env.TOKENROUTER_API_KEY && !env.GEMINI_API_KEY && !env.OPENAI_API_KEY) return Response.json({ error: "AI production key chưa được cấu hình; hệ thống không dùng fixture cho bài thật." }, { status: 503 });
     const dailyLimit = numeric(env.AI_DAILY_LIMIT_PER_REVIEWER, 5, 1, 30);
     await consumeRateLimit(env.DB, "ai_assessment_daily", user.id, dailyLimit, 24 * 60 * 60);
 
@@ -144,9 +152,11 @@ export async function POST(request: Request) {
     );
     if (!retrieved.evidence.length) return Response.json({ error: "Không tìm thấy evidence đủ điều kiện trong bài nộp." }, { status: 422 });
     const inputTokenEstimate = estimateTokenCount(JSON.stringify({ title: context.title, brief: structuredBrief, rubric, evidence: retrieved.evidence }));
+    if (inputTokenEstimate > numeric(env.AI_MAX_INPUT_TOKENS, 6_000, 1_500, 12_000)) return Response.json({error:"Đề bài và bằng chứng vượt ngân sách token. Hãy rút gọn đề bài hoặc chấm thủ công."},{status:413});
     const envelope = await generateLiveAssessment(env, context.submission_id, { title: context.title, brief: structuredBrief, rubric }, retrieved.evidence);
     const storedEnvelope = {
       ...envelope,
+      evidence: retrieved.evidence,
       extraction: { model: "local-document-parser", warnings },
       retrieval: { selectedChunkCount: retrieved.selectedChunkCount, tokenBudget: numeric(env.AI_MAX_INPUT_TOKENS, 6_000, 1_500, 12_000), inputTokenEstimate },
     };
@@ -154,7 +164,7 @@ export async function POST(request: Request) {
     const resultHash = await sha256(JSON.stringify(envelope.draft));
     const status = envelope.provenance.validationPassed ? "in_review" : "contract_failed";
     const outputTokenEstimate = envelope.usage?.outputTokens ?? estimateTokenCount(JSON.stringify(envelope.draft));
-    await env.DB.batch([
+    const writes = await env.DB.batch([
       env.DB.prepare(`
         INSERT INTO assessments (id, submission_id, provider, model, schema_version, assessment_json, status, ai_result_hash, assessment_mode, cache_key, input_token_estimate, output_token_estimate)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ai_assisted', ?, ?, ?)
@@ -163,14 +173,18 @@ export async function POST(request: Request) {
           assessment_json=excluded.assessment_json, status=excluded.status, ai_result_hash=excluded.ai_result_hash,
           assessment_mode='ai_assisted', cache_key=excluded.cache_key, input_token_estimate=excluded.input_token_estimate,
           output_token_estimate=excluded.output_token_estimate, final_result_hash=NULL, updated_at=CURRENT_TIMESTAMP
+          WHERE assessments.status NOT IN ('approved','rejected')
       `).bind(assessmentId, context.submission_id, envelope.provenance.provider, envelope.provenance.model, envelope.draft.schemaVersion, JSON.stringify(storedEnvelope), status, resultHash, cacheKey, inputTokenEstimate, outputTokenEstimate),
-      env.DB.prepare("UPDATE submissions SET evidence_json = ?, state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(JSON.stringify(retrieved.evidence), status === "in_review" ? "in_review" : "submitted", context.submission_id),
-      env.DB.prepare("UPDATE participations SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT participation_id FROM submissions WHERE id = ?)").bind(status === "in_review" ? "in_review" : "submitted", context.submission_id),
+      env.DB.prepare("UPDATE submissions SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND state IN ('submitted','in_review')").bind(status === "in_review" ? "in_review" : "submitted", context.submission_id),
+      env.DB.prepare("UPDATE participations SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT participation_id FROM submissions WHERE id = ?) AND state IN ('submitted','in_review')").bind(status === "in_review" ? "in_review" : "submitted", context.submission_id),
       auditStatement(env.DB, { actorUserId: user.id, organizationId: context.reviewer_organization_id, action: "assessment.ai_generated", targetType: "assessment", targetId: assessmentId, metadata: { submissionId: context.submission_id, model: envelope.provenance.model, status, cacheKey, inputTokenEstimate, outputTokenEstimate, selectedChunkCount: retrieved.selectedChunkCount } }),
     ]);
+    if (!writes[0].meta.changes) return Response.json({error:"Kết quả chính thức đã được lưu trong lúc AI xử lý. AI không ghi đè quyết định của con người."},{status:409});
     if (!envelope.provenance.validationPassed) return Response.json({ error: "AI output không vượt qua assessment contract.", validationErrors: envelope.provenance.validationErrors }, { status: 422 });
     return Response.json({ assessment: { id: assessmentId, status, envelope: storedEnvelope }, cached: false, tokenEstimate: { input: inputTokenEstimate, output: outputTokenEstimate } }, { status: 201 });
   } catch (error) {
     return jsonError(error);
+  } finally {
+    if (generationId) await env.DB.prepare("DELETE FROM ai_generation_locks WHERE submission_id=? AND lease=?").bind(generationId,generationLease).run().catch(()=>{});
   }
 }

@@ -1,3 +1,4 @@
+import { selectedAi } from "./provider-selection.ts";
 import {
   ASSESSMENT_JSON_SCHEMA,
   DEMO_EVIDENCE,
@@ -12,6 +13,9 @@ import {
 import { extractDocumentSections } from "./document-text.ts";
 
 export type AiEnvironment = {
+  OPENROUTER_API_KEY?: string;
+  OPENROUTER_MODEL?: string;
+  OPENROUTER_BASE_URL?: string;
   AI_PROVIDER?: string;
   TOKENROUTER_API_KEY?: string;
   TOKENROUTER_BASE_URL?: string;
@@ -194,28 +198,14 @@ function tokenRouterConfig(environment: AiEnvironment) {
   };
 }
 
-async function requestJson<T>(
+export async function requestJson<T>(
   environment: AiEnvironment,
   system: string,
   input: unknown,
   schemaName: string,
   schema: unknown,
-): Promise<{ value: T; model: string; provider: "tokenrouter" | "gemini" | "openai"; usage?: AiUsage }> {
-  const preference = (environment.AI_PROVIDER || "auto").trim().toLowerCase();
-  const provider = preference === "tokenrouter"
-    ? "tokenrouter"
-    : preference === "gemini"
-      ? "gemini"
-      : preference === "openai"
-        ? "openai"
-        : environment.GEMINI_API_KEY
-          ? "gemini"
-          : environment.TOKENROUTER_API_KEY
-            ? "tokenrouter"
-            : "openai";
-  if (!["auto", "tokenrouter", "gemini", "openai"].includes(preference)) {
-    throw new Error("AI_PROVIDER phải là auto, tokenrouter, gemini hoặc openai.");
-  }
+): Promise<{ value: T; model: string; provider: "openrouter" | "tokenrouter" | "gemini" | "openai"; usage?: AiUsage }> {
+  const { provider, model: selectedModel } = selectedAi(environment);
   if (provider === "tokenrouter" && !environment.TOKENROUTER_API_KEY) {
     throw new Error("TOKENROUTER_API_KEY chưa được cấu hình.");
   }
@@ -224,6 +214,40 @@ async function requestJson<T>(
   }
   if (provider === "openai" && !environment.OPENAI_API_KEY) {
     throw new Error("Chưa cấu hình API key cho provider AI đã chọn.");
+  }
+
+  if (provider === "openrouter") {
+    if (!environment.OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY chưa được cấu hình.");
+    const base = new URL(environment.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1");
+    if (base.origin !== "https://openrouter.ai" || base.pathname.replace(/\/$/, "") !== "/api/v1" || base.username || base.password || base.search || base.hash)
+      throw new Error("OPENROUTER_BASE_URL phải là https://openrouter.ai/api/v1.");
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      redirect: "error",
+      headers: { authorization: `Bearer ${environment.OPENROUTER_API_KEY}`, "content-type": "application/json", "X-OpenRouter-Title": "SkillBridge Vietnam" },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: [{role:"system",content:system},{role:"user",content:JSON.stringify(input)}],
+        response_format: {type:"json_schema",json_schema:{name:schemaName,strict:true,schema}},
+        provider: {require_parameters:true,allow_fallbacks:false,data_collection:"deny"},
+        max_tokens: boundedInteger(environment.AI_MAX_OUTPUT_TOKENS,2200,600,4096),
+        temperature:0.1, stream:false,
+      }),
+      signal: AbortSignal.timeout(45000),
+    });
+    if (!response.ok) {
+      await response.body?.cancel();
+      const status = response.status;
+      throw new AiProviderError(status === 402 ? "OpenRouter không đủ hạn mức. Bạn vẫn có thể chấm thủ công."
+        : status === 401 || status === 403 ? "OpenRouter API key không hợp lệ hoặc không được cấp quyền."
+        : status === 400 || status === 404 ? "Model OpenRouter không khả dụng hoặc chưa hỗ trợ định dạng yêu cầu."
+        : "OpenRouter chưa xử lý được yêu cầu. Hãy thử lại sau.", status >= 500 ? 503 : status);
+    }
+    const payload = await response.json() as ChatPayload;
+    const content = payload.choices?.[0]?.message?.content;
+    if (!content) throw new AiProviderError("OpenRouter trả về kết quả rỗng.",502);
+    return {value:parseJsonObject<T>(content),provider,model:payload.model || selectedModel,
+      usage:payload.usage ? {inputTokens:payload.usage.prompt_tokens || 0,outputTokens:payload.usage.completion_tokens || 0} : undefined};
   }
 
   if (provider === "gemini") {
@@ -407,7 +431,7 @@ export async function extractEvidenceSources(
   reflection: string,
   files: AssessmentFile[],
 ): Promise<{ evidence: EvidenceSource[]; model: string; warnings: string[] }> {
-  if (!environment.TOKENROUTER_API_KEY && !environment.GEMINI_API_KEY && !environment.OPENAI_API_KEY) {
+  if (!environment.OPENROUTER_API_KEY && !environment.TOKENROUTER_API_KEY && !environment.GEMINI_API_KEY && !environment.OPENAI_API_KEY) {
     throw new Error("Chưa cấu hình TOKENROUTER_API_KEY, GEMINI_API_KEY hoặc OPENAI_API_KEY.");
   }
   if (!files.length) return { evidence: [], model: "none", warnings: [] };
@@ -438,7 +462,7 @@ export async function generateLiveAssessment(
   challenge: { title: string; brief: string; rubric: unknown },
   evidence: EvidenceSource[],
 ): Promise<AssessmentEnvelope> {
-  if (!environment.TOKENROUTER_API_KEY && !environment.GEMINI_API_KEY && !environment.OPENAI_API_KEY) {
+  if (!environment.OPENROUTER_API_KEY && !environment.TOKENROUTER_API_KEY && !environment.GEMINI_API_KEY && !environment.OPENAI_API_KEY) {
     throw new Error("Chưa cấu hình TOKENROUTER_API_KEY, GEMINI_API_KEY hoặc OPENAI_API_KEY.");
   }
   if (!evidence.length) throw new Error("Không có evidence source để đánh giá.");
@@ -468,7 +492,7 @@ export async function generateAssessment(
   let provider: AssessmentEnvelope["provenance"]["provider"] = "skillbridge-fixture";
   let model = "assessment-fixture-v1";
 
-  if (environment.TOKENROUTER_API_KEY || environment.GEMINI_API_KEY || environment.OPENAI_API_KEY) {
+  if (environment.OPENROUTER_API_KEY || environment.TOKENROUTER_API_KEY || environment.GEMINI_API_KEY || environment.OPENAI_API_KEY) {
     const generated = await requestAssessment(environment, {
       title: "Growth Strategy 90D",
       brief: "Xây chiến lược tăng trưởng 90 ngày cho startup thời trang bền vững Việt Nam, ưu tiên Gen Z tại TP.HCM.",

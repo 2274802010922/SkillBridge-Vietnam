@@ -5,6 +5,8 @@ Start with the guide that matches your task.
 | Area | Guide |
 | --- | --- |
 | Product | [Overview and user journeys](product/overview.md) |
+| Blockchain core | [Proof-to-payout contract](product/proof-to-payout.md), [independent claim tool](solana/independent-verifier.md) |
+| AI setup | [OpenRouter on Vercel](deployment/openrouter.md) |
 | Judging | [Walkthrough and verifiable evidence](judging/README.md) |
 | Architecture | [Folders, dependencies and runtime](architecture/README.md) |
 | Deployment | [Vercel setup](deployment/vercel.md) |

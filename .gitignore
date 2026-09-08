@@ -44,3 +44,4 @@ yarn-error.log*
 /anchor/target/
 /solana/target/
 /.vscode/
+/public/claim-verifier/

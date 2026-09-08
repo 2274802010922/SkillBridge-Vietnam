@@ -33,7 +33,7 @@ async function registrar() {
       : bs58.decode(raw),
   );
 }
-async function access(id: string, user: { id: string; walletAddress: string }) {
+export async function access(id: string, user: { id: string; walletAddress: string }) {
   const c = await env.DB.prepare(
     `SELECT c.* FROM challenges c WHERE c.id=? AND c.deleted_at IS NULL`,
   )
@@ -252,6 +252,7 @@ export async function POST(
           "Before publication: funder cancels. After publication: only unused budget after all submissions are resolved. Allocated rewards never expire or refund.",
         trust:
           "Humans judge evidence. Registrar admits submissions. Program upgrade authority remains disclosed.",
+        stalledReview: "If primary and backup reviewers do not act, funds remain pending. No automatic refund or reviewer replacement.",
       });
       const config: EscrowConfig = {
         challengeId: id,

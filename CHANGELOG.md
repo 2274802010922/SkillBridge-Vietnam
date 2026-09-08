@@ -2,6 +2,16 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-09 — Independent proof-to-payout
+
+- Standalone Devnet claim and SAS issuer-policy verifier, separately hostable.
+- Downloadable terms, submission and approved-result commitments.
+- OpenRouter structured output, optional brief/feedback assistance and generation locks.
+- AI evidence stays separate from immutable submission evidence.
+- No automatic refund or replacement when both reviewers fail to act.
+- Recipient-only SOL Devnet claim verified finalized; OpenRouter live verification
+  still requires account configuration. No program upgrade or database reset.
+
 ## Unreleased — Repository organization
 
 - Separate frontend, backend, Solana and shared source.

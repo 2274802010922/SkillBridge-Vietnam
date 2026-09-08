@@ -151,6 +151,8 @@ export function SubmissionsWorkspace() {
       <section className="app-panel submission-editor">
         {detailLoading ? <ContentSkeleton variant="detail" /> : <>
         <div className="entity-top"><span>{active?.challenge_title}</span><b>{translateStatus(t, active?.state)}</b></div>
+        {selected && <a className="button button-secondary" href={`/api/submissions/${selected}/manifest`}>{locale === "vi" ? "Tải bản đối chiếu bài nộp" : "Download submission manifest"}</a>}
+        {selected && ["approved","rejected","credential_issued"].includes(active?.state ?? "") && <a className="button button-secondary" href={`/api/submissions/${selected}/manifest?kind=result`}>{locale === "vi" ? "Tải bản đối chiếu kết quả" : "Download result manifest"}</a>}
         <div className="submission-progress"><span>{t("submission.progressTitle")}</span><ol>{submissionSteps.map((step, index) => <li className={index <= currentStep ? "done" : ""} key={step}><i>{index < currentStep ? "✓" : index + 1}</i><strong>{translateStatus(t, step)}</strong></li>)}</ol></div>
         <label>{t("submission.note")}<textarea disabled={!editable} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("submission.notePlaceholder")} /><small>{t("submission.noteHelp")}</small></label>
         <div className="file-uploader"><div><strong>{t("submission.files")}</strong><small>{t("submission.fileHelp")}</small></div>{editable && <label className="button button-dark">{t("submission.chooseFiles")}<input type="file" multiple hidden onChange={(event) => { void uploadMany(event.target.files); event.currentTarget.value = ""; }} /></label>}</div>

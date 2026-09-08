@@ -34,13 +34,13 @@ export async function POST(request:Request, { params }:{params:Promise<{id:strin
     if (!body.decision || !(["approved","rejected","changes_requested"] as const).includes(body.decision)) {
       return Response.json({error:"Decision không hợp lệ."},{status:400});
     }
-    const stored = JSON.parse(row.assessment_json) as {draft:AssessmentDraft};
+    const stored = JSON.parse(row.assessment_json) as {draft:AssessmentDraft;evidence?:EvidenceSource[]};
     if(body.decision==="changes_requested" && await env.DB.prepare("SELECT submission_id FROM escrow_submission_locks WHERE submission_id=?").bind(row.submission_id).first()) return Response.json({error:"Bài đã ký gắn với quỹ có phiên bản cố định. Hãy phê duyệt hoặc từ chối kèm nhận xét."},{status:409});
     if (body.decision === "approved" && !body.finalDraft) {
       return Response.json({error:"Reviewer phải nhập và xác nhận điểm chính thức trước khi phê duyệt."},{status:400});
     }
     const finalDraft = body.finalDraft ?? stored.draft;
-    const validation = validateAssessment(finalDraft,JSON.parse(row.evidence_json) as EvidenceSource[]);
+    const validation = validateAssessment(finalDraft,stored.evidence ?? JSON.parse(row.evidence_json) as EvidenceSource[]);
     if (body.decision === "approved" && !validation.valid) {
       return Response.json({error:"Kết quả cuối không vượt qua assessment contract.",validationErrors:validation.errors},{status:422});
     }

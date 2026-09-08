@@ -1,0 +1,112 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+  color: #091426;
+  background: #f7f6f1;
+}
+* {
+  box-sizing: border-box;
+}
+main {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 28px;
+  background: white;
+  border: 1px solid #dce1e7;
+  border-radius: 12px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #355185;
+}
+h1 {
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.2;
+}
+p,
+footer {
+  line-height: 1.65;
+}
+label {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+input,
+select,
+textarea,
+button {
+  padding: 12px;
+  font: inherit;
+  border: 1px solid #abb6c4;
+  border-radius: 8px;
+  min-height: 46px;
+  max-width: 100%;
+}
+input,
+select,
+textarea {
+  width: 100%;
+}
+button {
+  background: #b7f34d;
+  color: #091426;
+  cursor: pointer;
+  margin: 8px 8px 8px 0;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f1f4f7;
+  padding: 16px;
+  border-radius: 8px;
+  line-height: 1.7;
+}
+footer {
+  margin-top: 32px;
+  color: #526174;
+  font-size: 14px;
+}
+a {
+  color: #2456e6;
+  overflow-wrap: anywhere;
+}
+input:focus-visible,
+button:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #2456e6;
+  outline-offset: 3px;
+}
+#notice {
+  min-height: 28px;
+  font-weight: 600;
+}
+section {
+  border-top: 1px solid #dce1e7;
+  padding-top: 20px;
+}
+@media (max-width: 600px) {
+  main {
+    margin: 12px;
+    padding: 18px;
+  }
+  button {
+    width: 100%;
+  }
+}
+textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+#credential-result,
+#notice {
+  overflow-wrap: anywhere;
+}

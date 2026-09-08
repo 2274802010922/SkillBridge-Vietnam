@@ -34,6 +34,12 @@ Kết nối sinh viên, doanh nghiệp và đơn vị đánh giá thông qua bà
 
 ## SkillBridge giải quyết điều gì?
 
+Hướng lõi: cam kết đề bài → ký quỹ → bài nộp có phiên bản → quyết định của con người
+→ quyền nhận thưởng → nhận thưởng không phụ thuộc API SkillBridge.
+Xem [phạm vi và giới hạn tin cậy](docs/product/proof-to-payout.md),
+[công cụ xác minh độc lập](docs/solana/independent-verifier.md) và
+[cấu hình OpenRouter](docs/deployment/openrouter.md).
+
 Sinh viên cần chứng minh năng lực bằng bài làm. Doanh nghiệp cần căn cứ để đánh giá
 ứng viên. Đơn vị đánh giá cần quy trình chấm bài và xác nhận thành tích rõ ràng.
 

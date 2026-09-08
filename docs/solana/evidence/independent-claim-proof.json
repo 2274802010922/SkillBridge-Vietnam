@@ -1,0 +1,23 @@
+{
+  "network": "Solana Devnet",
+  "program": "HBasPxF9R83pCFdeuvvXW5Hpt7hSMTXghLRSzeAEGpDB",
+  "escrow": "Ax2bNZMXSanA3tbLLRPxqA7A9yKkSPBwsdTqLGkDsCvA",
+  "recipient": "Cj5kymdEpnZC3hFz9pMk3GrKVEShsfhh2pPAC4RDp2am",
+  "receipt": "5rjKftkgLxdTb7kySVAdcnp7pZjqtRHTqnqj26XLmeRA",
+  "claimTx": "3wW4hobCE2wNwNeAVSfqBo7cQRAWKTmaWGYjM4s9RC62Eq3XPBGMCKR1Mxm9TDzkBoWVbFa2FTJpqN1yeJFTd35L",
+  "claimSlot": 495181217,
+  "claimStatus": "finalized",
+  "claimTransactionError": null,
+  "recipientIsOnlySigner": true,
+  "claimInstruction": "ClaimAward",
+  "fundedLamports": "2000000",
+  "paidLamports": "1000000",
+  "refundedLamports": "1000000",
+  "refundTx": "3eveunNoyHQceMFdXYUXAgUcjSGFS1dXADWxDKNF2EYqVSKUhYfEuTHDbGZYPnXjaFL3i8ESNQAYFohHUrEoVjge",
+  "refundSlot": 495181228,
+  "backendRequests": 0,
+  "verificationMethod": "Live test blocks non-Devnet-RPC fetches. Following an RPC 429 during refund confirmation, finalized transactions and account state were recovered with read-only RPC requests; no claim or refund was resent.",
+  "testWalletCleanup": "Not completed: the interrupted process lost its ephemeral test-recipient key. This wallet contains Devnet test tokens only.",
+  "verifiedDate": "2026-09-09",
+  "limitations": ["SOL path tested live; USDC instruction construction tested locally.", "This does not constitute a smart-contract security audit.", "Program upgrade authority remains enabled."]
+}
