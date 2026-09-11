@@ -1,0 +1,49 @@
+.panel {
+  scroll-margin-top: 112px;
+  min-width: 0;
+}
+.panel h2 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+.panel p {
+  line-height: 1.65;
+}
+.panel dl {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+.panel dl > div {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid #dce1e7;
+  padding-bottom: 12px;
+}
+.panel dt {
+  color: #526174;
+}
+.panel dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.address {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 12px;
+}
+.panel > a,
+.panel > button {
+  margin-top: 12px;
+  max-width: 100%;
+  white-space: normal;
+}

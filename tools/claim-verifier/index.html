@@ -3,93 +3,221 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SkillBridge — Nhận thưởng độc lập</title>
+    <title>SkillBridge — Tra cứu ví</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main>
       <header>
-        <strong>SkillBridge · Solana Devnet</strong><span>Công cụ độc lập</span>
+        <strong>SkillBridge · Solana Devnet</strong>
+        <nav aria-label="Language">
+          <a id="lang-vi" href="?lang=vi">VI</a
+          ><a id="lang-en" href="?lang=en">EN</a>
+        </nav>
       </header>
-      <h1>Tự kiểm tra và nhận phần thưởng</h1>
-      <p>
-        Công cụ đọc trực tiếp Solana RPC và ký bằng ví của bạn. Không cần phiên
-        đăng nhập hoặc API SkillBridge.
+      <h1 data-en="Your achievements and rewards">
+        Tra cứu thành tích và phần thưởng
+      </h1>
+      <p
+        data-en="Enter a wallet to view verified badges and rewards. No sign-in or signature is needed to view."
+      >
+        Nhập địa chỉ ví để xem huy hiệu và phần thưởng. Không cần phiên đăng
+        nhập hoặc ký để xem.
       </p>
-      <form id="inspect">
+      <p id="lookup-context"></p>
+      <form id="lookup-form">
         <label
-          >Solana Devnet RPC<input
-            id="rpc"
-            type="url"
-            value="https://api.devnet.solana.com"
-            required /></label
-        ><label
-          >Địa chỉ quỹ<input id="escrow" required autocomplete="off" /></label
-        ><label
-          >Ví nhận thưởng<input
-            id="recipient"
+          ><span data-en="Wallet address">Địa chỉ ví</span
+          ><input
+            id="lookup-wallet"
             required
-            autocomplete="off" /></label
-        ><button>Kiểm tra quyền nhận thưởng</button>
+            autocomplete="off"
+            spellcheck="false" /></label
+        ><button id="lookup-submit" data-en="Look up wallet">Tra cứu ví</button>
       </form>
-      <p id="notice" role="status" aria-live="polite"></p>
-      <section id="result" hidden>
-        <h2>Thông tin đã xác minh từ chuỗi</h2>
-        <pre id="state"></pre>
-        <p id="upgrade"></p>
-        <p>
-          Con người quyết định kết quả. Nếu cả reviewer chính và dự phòng không
-          xử lý, quỹ tiếp tục chờ; công cụ không tự thay người đánh giá hoặc
-          hoàn tiền.
-        </p>
+      <div class="connect-row">
         <label
-          >Đối chiếu bản cam kết tải từ SkillBridge<input
-            id="terms"
-            type="file"
-            accept=".json,.txt"
-        /></label>
-        <p id="terms-status" role="status"></p>
-        <label>Ví dùng để ký<select id="wallet"></select></label
-        ><button id="claim" type="button">Ký nhận thưởng</button
-        ><button id="refresh" type="button">Kiểm tra lại</button
-        ><a id="explorer" target="_blank" rel="noreferrer"
-          >Xem quỹ trên Explorer</a
+          ><span data-en="Browser wallet">Ví trên trình duyệt</span
+          ><select id="wallet"></select></label
+        ><button id="connect-lookup" type="button" data-en="Connect my wallet">
+          Kết nối ví của tôi
+        </button>
+      </div>
+      <p id="wallet-help" class="muted"></p>
+      <p id="lookup-status" role="status" aria-live="polite"></p>
+      <section id="wallet-results" hidden>
+        <button
+          id="load-names"
+          type="button"
+          class="secondary"
+          data-en="Load challenge names"
         >
+          Hiện tên thử thách
+        </button>
+        <p
+          id="names-status"
+          class="muted"
+          role="status"
+          data-en="Names are optional descriptions from SkillBridge. Reward checks use Solana directly."
+        >
+          Tên thử thách là thông tin mô tả tùy chọn từ SkillBridge. Phần thưởng
+          được kiểm tra trực tiếp trên Solana.
+        </p>
+        <div class="stats">
+          <div>
+            <strong id="badge-count">—</strong
+            ><span data-en="Active badges">Huy hiệu còn hiệu lực</span>
+          </div>
+          <div>
+            <strong id="reward-count">—</strong
+            ><span data-en="Ready to claim">Phần thưởng có thể nhận</span>
+          </div>
+          <div>
+            <strong id="paid-count">—</strong
+            ><span data-en="Rewards received">Phần thưởng đã nhận</span>
+          </div>
+        </div>
+        <button
+          id="share-wallet"
+          type="button"
+          class="secondary"
+          data-en="Share wallet lookup / QR"
+        >
+          Chia sẻ tra cứu ví / QR
+        </button>
+        <div id="share-area" hidden>
+          <p id="share-status" role="status"></p>
+          <a id="share-url"></a
+          ><canvas id="share-qr" aria-label="QR code"></canvas>
+          <p
+            class="muted"
+            data-en="A localhost link works only on your machine. Use a public HTTPS host to share with others."
+          >
+            Liên kết localhost chỉ hoạt động trên máy của bạn. Dùng trang HTTPS
+            công khai để chia sẻ cho người khác.
+          </p>
+        </div>
+        <h2 data-en="Skill badges">Huy hiệu kỹ năng</h2>
+        <p
+          class="muted"
+          data-en="Counts verified credentials from configured issuers, not every NFT. Credentials deleted from the chain cannot be discovered in a new lookup."
+        >
+          Chỉ đếm chứng nhận kỹ năng từ đơn vị cấp được cấu hình. Chứng nhận đã
+          bị xóa khỏi chuỗi không xuất hiện trong lượt tra cứu mới.
+        </p>
+        <div id="badges" class="cards"></div>
+        <h2 data-en="Pending rewards">Phần thưởng đang chờ</h2>
+        <div id="rewards" class="cards"></div>
+        <h2 data-en="Received rewards">Lịch sử nhận thưởng</h2>
+        <div id="history" class="cards"></div>
       </section>
-      <section>
-        <h2>Doanh nghiệp B · Kiểm tra chứng nhận</h2>
-        <p>
-          Bạn tự chọn những đơn vị phát hành mình tin tưởng. Một chứng nhận tồn
-          tại trên chuỗi không tự động có nghĩa doanh nghiệp của bạn công nhận
-          nó.
+      <section id="result" hidden>
+        <h2 data-en="Selected reward">Phần thưởng đã chọn</h2>
+        <p id="selected-reward"></p>
+        <p id="notice" role="status" aria-live="polite"></p>
+        <button id="claim" type="button" data-en="Claim reward">
+          Nhận thưởng</button
+        ><button
+          id="refresh"
+          type="button"
+          class="secondary"
+          data-en="Check again"
+        >
+          Kiểm tra lại</button
+        ><a
+          id="explorer"
+          target="_blank"
+          rel="noreferrer"
+          data-en="View fund evidence"
+          >Xem bằng chứng quỹ</a
+        >
+        <details>
+          <summary data-en="Fund details and document comparison">
+            Chi tiết quỹ và đối chiếu tài liệu
+          </summary>
+          <pre id="state"></pre>
+          <p id="upgrade"></p>
+          <label
+            ><span data-en="Compare a downloaded manifest"
+              >Đối chiếu bản cam kết tải từ SkillBridge</span
+            ><input id="terms" type="file" accept=".json,.txt"
+          /></label>
+          <p id="terms-status" role="status"></p>
+        </details>
+      </section>
+      <details id="advanced">
+        <summary data-en="Advanced checks">Kiểm tra nâng cao</summary>
+        <p
+          data-en="The tool reads Solana directly. No SkillBridge API is needed to verify or claim."
+        >
+          Công cụ đọc trực tiếp Solana. Không cần API SkillBridge để xác minh
+          hoặc nhận thưởng.
+        </p>
+        <form id="inspect">
+          <label
+            >Solana Devnet RPC<input
+              id="rpc"
+              type="url"
+              value="https://api.devnet.solana.com"
+              required /></label
+          ><label
+            ><span data-en="Fund address">Địa chỉ quỹ</span
+            ><input id="escrow" required autocomplete="off" /></label
+          ><label
+            ><span data-en="Recipient wallet">Ví nhận thưởng</span
+            ><input id="recipient" required autocomplete="off" /></label
+          ><button data-en="Check this fund">Kiểm tra quỹ cụ thể</button>
+        </form>
+        <p id="advanced-status" role="status"></p>
+        <label
+          ><span data-en="Website for optional challenge names"
+            >Trang web tải tên thử thách (tùy chọn)</span
+          ><input
+            id="metadata-origin"
+            type="url"
+            value="https://404-eight-rho.vercel.app"
+        /></label>
+        <h2 data-en="Verify a specific credential">
+          Kiểm tra chứng nhận cụ thể
+        </h2>
+        <p data-en="Choose the issuer authorities you trust for this check.">
+          Chọn địa chỉ đơn vị phát hành bạn tin tưởng cho lượt kiểm tra này.
         </p>
         <form id="credential-form">
           <label
-            >Địa chỉ attestation SAS<input id="attestation" required /></label
-          ><label>Ví ứng viên<input id="candidate" required /></label
+            ><span data-en="SAS attestation address"
+              >Địa chỉ chứng nhận SAS</span
+            ><input id="attestation" required /></label
           ><label
-            >ID thử thách cần kiểm tra<input
-              id="challenge-id"
-              required /></label
+            ><span data-en="Candidate wallet">Ví ứng viên</span
+            ><input id="candidate" required /></label
           ><label
-            >Authority của đơn vị phát hành được tin tưởng (mỗi dòng một địa
-            chỉ)<textarea id="trusted" rows="3" required></textarea></label
+            ><span data-en="Challenge ID">Mã thử thách</span
+            ><input id="challenge-id" required /></label
           ><label
-            >Điểm tối thiểu<input
+            ><span data-en="Trusted issuer authorities, one per line"
+              >Địa chỉ đơn vị phát hành được tin tưởng, mỗi dòng một địa
+              chỉ</span
+            ><textarea id="trusted" rows="3" required></textarea></label
+          ><label
+            ><span data-en="Minimum score">Điểm tối thiểu</span
+            ><input
               id="score"
               type="number"
               min="0"
               max="100"
               value="0"
               required /></label
-          ><button>Kiểm tra trực tiếp trên Solana</button>
+          ><button data-en="Verify credential">Kiểm tra chứng nhận</button>
         </form>
         <pre id="credential-result" role="status"></pre>
-      </section>
-      <footer>
-        Chỉ Devnet. Bản chương trình hiện tại còn có khả năng nâng cấp; quyền
-        nâng cấp được đọc và hiển thị bên trên. Tuyệt đối không nhập seed phrase
-        hoặc private key.
+      </details>
+      <footer
+        data-en="Devnet test network. Viewing needs no transaction fee; claiming requires a wallet signature and Devnet SOL for fees. If both reviewers do not act, funds remain pending."
+      >
+        Mạng thử nghiệm Devnet. Xem thông tin không tốn phí giao dịch; nhận
+        thưởng cần ký bằng ví và SOL Devnet trả phí mạng. Nếu cả hai người đánh
+        giá không xử lý, quỹ tiếp tục chờ.
       </footer>
     </main>
     <script src="app.js" defer></script>

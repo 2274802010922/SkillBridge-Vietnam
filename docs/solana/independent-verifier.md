@@ -4,6 +4,52 @@ The static tool is built from [source](../../tools/claim-verifier/main.ts).
 It does not call Next.js routes, Turso, Blob or the SkillBridge login service.
 It does require an available, trustworthy Solana Devnet RPC and a compatible wallet.
 
+## Wallet-first lookup
+
+Enter a wallet, or connect a browser wallet to fill it automatically. Viewing does
+not request a signature. The page discovers submission receipts and SkillBridge
+SAS credentials on Devnet, then shows active badges, allocated rewards and claims.
+Unknown/RPC-error states show a dash and an error, never a misleading zero.
+
+Wallet links use `?wallet=ADDRESS&lang=vi` (or `en`). Share/QR produces the same
+lookup link. A localhost URL is only useful on your own machine; use the public
+HTTPS deployment when sharing. Challenge fund links use `?escrow=ADDRESS` so users
+only need to enter their wallet.
+
+The default lookup and claim need no SkillBridge API. **Load challenge names** is
+an optional metadata request: it loads public challenge titles from the configured
+SkillBridge site and does not change any verified score, amount or claim right.
+Private/unavailable titles retain their IDs. The API only returns public challenge
+descriptions; it does not return private submissions or wallet profiles.
+
+## Issuers and badge counts
+
+At build time, `SKILLBRIDGE_TRUSTED_ISSUERS` may contain public authority addresses
+separated by commas. If empty, the build derives the public authority from the
+existing `SOLANA_ISSUER_SECRET`. Only public addresses are embedded in the bundle;
+the secret is never exported. After issuer rotation, explicitly list historical
+authorities if their credentials should remain included. Redeploy after changing it.
+
+Missing issuer configuration produces an unavailable count. It does not classify
+arbitrary NFTs or self-issued lookalikes as SkillBridge badges. Expired/paused
+credentials stay visible with their status but do not count as active.
+
+Discovery supports the current SkillBridge SAS layout (wallet is the first Borsh
+string), not all possible SAS schemas. Deleted attestations cannot be discovered
+by a fresh wallet scan. Their historical existence would require a separate indexer;
+this UI does not invent a revoked-history count or an issuance date. Expiry is read
+from the attestation. Scans above 500 results report a limit rather than a partial
+total. A provider must support filtered getProgramAccounts; other RPCs can be chosen
+under Advanced checks.
+
+## Challenge fund transparency
+
+The challenge detail sidebar now displays the fund address, copy button, Explorer
+link and **Check my rewards** link. Program escrow totals are read at finalized
+commitment with a timestamp. RPC failure is shown as unverified. Legacy shared
+vaults are explicitly labeled; their whole-wallet balance is not represented as
+the budget of one challenge. Public read access follows challenge visibility.
+
 ## Run separately from the product
 
 ```sh

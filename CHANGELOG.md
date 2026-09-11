@@ -2,6 +2,14 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-11 — Wallet-first verification
+
+- Address-only lookup, optional wallet connection, active badge counts and reward history.
+- Shareable wallet links/QR and prefilled fund links from challenge details.
+- Finalized fund totals, visible escrow addresses and labeled legacy shared vaults.
+- Vietnamese/English lookup UI with technical controls under Advanced checks.
+- Optional public title lookup; RPC failures remain distinct from empty results.
+
 ## 2026-09-09 — Independent proof-to-payout
 
 - Standalone Devnet claim and SAS issuer-policy verifier, separately hostable.
