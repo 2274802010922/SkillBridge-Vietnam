@@ -8,7 +8,7 @@ export function LegalPage({ title, kicker, children }: { title: string; kicker: 
         <Link className="wordmark" href="/" aria-label="SkillBridge Vietnam">
           <span className="wordmark-mark" aria-hidden="true">S</span><span>SkillBridge</span><small>VIETNAM</small>
         </Link>
-        <Link className="text-link" href="/auth">Đăng nhập →</Link>
+        <Link className="text-link" href="/auth">Kết nối ví →</Link>
       </header>
       <article className="legal-document page-shell">
         <div className="eyebrow"><span /> {kicker}</div>
@@ -19,4 +19,3 @@ export function LegalPage({ title, kicker, children }: { title: string; kicker: 
     </main>
   );
 }
-

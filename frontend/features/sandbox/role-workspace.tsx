@@ -150,7 +150,7 @@ export function RoleWorkspace() {
         </div>
       </section>
 
-      <div className="role-mode-notice"><strong>ROLE SIMULATOR</strong><span>Role switching dành cho MVP test; production sẽ bind role vào danh tính đăng nhập ở server.</span></div>
+      <div className="role-mode-notice"><strong>ROLE SIMULATOR</strong><span>Role switching dành cho MVP test; production sẽ bind role vào danh tính ví đã xác minh ở server.</span></div>
 
       <nav className="role-tabs" aria-label="Chọn vai trò kiểm thử">
         {(Object.keys(roleMeta) as Role[]).map((item) => (

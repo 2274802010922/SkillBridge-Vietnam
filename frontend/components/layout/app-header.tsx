@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { LanguageSwitcher, useLanguage, type MessageKey } from "../../i18n/i18n";
 import { ProfileAvatar } from '../../features/profile/wallet-profile-view';
 import { InlineLoading } from "../feedback/loading-ui";
+import { getWallets } from "@wallet-standard/app";
+import { endWalletSession } from "../wallet/wallet-session";
 
 export type WorkspaceId = "overview" | "challenges" | "submissions" | "reviews" | "opportunities" | "passport" | "invoices" | "payouts" | "talent" | "contracts" | "audit" | "payments" | "cashout" | "profile" | "escrow";
 type Membership = { role: string; organization_kind: string };
@@ -71,7 +73,7 @@ function NavigationLinks({ items, active, t, onNavigate }: { items: NavItem[]; a
 
 type WalletAssets = { assets: Array<{ symbol: string; display: string }>; explorerUrl: string };
 
-function WalletSummary({ walletAddress, onLogout }: { walletAddress: string; onLogout: () => void }) {
+function WalletSummary({ walletAddress, onLogout }: { walletAddress: string; onLogout: () => Promise<void> }) {
   const { t, locale } = useLanguage();
   const [open, setOpen] = useState(false);
   const walletContainer = useRef<HTMLDivElement>(null);
@@ -116,8 +118,11 @@ function WalletSummary({ walletAddress, onLogout }: { walletAddress: string; onL
     }).then((data) => { if (active) { setAssets(data); setUpdatedAt(new Date()); } }).catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Không thể đọc số dư ví."); }).finally(() => { if (active) setRefreshing(false); });
     return () => { active = false; };
   }, [open, refresh]);
+  const [disconnecting,setDisconnecting]=useState(false);
+  const [disconnectError,setDisconnectError]=useState(false);
+  async function disconnect(){if(disconnecting)return;setDisconnecting(true);setDisconnectError(false);try{await onLogout();}catch{setDisconnectError(true);}finally{setDisconnecting(false);}}
   const loadingAssets = !assets && !error;
-  return <div className="wallet-summary" ref={walletContainer}><button type="button" className="wallet-pill wallet-summary-trigger" aria-label={(locale === "vi" ? "Tài khoản: " : "Account: ") + (identity?.displayName || walletAddress)} aria-expanded={open} onClick={() => setOpen((value) => !value)}><ProfileAvatar avatar={identity?.avatar || ""} name={identity?.displayName || walletAddress}/><span className="wallet-status-dot" /><span className="wallet-profile-name">{identity?.displayName || walletAddress.slice(0, 5)}</span><span className="wallet-address">{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}</span><span aria-hidden="true">⌄</span></button>{open && <div className="wallet-summary-menu"><div><span>{locale === "vi" ? "VÍ ĐANG KẾT NỐI" : "CONNECTED WALLET"}</span><strong>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</strong></div><div className="wallet-menu-actions"><Link className="profile-menu-link" href="/app/profile">{locale === "vi" ? "Hồ sơ của tôi" : "My profile"}</Link><button aria-busy={refreshing || loadingAssets} className="wallet-refresh" disabled={refreshing || loadingAssets} type="button" onClick={() => { setError(null); setRefreshing(true); setRefresh(value => value + 1); }}>{refreshing ? (locale === "vi" ? "Đang làm mới…" : "Refreshing…") : (locale === "vi" ? "Làm mới số dư" : "Refresh balances")}</button></div><p>{locale === "vi" ? "Số dư trên Solana Devnet" : "Balances on Solana Devnet"}</p>{assets ? <dl aria-busy={refreshing}>{assets.assets.map((asset) => <div key={asset.symbol}><dt>{asset.symbol}</dt><dd>{asset.display}</dd></div>)}</dl> : error ? <p className="wallet-summary-loading" role="alert">{error}</p> : <InlineLoading label={t("common.loading")} />}{updatedAt && <small>{locale === "vi" ? "Cập nhật lúc" : "Updated at"} {updatedAt.toLocaleTimeString(locale === "vi" ? "vi-VN" : "en-US", { hour: "2-digit", minute: "2-digit" })}</small>}{assets && <a className="chain-proof-link" target="_blank" rel="noreferrer" href={assets.explorerUrl}>{locale === "vi" ? "Mở Solana Explorer" : "Open Solana Explorer"}</a>}<button type="button" className="wallet-summary-logout" onClick={onLogout}>{t("common.logout")}</button></div>}</div>;
+  return <div className="wallet-summary" ref={walletContainer}><button type="button" className="wallet-pill wallet-summary-trigger" aria-label={(locale === "vi" ? "Tài khoản: " : "Account: ") + (identity?.displayName || walletAddress)} aria-expanded={open} onClick={() => setOpen((value) => !value)}><ProfileAvatar avatar={identity?.avatar || ""} name={identity?.displayName || walletAddress}/><span className="wallet-status-dot" /><span className="wallet-profile-name">{identity?.displayName || walletAddress.slice(0, 5)}</span><span className="wallet-address">{walletAddress.slice(0, 5)}…{walletAddress.slice(-5)}</span><span aria-hidden="true">⌄</span></button>{open && <div className="wallet-summary-menu"><div><span>{locale === "vi" ? "VÍ ĐANG KẾT NỐI" : "CONNECTED WALLET"}</span><strong>{walletAddress.slice(0, 10)}…{walletAddress.slice(-8)}</strong></div><div className="wallet-menu-actions"><Link className="profile-menu-link" href="/app/profile">{locale === "vi" ? "Hồ sơ của tôi" : "My profile"}</Link><button aria-busy={refreshing || loadingAssets} className="wallet-refresh" disabled={refreshing || loadingAssets} type="button" onClick={() => { setError(null); setRefreshing(true); setRefresh(value => value + 1); }}>{refreshing ? (locale === "vi" ? "Đang làm mới…" : "Refreshing…") : (locale === "vi" ? "Làm mới số dư" : "Refresh balances")}</button></div><p>{locale === "vi" ? "Số dư trên Solana Devnet" : "Balances on Solana Devnet"}</p>{assets ? <dl aria-busy={refreshing}>{assets.assets.map((asset) => <div key={asset.symbol}><dt>{asset.symbol}</dt><dd>{asset.display}</dd></div>)}</dl> : error ? <p className="wallet-summary-loading" role="alert">{error}</p> : <InlineLoading label={t("common.loading")} />}{updatedAt && <small>{locale === "vi" ? "Cập nhật lúc" : "Updated at"} {updatedAt.toLocaleTimeString(locale === "vi" ? "vi-VN" : "en-US", { hour: "2-digit", minute: "2-digit" })}</small>}{assets && <a className="chain-proof-link" target="_blank" rel="noreferrer" href={assets.explorerUrl}>{locale === "vi" ? "Mở Solana Explorer" : "Open Solana Explorer"}</a>}{disconnectError&&<p role="alert">{t("wallet.disconnectError")}</p>}<button type="button" className="wallet-summary-logout" disabled={disconnecting} aria-busy={disconnecting} onClick={()=>void disconnect()}>{t(disconnecting?"wallet.disconnecting":"common.logout")}</button></div>}</div>;
 }
 
 export function AppHeader({ walletAddress }: { walletAddress: string }) {
@@ -139,7 +144,7 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
   }, [workspaceMenuOpen]);
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await endWalletSession(walletAddress,()=>fetch("/api/auth/logout", { method: "POST",signal:AbortSignal.timeout(10000) }),()=>getWallets().get());
     router.push("/");
     router.refresh();
   }
@@ -160,7 +165,7 @@ export function AppHeader({ walletAddress }: { walletAddress: string }) {
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           <span>{t("shell.workspace")}</span>
         </button>
-        <WalletSummary walletAddress={walletAddress} onLogout={() => void logout()} />
+        <WalletSummary walletAddress={walletAddress} onLogout={logout} />
         <LanguageSwitcher />
       </div>
       {workspaceMenuOpen && <nav aria-label={t("shell.workspace")} className="mobile-workspace-navigation" id="mobile-workspace-navigation">

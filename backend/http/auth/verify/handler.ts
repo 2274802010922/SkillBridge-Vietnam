@@ -53,10 +53,10 @@ export async function POST(request: Request) {
       FROM auth_nonces WHERE id = ?
     `).bind(challengeId).first<NonceRow>();
     if (!nonce || nonce.used_at || nonce.expires_at <= new Date().toISOString()) {
-      return Response.json({ error: "Yêu cầu đăng nhập đã hết hạn hoặc đã được sử dụng." }, { status: 401 });
+      return Response.json({ error: "Yêu cầu xác minh ví đã hết hạn hoặc đã được sử dụng." }, { status: 401 });
     }
     if (nonce.wallet_address !== address || nonce.domain !== new URL(request.url).host || nonce.uri !== new URL(request.url).origin) {
-      return Response.json({ error: "Domain hoặc ví không khớp yêu cầu đăng nhập." }, { status: 401 });
+      return Response.json({ error: "Domain hoặc ví không khớp yêu cầu xác minh ví." }, { status: 401 });
     }
 
     const publicKey = bs58.decode(address);
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       WHERE id = ? AND used_at IS NULL AND expires_at > ?
     `).bind(challengeId, new Date().toISOString()).run();
     if (!consumed.meta.changes) {
-      return Response.json({ error: "Yêu cầu đăng nhập đã được sử dụng." }, { status: 409 });
+      return Response.json({ error: "Yêu cầu xác minh ví đã được sử dụng." }, { status: 409 });
     }
 
     const existingWallet = await env.DB.prepare("SELECT user_id FROM wallets WHERE address = ?")

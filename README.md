@@ -90,7 +90,7 @@ The evidence-reader image uses labeled local QA data, not real user research or 
 | Changed claim message is rejected | [Co-signing tests](tests/solana/sponsored-claim.test.ts) |
 | Duplicate application requests do not duplicate records | [Application tests](tests/backend/applications.test.ts) |
 
-The current default suite passed **114 tests** locally at this release checkpoint.
+The current default suite passed **116 tests** locally at this release checkpoint.
 CI runs the build, repository checks, lint and automated suite. Live Devnet tests are
 opt-in and spend test SOL.
 

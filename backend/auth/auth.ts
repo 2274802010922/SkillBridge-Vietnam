@@ -105,7 +105,7 @@ export async function getSessionUser(request: Request): Promise<SessionUser | nu
 
 export async function requireSessionUser(request: Request) {
   const user = await getSessionUser(request);
-  if (!user) throw new Response("Bạn cần đăng nhập bằng ví Solana.", { status: 401 });
+  if (!user) throw new Response("Bạn cần kết nối và xác minh ví Solana.", { status: 401 });
   return user;
 }
 

@@ -36,6 +36,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
   const [wallets, setWallets] = useState<readonly CompatibleWallet[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
+  const [stage,setStage]=useState<"connecting"|"preparing"|"signing"|"verifying">("connecting");
   const [error, setError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
 
@@ -57,6 +58,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
   async function signIn() {
     if (!wallet || !accepted) return;
     setBusy(true);
+    setStage("connecting");
     setError(null);
     try {
       let account: WalletAccount | undefined = wallet.accounts.find((item) => item.chains.some((chain) => chain.startsWith("solana:")));
@@ -66,6 +68,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
       }
       if (!account) throw new Error(t("wallet.noAccount"));
 
+      setStage("preparing");
       const challengeResponse = await fetch("/api/auth/challenge", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -76,6 +79,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
         throw new Error(challenge.error ?? t("wallet.challengeError"));
       }
 
+      setStage("signing");
       let signedMessage: Uint8Array;
       let signature: Uint8Array;
       let signedAddress = account.address;
@@ -97,6 +101,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
         throw new Error(t("wallet.unsupported"));
       }
 
+      setStage("verifying");
       const verifyResponse = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -112,7 +117,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
       router.push(returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/app");
       router.refresh();
     } catch (signInError) {
-      setError(signInError instanceof Error ? signInError.message : "Đăng nhập không thành công.");
+      setError(signInError instanceof Error ? signInError.message : t("wallet.genericError"));
     } finally {
       setBusy(false);
     }
@@ -121,22 +126,22 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
   return (
     <div className="wallet-login-card">
       <div className="wallet-login-heading">
-        <span>SIWS · SOLANA DEVNET</span>
+        <span>SOLANA DEVNET</span>
         <h2>{t("wallet.heading")}</h2>
         <p>{t("wallet.description")}</p>
       </div>
       {wallets.length ? (
         <>
           <label className="field-label" htmlFor="wallet-select">{t("wallet.detected")}</label>
-          <select id="wallet-select" value={selected} onChange={(event) => setSelected(event.target.value)}>
+          <select disabled={busy} id="wallet-select" value={selected} onChange={(event) => setSelected(event.target.value)}>
             {wallets.map((item) => <option value={item.name} key={item.name}>{item.name}</option>)}
           </select>
           <label className="consent-check">
-            <input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
+            <input type="checkbox" disabled={busy} checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
             <span>{t("wallet.consent")} <a href="/terms" target="_blank">{t("wallet.terms")}</a> &amp; <a href="/privacy" target="_blank">{t("wallet.privacy")}</a>.</span>
           </label>
-          <button className="button button-primary wallet-login-button" disabled={busy || !wallet || !accepted} onClick={signIn}>
-            {busy ? t("wallet.signing") : `${t("wallet.continue")} ${wallet?.name ?? "wallet"}`}
+          <button aria-busy={busy} className="button button-primary wallet-login-button" disabled={busy || !wallet || !accepted} onClick={signIn}>
+            {busy ? t(stage === "connecting" ? "wallet.connecting" : stage === "preparing" ? "wallet.preparing" : stage === "verifying" ? "wallet.verifying" : "wallet.signing") : `${t("wallet.continue")} ${wallet?.name ?? "wallet"}`}
           </button>
         </>
       ) : (

@@ -80,7 +80,7 @@ Chấm thủ công hoạt động độc lập. AI không có quyền phê duy�
 | Không ký giao dịch đã bị sửa | [Kiểm thử đồng ký](tests/solana/sponsored-claim.test.ts) |
 | Gửi lặp không tạo đơn trùng | [Kiểm thử ứng tuyển](tests/backend/applications.test.ts) |
 
-Bộ kiểm thử mặc định đã qua **114 ca** ở mốc phát hành này. CI chạy build, kiểm tra
+Bộ kiểm thử mặc định đã qua **116 ca** ở mốc phát hành này. CI chạy build, kiểm tra
 cấu trúc repo, lint và kiểm thử tự động. Kiểm thử Devnet được chạy riêng và dùng SOL thử nghiệm.
 
 **Còn kiểm tra thủ công:** chủ dự án sẽ kiểm tra OpenRouter thật sau khi triển khai.

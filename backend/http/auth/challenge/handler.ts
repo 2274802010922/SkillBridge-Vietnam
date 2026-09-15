@@ -6,7 +6,7 @@ import { consumeRateLimit, requestClientIdentity } from "../../../auth/rate-limi
 import { createAuthenticationSignInInput, PRODUCT_CHAIN } from "../../../../shared/validation/siws";
 
 // Phantom validates this field against the SIWS ABNF, which permits URI-safe ASCII only.
-const STATEMENT = "Sign in to SkillBridge Vietnam to manage challenges, skill evidence, and credentials.";
+const STATEMENT = "Verify wallet ownership to access your SkillBridge Vietnam workspace.";
 
 export async function POST(request: Request) {
   try {

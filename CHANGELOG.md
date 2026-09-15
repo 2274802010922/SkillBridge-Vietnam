@@ -2,6 +2,12 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-16 — Connect wallet
+
+- Consistent Connect wallet / Disconnect terminology across Vietnamese and English UI.
+- Distinct connection, signature and verification feedback for entering the workspace.
+- Session revocation before a best-effort disconnect of the matching Wallet Standard connection.
+
 ## 2026-09-15 — From proof to opportunity
 
 - Credential-based applications with business/university issuers, deadlines, consent-scoped snapshots and current-status rechecks.
