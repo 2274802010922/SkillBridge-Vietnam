@@ -1,0 +1,13 @@
+{
+  "network": "Solana Devnet",
+  "escrow": "EGdXgxtvb2G5KqTxwph8pAJkJbWmwk43CSmYkURF5wXP",
+  "recipient": "BAm7uBVR1G9FUztVi5hYg8M7krZHCYy39s41EqcGZCeF",
+  "feePayer": "5zDXaZk7HWcdzEZRKfTQ8atG8XE6P6CyYT7Gf8xHU4LT",
+  "claimTx": "4yXat38W8QaQNQ5Y3diBN6a9d11wyDTfBPF92GiRLSF1Ji64mY6VaiMYxXecN1kvZorZ8hvwPyhvjyVPxJhKECRf",
+  "recipientLamportsBefore": "0",
+  "recipientLamportsAfter": "1000000",
+  "feeLamports": 10000,
+  "status": "finalized",
+  "verifiedAt": "2026-09-15T00:58:09.559Z",
+  "scope": "Live SOL sponsored claim via production transaction builder/co-signer. Not a live USDC claim."
+}

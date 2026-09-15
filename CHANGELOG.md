@@ -2,6 +2,15 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-15 — From proof to opportunity
+
+- Credential-based applications with business/university issuers, deadlines, consent-scoped snapshots and current-status rechecks.
+- Submission progress covering official assessment, allocation, claim and credentials.
+- File-ID/hash-bound citation navigation, PDF page access, extracted-text highlighting and recorded human score adjustments.
+- Budgeted Devnet claim sponsorship with exact-message co-signing and transaction recovery.
+- Live SOL sponsorship and credential-revocation evidence; live OpenRouter validation remains the owner's final manual check.
+- Refreshed English/Vietnamese README with product journey, architecture, screenshots and inspectable evidence.
+
 ## 2026-09-11 — Wallet-first verification
 
 - Address-only lookup, optional wallet connection, active badge counts and reward history.

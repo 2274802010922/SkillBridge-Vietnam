@@ -35,7 +35,7 @@ function numeric(value: string | undefined, fallback: number, min: number, max: 
 
 async function loadOrCreateChunks(files: FileRow[], submissionId: string) {
   const cached = await env.DB.prepare(`
-    SELECT id, file_id, file_hash, locator, ordinal, content, token_estimate
+    SELECT id, file_id, file_hash, locator, ordinal, content, token_estimate AS tokenEstimate
     FROM evidence_chunks WHERE submission_id = ? ORDER BY file_id, ordinal
   `).bind(submissionId).all<StoredChunk>();
   const cacheByFile = new Map<string, StoredChunk[]>();
@@ -54,10 +54,13 @@ async function loadOrCreateChunks(files: FileRow[], submissionId: string) {
       warnings.push(`${file.original_name}: không tìm thấy file trong Blob.`);
       continue;
     }
+    const bytes=await object.arrayBuffer();
+    const actualHash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),b=>b.toString(16).padStart(2,"0")).join("");
+    if(actualHash!==file.sha256)throw new Response("Tệp không khớp phiên bản đã nộp.",{status:409});
     const extracted = await extractDocumentSections([{
       filename: file.original_name,
       contentType: file.content_type,
-      bytes: await object.arrayBuffer(),
+      bytes,
     }]);
     warnings.push(...extracted.warnings);
     const chunks = chunkDocumentSections(
@@ -117,7 +120,7 @@ export async function POST(request: Request) {
       brief: structuredBrief,
       rubric,
       extractionVersion: "local-chunks-v2",
-      promptVersion: "assessment-v2",
+      promptVersion: "assessment-v3-file-bindings",
       provider: selectedAi(env).provider,
       model: selectedAi(env).model,
     }));

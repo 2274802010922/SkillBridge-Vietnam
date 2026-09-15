@@ -1,4 +1,6 @@
 import bs58 from "bs58";
+import {Buffer} from "buffer";
+import {escrowRpc,disc,assertEscrowDevnet} from "../client/challenge-escrow.ts";
 import {
   AccountRole,
   address,
@@ -16,6 +18,7 @@ export const OPPORTUNITY_GATE_PROGRAM_ADDRESS = address(
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 const INITIALIZE_POLICY_DISCRIMINATOR = new Uint8Array([9, 186, 86, 225, 129, 162, 231, 56]);
 const RECORD_ACCESS_DISCRIMINATOR = new Uint8Array([64, 187, 29, 123, 147, 64, 218, 100]);
+async function readGate(rpc:string,key:string,type:string){const r=await escrowRpc<{value:{owner:string;data:[string,string]}|null}>(rpc,"getAccountInfo",[key,{encoding:"base64",commitment:"finalized"}]);if(!r.value)return null;const bytes=Buffer.from(r.value.data[0],"base64");if(r.value.owner!==String(OPPORTUNITY_GATE_PROGRAM_ADDRESS)||!bytes.subarray(0,8).equals(await disc("account:"+type)))throw new Error("Invalid gate account");return bytes;}
 
 type SolanaEnvironment = {
   SOLANA_RPC_URL?: string;
@@ -71,6 +74,11 @@ export async function initializeOpportunityPolicy(
 ) {
   const { payer, authorizedSigner } = await solanaSigners(environment);
   const { policy, policyId } = await derivePolicyAddress(payer.address, input.opportunityId);
+  const rpc=environment.SOLANA_RPC_URL||"https://api.devnet.solana.com";await assertEscrowDevnet(rpc);
+  const recovered=async()=>{const p=await readGate(rpc,String(policy),"Policy");if(!p)return null;
+    if(p.length<172||bs58.encode(p.subarray(72,104))!==input.credentialAddress||bs58.encode(p.subarray(104,136))!==input.schemaAddress||bs58.encode(p.subarray(136,168))!==String(authorizedSigner.address)||p.readUInt16LE(168)!==input.minimumScore||p[170]!==1)throw new Error("Existing policy differs from requested policy");
+    return {policyAddress:String(policy),signature:null};};
+  const prior=await recovered();if(prior)return prior;
   const instruction = {
     programAddress: OPPORTUNITY_GATE_PROGRAM_ADDRESS,
     accounts: [
@@ -87,7 +95,7 @@ export async function initializeOpportunityPolicy(
       u16(input.minimumScore),
     ),
   };
-  const signature = await sendSolanaInstructions(environment, payer, [instruction]);
+  let signature;try{signature = await sendSolanaInstructions(environment, payer, [instruction]);}catch(error){const existing=await recovered();if(existing)return existing;throw error;}
   return { policyAddress: String(policy), signature };
 }
 
@@ -115,6 +123,9 @@ export async function recordOpportunityAccess(
       publicKeyBytes(attestation),
     ],
   });
+  const rpc=environment.SOLANA_RPC_URL||"https://api.devnet.solana.com";await assertEscrowDevnet(rpc);
+  const recovered=async()=>{const r=await readGate(rpc,String(receipt),"AccessReceipt");if(!r)return null;if(r.length<179||bs58.encode(r.subarray(8,40))!==String(policy)||bs58.encode(r.subarray(40,72))!==String(subject)||bs58.encode(r.subarray(72,104))!==String(attestation)||r.readUInt16LE(136)!==input.score)throw new Error("Receipt mismatch");return {receiptAddress:String(receipt),signature:null,verificationDigest:bs58.encode(r.subarray(138,170))};};
+  const prior=await recovered();if(prior)return prior;
   const instruction = {
     programAddress: OPPORTUNITY_GATE_PROGRAM_ADDRESS,
     accounts: [
@@ -132,6 +143,6 @@ export async function recordOpportunityAccess(
       verificationDigest,
     ),
   };
-  const signature = await sendSolanaInstructions(environment, payer, [instruction]);
+  let signature;try{signature = await sendSolanaInstructions(environment, payer, [instruction]);}catch(error){const existing=await recovered();if(existing)return existing;throw error;}
   return { receiptAddress: String(receipt), signature, verificationDigest: bs58.encode(verificationDigest) };
 }

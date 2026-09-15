@@ -1,0 +1,81 @@
+.workspace {
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+}
+.workspace p {
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.workspace h1 { font-size:clamp(28px,3vw,42px); line-height:1.2; margin:0; }
+.workspace h2 { font-size:22px; line-height:1.35; margin:0 0 16px; }
+.workspace h3 { font-size:18px; line-height:1.4; margin:0 0 12px; }
+.workspace article>p,.workspace section>p { margin:10px 0; }
+.workspace select { display:block; width:100%; min-height:44px; margin:8px 0 16px; }
+.workspace article>button { margin:8px 0 12px; }
+.form {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+.form label {
+  display: grid;
+  gap: 8px;
+  line-height: 1.5;
+}
+.form input,
+.form textarea,
+.form select {
+  width: 100%;
+  min-width: 0;
+}
+.form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.cards > article {
+  min-width: 0;
+}
+.checks {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+.checks li {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-block: 16px;
+}
+.snapshot {
+  background: var(--surface-muted);
+  padding: 16px;
+  border-radius: 8px;
+}
+.snapshot dl {
+  display: grid;
+  gap: 10px;
+}
+.snapshot dd {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 850px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}

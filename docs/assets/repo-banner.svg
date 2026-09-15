@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">SkillBridge Vietnam — Proof to Opportunity</title><desc id="desc">Human-reviewed work, verifiable credentials, and funded rewards on Solana Devnet.</desc>
+  <rect width="1200" height="300" rx="20" fill="#f7f6f1"/>
+  <rect x="36" y="38" width="64" height="64" rx="12" fill="#091426"/>
+  <text x="56" y="82" fill="#b7f34d" font-family="Arial,sans-serif" font-size="38" font-weight="700">S</text>
+  <text x="122" y="64" fill="#526174" font-family="monospace" font-size="14" letter-spacing="2">VIETNAM FIRST · BUILT ON SOLANA</text>
+  <text x="122" y="102" fill="#091426" font-family="Arial,sans-serif" font-size="40" font-weight="700">SkillBridge</text>
+  <text x="38" y="170" fill="#091426" font-family="Arial,sans-serif" font-size="38" font-weight="700">Good work becomes verifiable opportunity.</text>
+  <text x="40" y="211" fill="#354256" font-family="Arial,sans-serif" font-size="21">Funded challenges. Human decisions. Portable proof.</text>
+  <path d="M40 246H1160" stroke="#d3d9e2"/>
+  <text x="40" y="274" fill="#2456e6" font-family="monospace" font-size="15">EVIDENCE → REVIEW → CREDENTIAL → APPLICATION</text>
+  <rect x="955" y="38" width="205" height="36" rx="18" fill="#e3f4bd"/>
+  <text x="979" y="61" fill="#294519" font-family="monospace" font-size="14">SOLANA DEVNET</text>
+</svg>

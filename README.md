@@ -1,15 +1,14 @@
 <div align="center">
-  <img src="public/favicon.svg" width="72" height="72" alt="SkillBridge logo" />
+
+![SkillBridge Vietnam](docs/assets/repo-banner.svg)
 
 # SkillBridge Vietnam
 
-### Proven skills. Verifiable rewards.
-
-A Vietnam-first platform connecting students, businesses and reviewing organizations through real work, human assessment and Solana Devnet evidence.
+**Work becomes proof. Proof opens opportunities.**
 
 [Tiếng Việt](README.vi.md) · **English**
 
-[Open the app](https://404-eight-rho.vercel.app/) · [Judge's walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md) · [Devnet evidence](docs/solana/README.md)
+[Try SkillBridge](https://404-eight-rho.vercel.app/) · [Wallet lookup](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Judge's walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md)
 
 [![CI](https://github.com/2274802010922/404/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/404/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-16-091426?logo=nextdotjs)
@@ -18,108 +17,136 @@ A Vietnam-first platform connecting students, businesses and reviewing organizat
 
 </div>
 
----
+SkillBridge connects students, businesses and reviewing organizations through real work:
+a business funds a challenge, a human reviews the submission, and the student receives
+verifiable skill credentials and allocated rewards. Another business can accept that
+credential when the student applies for an opportunity.
 
-![SkillBridge landing page](docs/assets/landing.png)
+Built for **UniHackFest**, with Vietnamese/English interfaces and a Solana Devnet
+implementation. Live chain evidence, automated QA and pending manual checks are identified
+separately below.
 
-<details>
-<summary>More product screens</summary>
-
-**Wallet sign-in** — Wallet Standard discovery in a browser without an extension.
-
-![Wallet sign-in](docs/assets/sign-in.png)
-
-**Manual assessment** — a local QA fixture, not a claim about real users or traction.
-
-![Manual assessment](docs/assets/manual-review.png)
-
-</details>
-
-## Why SkillBridge?
-
-Students need a way to show what they can do. Businesses need evidence beyond a CV.
-Reviewing organizations need a clear process for assessing work and issuing credentials.
-
-SkillBridge connects that process: a business defines a challenge, students submit files,
-humans assess the work, and verifiable credentials or funded rewards make the result useful.
-
-## The product journey
+## Follow one student's journey
 
 ```mermaid
 flowchart LR
-    A["Create a challenge"] --> B["Fund and publish"]
-    B --> C["Submit evidence"]
-    C --> D["Human assessment"]
-    AI["Optional AI assistance"] -.-> D
-    D --> E["Verifiable credential"]
-    D --> F["Allocate and claim reward"]
+    A["Business A: fund a challenge"] --> B["Student: submit a fixed version"]
+    B --> C["Human: inspect evidence and score"]
+    AI["Optional AI suggestions"] -.-> C
+    C --> D["Revocable skill credential"]
+    C --> E["Allocate a reward"]
+    E --> F["Student claims to their wallet"]
+    D --> G["Business B: verify and receive application"]
+    S["Optional fee sponsor"] -.-> F
 ```
 
-- **For students:** discover challenges, submit work, build a wallet profile and share verified achievements.
-- **For businesses:** publish challenges, secure reward budgets, review submissions and find candidates.
-- **For reviewing organizations:** score manually or use evidence-linked AI suggestions; humans own the official decision.
-- **For verifiers:** inspect credential status and transaction evidence through public verification pages.
+**For students:** know the next step, inspect official feedback, claim rewards and apply
+with a credential. **For organizations:** fund work, evaluate evidence and select candidates
+with a clear verification history.
 
-## What is implemented?
+## What makes it useful
 
-| Area | Current scope |
+| Capability | What users can actually do |
 | --- | --- |
-| Wallet identity | Sign In With Solana, server-enforced permissions, individual wallet profiles |
-| Challenges | Public/invitation-only access, editable drafts, structured briefs and file submissions |
-| Assessment | Independent manual scoring; optional AI with document extraction, retrieval and caching |
-| Credentials | Issuance, revocation and verification on Solana Devnet |
-| Monetary challenge rewards | Program-controlled escrow for new monetary challenges; human decisions, fixed-recipient claims |
-| Existing rewards / badge bonds | Separate legacy reward-vault path; existing records retain their original rules |
-| USDC invoices | Devnet wallet transfer, signature verification and reconciliation |
-| USDC → VND | Devnet transfer plus **sandbox** VND settlement; no claim of real bank payout |
+| Funded challenges | Publish public or invitation-only challenges with structured briefs, escrow and visible fund proofs |
+| Evidence-linked review | Open an AI citation in the authorized source, inspect extracted text and PDF pages, then set the official human score |
+| Progress tracking | Follow submission, human assessment, allocation, claim and credential status in one place |
+| Credential-based applications | Business B accepts an issuer and score threshold; students preview and submit only the information they choose to share |
+| Fresh credential checks | Recheck a credential when reviewing an applicant; historical eligibility is distinct from current validity |
+| Sponsored claims | Recipient signs while a configured sponsor pays Devnet network fees, with fixed-message validation and budget limits |
+| Independent verification | Look up a wallet and claim an allocated reward through a separately hostable static tool |
 
-See the [escrow runbook](docs/solana/escrow-runbook.md) for constraints, deadlines,
-backup reviewers, upgrade authority and the distinction between new and legacy funds.
+Manual review is independent of AI. AI cannot approve work, allocate funds or sign a payout.
 
-## Explore the code
+<details>
+<summary><strong>Product screens</strong></summary>
 
-The [blockchain product contract](docs/product/proof-to-payout.md) explains the
-trust boundary. The [independent verifier](docs/solana/independent-verifier.md)
-can claim allocated rewards without our backend. Optional AI now supports
-[OpenRouter](docs/deployment/openrouter.md); live provider validation requires your key.
+**Landing page**
 
-```text
-frontend/     Product screens, shared UI, language and styles
-backend/      HTTP handlers, authentication, AI, storage and database
-solana/       Anchor programs, IDL, chain clients and server integrations
-shared/       Pure validation and data shared across layers
-app/          Thin Next.js route and layout entry points
-tests/        Backend, Solana and integration checks
-docs/         Product, architecture, deployment and judging guides
-public/       Public product assets
-tooling/      Archived agent guidance and optional legacy Sites tools
-```
+![SkillBridge landing](docs/assets/landing.png)
 
-**Start here:** [Frontend](frontend/README.md) · [Backend](backend/README.md) ·
-[Solana](solana/README.md) · [Shared code](shared/README.md) · [Tests](tests/README.md)
+**Open a citation and inspect the matching text**
 
-Next.js serves both the UI and backend on one Vercel project. Folder separation does
-not introduce a second deployment or change existing URLs.
+![Evidence reader](docs/assets/evidence-reader.png)
+
+The evidence-reader image uses labeled local QA data, not real user research or customer traction.
+
+**Wallet sign-in and manual review**
+
+![Wallet sign-in](docs/assets/sign-in.png)
+
+![Manual review](docs/assets/manual-review.png)
+
+</details>
+
+## Check the evidence
+
+| Claim | Evidence and scope |
+| --- | --- |
+| Allocated reward can be claimed without the SkillBridge API | [Independent claim proof](docs/solana/evidence/independent-claim-proof.json): recipient-only SOL Devnet claim |
+| Recipient can start with zero SOL | [Sponsored claim proof](docs/solana/evidence/sponsored-claim-proof.json): 0 → 0.001 SOL; a separate sponsor paid the 10,000-lamport fee |
+| Revocation changes fresh eligibility | [Opportunity proof](docs/solana/evidence/opportunity-application-proof.json): accepted before revocation, denied afterward |
+| Review → application workflow and access controls | [HTTP integration test](tests/integration/competition-flow.test.ts), using an isolated database and explicit RPC fixtures |
+| Changed claim message is rejected | [Co-signing tests](tests/solana/sponsored-claim.test.ts) |
+| Duplicate application requests do not duplicate records | [Application tests](tests/backend/applications.test.ts) |
+
+The current default suite passed **114 tests** locally at this release checkpoint.
+CI runs the build, repository checks, lint and automated suite. Live Devnet tests are
+opt-in and spend test SOL.
+
+**Pending manual validation:** the owner will test the live OpenRouter provider after
+deployment. SOL sponsorship has live evidence; USDC sponsorship has instruction-level
+coverage and still needs a funded live USDC test. No mainnet-readiness or security-audit
+claim is made.
+
+## Why Solana matters
+
+- **Escrow:** the program holds funds and enforces accepted roles, allocation, fixed
+  recipients and protection against repeated claims.
+- **Credentials:** SAS records can be read outside the application and checked for
+  issuer authorization, expiry, schema state and revocation.
+- **Opportunity policies:** the program stores policies and verifier-authorized historical
+  access receipts. The verifier service performs fresh SAS checks before an application;
+  the current gate does not itself parse SAS inside the program.
+- **Exit path:** an already allocated reward can be claimed through the independent tool,
+  using a public RPC and a compatible wallet.
+
+Private documents and application profiles stay off-chain. Program upgrade authority
+still exists. If both reviewers fail to act, unresolved funds remain pending under the
+agreed policy. See the [product contract](docs/product/proof-to-payout.md) and
+[escrow runbook](docs/solana/escrow-runbook.md).
 
 ## Run locally
 
-Requires **Node.js 22.13+** and npm. Run commands from the repository root.
+Requires **Node.js 22.13+** and npm. Run from the repository root:
 
 ```bash
 npm ci
-```
-
-Copy `.env.example` to `.env.local`, configure the features you want to test, then:
-
-```bash
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000). Without Turso settings, development uses
-local SQLite. AI, private file storage and blockchain actions need their corresponding
-configuration; see [deployment and environment setup](docs/deployment/vercel.md).
+Create `.env.local` from [.env.example](.env.example) before testing integrations.
+Local development uses SQLite when Turso is not configured.
 
-## Verify changes
+For the independently hosted verifier:
+
+```bash
+npm run preview:verifier
+```
+
+Open [localhost:3000](http://localhost:3000) for the product or
+[localhost:3219](http://localhost:3219) for the standalone verifier.
+
+## Deploy and verify
+
+Deploy one Next.js project on **Vercel**, with the repository root as Root Directory.
+Use `npm ci` and `npm run build`. Existing records migrate without a database reset;
+these upgrades do not require a new Solana program deployment.
+
+- [Vercel configuration](docs/deployment/vercel.md)
+- [OpenRouter configuration](docs/deployment/openrouter.md)
+- [Applications, progress, citations and sponsored-fee setup](docs/testing/competition-upgrades.md)
+- [Independent tool instructions](docs/solana/independent-verifier.md)
 
 ```bash
 npm run check:repo
@@ -127,26 +154,32 @@ npm run lint
 npm test
 ```
 
-The default suite builds the app and runs regression checks. Live Devnet and local
-validator scripts are separate: [testing guide](docs/testing/README.md).
+For opt-in chain tests and expected results, see the [testing guide](docs/testing/README.md).
+Never commit `.env.local`, private keypairs or wallet secrets.
 
-## Documentation
+## Repository map
 
-| You want to… | Start here |
-| --- | --- |
-| Evaluate the competition entry | [Judge's walkthrough](docs/judging/README.md) |
-| Understand the architecture | [Architecture](docs/architecture/README.md) |
-| Deploy to Vercel | [Deployment guide](docs/deployment/vercel.md) |
-| Test each role | [Manual testing](docs/testing/manual-test-guide.md) |
-| Inspect blockchain proof | [Solana evidence](docs/solana/README.md) |
-| Understand the interface | [Design system](docs/design/system.md) |
-| Contribute a change | [Contributing](CONTRIBUTING.md) |
-| Review notable changes | [Changelog](CHANGELOG.md) |
+```text
+frontend/       Screens, components, bilingual copy and styles
+backend/        HTTP handlers, authorization, AI, database and storage
+solana/         Anchor programs, IDL, chain clients and server signing
+shared/         Shared validation and data contracts
+app/            Thin Next.js route/layout adapters
+tools/          Independently hostable wallet verifier
+tests/          Unit, HTTP integration and opt-in Devnet tests
+docs/           Product, architecture, evidence and deployment guides
+public/         Public product assets
+tooling/        Archived guidance and optional legacy tools
+```
 
-[All documentation →](docs/README.md)
+[Frontend](frontend/README.md) · [Backend](backend/README.md) · [Solana](solana/README.md) ·
+[Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [All documentation](docs/README.md)
 
-## Project status and source use
+## Scope and source use
 
-Built as a UniHackFest project. The target network is Solana **Devnet**.
-The repository does not currently grant an open-source license. Third-party brand
-assets retain their respective ownership; see [asset attribution](public/brands/README.md).
+Invoices and VND cashout are supporting experiments; the VND settlement leg remains
+**sandbox**. They are separate from the challenge-to-opportunity flow.
+
+This repository does not currently grant an open-source license.
+Third-party brand assets retain their respective ownership; see
+[asset attribution](public/brands/README.md).

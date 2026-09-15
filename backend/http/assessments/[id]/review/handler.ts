@@ -3,6 +3,7 @@ import { validateAssessment, type AssessmentDraft, type EvidenceSource } from ".
 import { auditStatement } from "../../../../services/audit/audit";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../../../auth/auth";
 import { requireChallengeReviewer } from "../../../../auth/authorization";
+import {scoreChanges} from "@/shared/validation/review-changes";
 
 type Row = {
   id:string; submission_id:string; status:string; assessment_json:string;
@@ -40,6 +41,8 @@ export async function POST(request:Request, { params }:{params:Promise<{id:strin
       return Response.json({error:"Reviewer phải nhập và xác nhận điểm chính thức trước khi phê duyệt."},{status:400});
     }
     const finalDraft = body.finalDraft ?? stored.draft;
+    const changes=scoreChanges(stored.draft,finalDraft);
+    if(changes.length&&(!body.note||body.note.trim().length<5))return Response.json({error:"Hãy ghi lý do điều chỉnh điểm AI trước khi xác nhận."},{status:400});
     const validation = validateAssessment(finalDraft,stored.evidence ?? JSON.parse(row.evidence_json) as EvidenceSource[]);
     if (body.decision === "approved" && !validation.valid) {
       return Response.json({error:"Kết quả cuối không vượt qua assessment contract.",validationErrors:validation.errors},{status:422});
@@ -48,6 +51,7 @@ export async function POST(request:Request, { params }:{params:Promise<{id:strin
     const reviewId = crypto.randomUUID();
     const reviewJson = JSON.stringify({
       decision:body.decision,note:body.note?.trim()||null,finalDraft,validation,
+      aiProposal:stored.draft,scoreChanges:changes,
       source:"human_reviewer",officialScore:body.decision === "approved" ? finalDraft.totalScore : null,
       reviewedAt:new Date().toISOString(),
     });

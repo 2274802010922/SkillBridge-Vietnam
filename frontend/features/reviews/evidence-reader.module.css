@@ -1,0 +1,47 @@
+.reader {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.reader label {
+  display: grid;
+  gap: 8px;
+}
+.reader h3 { font-size:18px; line-height:1.4; margin-bottom:16px; }
+.reader p { margin:12px 0; }
+.reader select {
+  min-height: 44px;
+  max-width: 100%;
+  width: 100%;
+}
+.pdf {
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.text {
+  max-height: 440px;
+  overflow: auto;
+  white-space: pre-wrap;
+  line-height: 1.7;
+  background: var(--surface-muted);
+  padding: 16px;
+  border-radius: 8px;
+}
+.text mark {
+  background: #e3f4a8;
+  color: #091426;
+}
+.caption {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.reader code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.reader button,
+.reader a {
+  margin-block: 12px;
+}

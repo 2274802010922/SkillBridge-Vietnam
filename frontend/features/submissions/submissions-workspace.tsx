@@ -151,6 +151,7 @@ export function SubmissionsWorkspace() {
       <section className="app-panel submission-editor">
         {detailLoading ? <ContentSkeleton variant="detail" /> : <>
         <div className="entity-top"><span>{active?.challenge_title}</span><b>{translateStatus(t, active?.state)}</b></div>
+        {selected&&<Link className="button button-primary" href={`/app/submissions/${selected}/progress`}>{locale==="vi"?"Theo dõi tiến trình và nhận thưởng":"Track progress and claim rewards"}</Link>}
         {selected && <a className="button button-secondary" href={`/api/submissions/${selected}/manifest`}>{locale === "vi" ? "Tải bản đối chiếu bài nộp" : "Download submission manifest"}</a>}
         {selected && ["approved","rejected","credential_issued"].includes(active?.state ?? "") && <a className="button button-secondary" href={`/api/submissions/${selected}/manifest?kind=result`}>{locale === "vi" ? "Tải bản đối chiếu kết quả" : "Download result manifest"}</a>}
         <div className="submission-progress"><span>{t("submission.progressTitle")}</span><ol>{submissionSteps.map((step, index) => <li className={index <= currentStep ? "done" : ""} key={step}><i>{index < currentStep ? "✓" : index + 1}</i><strong>{translateStatus(t, step)}</strong></li>)}</ol></div>

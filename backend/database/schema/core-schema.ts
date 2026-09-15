@@ -1,5 +1,6 @@
 import { PROFILE_SCHEMA } from '../../services/profiles/wallet-profile.ts';
 import { ESCROW_SCHEMA, ESCROW_TRIGGERS } from './escrow-schema.ts';
+import { COMPETITION_SCHEMA } from './competition-schema.ts';
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS users (
@@ -571,10 +572,10 @@ const statements = [
   `CREATE INDEX IF NOT EXISTS idx_rate_limits_expiry ON rate_limits(expires_at)`,
 ] as const;
 
-let initialized = false;
+const initialized = new WeakSet<object>();
 
 export async function ensureCoreSchema(db: D1Database) {
-  if (initialized) return;
+  if (initialized.has(db)) return;
   await db.batch(statements.map((statement) => db.prepare(statement)));
   await db.batch(ESCROW_TRIGGERS.map((statement) => db.prepare(statement)));
   const challengeColumns = await db
@@ -880,5 +881,6 @@ export async function ensureCoreSchema(db: D1Database) {
         throw error;
     }
   }
-  initialized = true;
+  for(const statement of COMPETITION_SCHEMA) await db.prepare(statement).run();
+  initialized.add(db);
 }

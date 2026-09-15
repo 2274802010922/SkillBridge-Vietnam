@@ -175,6 +175,11 @@ test("USDC claim creates the recipient ATA and fixes the accepted mint", async (
     assert.equal(instructions[0].accounts?.[2].address, recipient);
     assert.equal(instructions[0].accounts?.[3].address, DEVNET_USDC);
     assert.equal(instructions[1].accounts?.length, 7);
+    const sponsor=bs58.encode(new Uint8Array(32).fill(9));
+    const sponsored=await independentClaimInstructions("https://rpc.invalid",escrow,recipient,sponsor);
+    assert.equal(sponsored[0].accounts?.[0].address,sponsor);
+    assert.equal(sponsored[0].accounts?.[2].address,recipient);
+    assert.equal(sponsored[1].accounts?.[0].address,recipient);
   } finally {
     restore();
   }

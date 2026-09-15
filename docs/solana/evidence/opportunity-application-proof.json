@@ -1,0 +1,62 @@
+{
+  "network": "Solana Devnet",
+  "wallet": "BAm7uBVR1G9FUztVi5hYg8M7krZHCYy39s41EqcGZCeF",
+  "challengeId": "competition-2cc04002-6118-41e6-9e76-a1365c760f9a",
+  "opportunityId": "external-employer-2cc04002-6118-41e6-9e76-a1365c760f9a",
+  "issuer": {
+    "credentialName": "SKILLBRIDGE-ISSUER-2",
+    "credentialAddress": "C5XU9kA49AzMeypwETYsQ8m1B9xDwcHPr14DyjcJmFu8",
+    "schemaName": "PROOF-OF-SKILL",
+    "schemaAddress": "G1qGfpvHefVnS7cNdtV7DBB5zYEfpBFs1qzRoSe7ijM6",
+    "authorizedSignerAddress": "5zDXaZk7HWcdzEZRKfTQ8atG8XE6P6CyYT7Gf8xHU4LT",
+    "credentialTx": "4JJwaP1RBVbWGK9VHeth19RDKRGior8vw8JmTwmWqBuNssceMRQhSGe4ut9mktkhyHtm5f2V4rJkt7YBa22kzvtK",
+    "schemaTx": "5hWvY7iVrk54TCiQigLNbMaDvtAAGR4nytUYmvk9FNpcWAHmBExpU4Vw4ecme2Au2auV42zqKfTHiEcrkB1nsDtq"
+  },
+  "credential": {
+    "nonceAddress": "oZSzLK4xpkj9vC6RKNZN3PLEzC2ELKDDsAyrrYHace7",
+    "attestationAddress": "6V38pekFC9gWxkmJzYM77bhR9zBVMTRFxLYf9QvWeUmh",
+    "signature": "5AXp11MNXZMFKj2zasx7JRGR9aYRJJk6p2ZhiKu66DVJ8u86GNE1XeiyKzBByg39ot9Vx5ZLvM2GVdZY3CCFFwN6"
+  },
+  "policy": {
+    "policyAddress": "8XXpsyHPsNoW71okrq6DcWMVcNdpBBSdGhiim7KXifb8",
+    "signature": "3sw35iXazrHSCipwsGYRbcBapwUh9nek6LSJ6Ay8VawZWXfjM9QP24KWUSH9m78pxokRHUzTFonPhKt1NDa4trDV"
+  },
+  "accepted": {
+    "valid": true,
+    "reason": "ACTIVE_ONCHAIN_CREDENTIAL",
+    "checks": {
+      "wallet": true,
+      "issuer": true,
+      "active": true,
+      "score": true,
+      "approved": true
+    },
+    "score": 87,
+    "checkedAt": "2026-09-15T01:01:01.204Z",
+    "policyAddress": "8XXpsyHPsNoW71okrq6DcWMVcNdpBBSdGhiim7KXifb8",
+    "attestation": "6V38pekFC9gWxkmJzYM77bhR9zBVMTRFxLYf9QvWeUmh"
+  },
+  "receipt": {
+    "receiptAddress": "4RSjDBY9tHQpGsyPgUgXuf5PccFERKNQcb6cpyv33fn3",
+    "signature": "5unxCb5zZ5oMVE9kxzDgJ8FiPiJVNpUDZrg3s1d3GuCATMPJFstoAHqJM1HQ1FTsGrX4je3obwtTdGAbDeUWiySm",
+    "verificationDigest": "2NS1ntambR9CM535REYxWN3TQiq953EGz63UJNHVuhP1"
+  },
+  "revokedTx": "4HSzG9iEmCHm8G2UiFcszuQoopQZordYsqhZGj85coonKhNxcPfrQa5qdER2Pa2Kdo2EVT6TRcA8WWnrvos5WrhJ",
+  "afterRevocation": {
+    "valid": false,
+    "reason": "CREDENTIAL_REVOKED",
+    "checks": {
+      "wallet": false,
+      "issuer": false,
+      "active": false,
+      "score": false,
+      "approved": false
+    },
+    "score": null,
+    "checkedAt": "2026-09-15T01:01:16.182Z",
+    "policyAddress": "8XXpsyHPsNoW71okrq6DcWMVcNdpBBSdGhiim7KXifb8",
+    "attestation": "6V38pekFC9gWxkmJzYM77bhR9zBVMTRFxLYf9QvWeUmh"
+  },
+  "verifiedAt": "2026-09-15T01:01:16.182Z",
+  "scope": "Live credential, opportunity policy and historical verification receipt; fresh check denies revoked credential. This is a protocol integration test, not evidence of customer adoption."
+}

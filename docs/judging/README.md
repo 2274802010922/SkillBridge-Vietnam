@@ -15,6 +15,13 @@ skills and funded rewards.
 4. Review a submission manually; AI is optional and cannot make the official decision.
 5. Inspect credentials and the separate allocation/claim flow.
 6. Cross-check public transaction signatures in the [evidence record](../solana/evidence/escrow-devnet-proof.json).
+7. Follow the student's progress page, then use a credential to apply to a second organization.
+8. Inspect [sponsored-claim evidence](../solana/evidence/sponsored-claim-proof.json) and
+   [revocation-aware eligibility evidence](../solana/evidence/opportunity-application-proof.json).
+
+See the [competition upgrade runbook](../testing/competition-upgrades.md) for the exact
+role flow, fee-sponsor configuration and manual OpenRouter check. Screenshots with QA
+labels demonstrate interface behavior; the separate evidence JSON files record live Devnet runs.
 
 The `/sandbox` route is a separate role simulator. It is not evidence that a
 live provider or financial transfer succeeded.

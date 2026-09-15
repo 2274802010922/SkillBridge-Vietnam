@@ -3,6 +3,9 @@
 [Program code](../../solana/README.md) · [Escrow runbook](escrow-runbook.md) ·
 [Stored evidence JSON](evidence/escrow-devnet-proof.json)
 
+Latest: [zero-SOL sponsored recipient](evidence/sponsored-claim-proof.json) and
+[opportunity eligibility before/after credential revocation](evidence/opportunity-application-proof.json).
+
 New: [independent claim and issuer verification](independent-verifier.md),
 with [recipient-only live claim evidence](evidence/independent-claim-proof.json).
 

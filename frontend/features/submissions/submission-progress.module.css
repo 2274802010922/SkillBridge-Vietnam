@@ -1,0 +1,67 @@
+.page {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.page p {
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.timeline li {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.timeline li > span {
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  padding: 8px 12px;
+  border-radius: 50%;
+}
+.timeline h3 {
+  margin: 0 0 8px;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.page summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.file {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.file strong {
+  overflow-wrap: anywhere;
+}
+.page select {
+  min-height: 44px;
+  max-width: 100%;
+}
+.page section > a,
+.page section > button {
+  margin: 12px 12px 0 0;
+}
+@media (max-width: 600px) {
+  .timeline li {
+    gap: 12px;
+  }
+  .file {
+    display: grid;
+    gap: 10px;
+  }
+}

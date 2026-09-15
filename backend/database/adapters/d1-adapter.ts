@@ -128,3 +128,7 @@ export function createMemoryDatabaseForTests() {
   const client = createClient({ url: ":memory:" });
   return new LibsqlD1Database(client) as unknown as D1Database;
 }
+export function createIsolatedDatabaseForTests(url:string){
+  if(!url.startsWith("file:")&&url!==":memory:")throw new Error("Test database must be local");
+  const client=createClient({url});return {db:new LibsqlD1Database(client) as unknown as D1Database,close:()=>client.close()};
+}

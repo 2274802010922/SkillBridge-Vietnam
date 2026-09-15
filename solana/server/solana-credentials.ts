@@ -41,8 +41,10 @@ function secretBytes(value: string | undefined, label: string) {
 
 export async function solanaSigners(environment: SolanaEnvironment) {
   const payer = await createKeyPairSignerFromBytes(secretBytes(environment.SOLANA_FEE_PAYER_SECRET, "SOLANA_FEE_PAYER_SECRET"));
-  const issuer = await createKeyPairSignerFromBytes(secretBytes(environment.SOLANA_ISSUER_SECRET, "SOLANA_ISSUER_SECRET"));
-  const authorizedSigner = await createKeyPairSignerFromBytes(secretBytes(environment.SOLANA_AUTHORIZED_SIGNER_SECRET, "SOLANA_AUTHORIZED_SIGNER_SECRET"));
+  const issuerCandidate = await createKeyPairSignerFromBytes(secretBytes(environment.SOLANA_ISSUER_SECRET, "SOLANA_ISSUER_SECRET"));
+  const issuer = issuerCandidate.address === payer.address ? payer : issuerCandidate;
+  const authorizedCandidate = await createKeyPairSignerFromBytes(secretBytes(environment.SOLANA_AUTHORIZED_SIGNER_SECRET, "SOLANA_AUTHORIZED_SIGNER_SECRET"));
+  const authorizedSigner = authorizedCandidate.address === payer.address ? payer : authorizedCandidate.address === issuer.address ? issuer : authorizedCandidate;
   return { payer, issuer, authorizedSigner };
 }
 

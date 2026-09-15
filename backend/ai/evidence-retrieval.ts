@@ -1,6 +1,6 @@
 import type { EvidenceSource } from "../../shared/validation/assessment-contract";
 import type { DocumentChunk } from "./document-text";
-import { estimateTokenCount } from "./document-text";
+import { estimateTokenCount } from "./document-text.ts";
 
 type RubricLike = { id: string; label: string; maxScore: number };
 
@@ -29,8 +29,9 @@ function scoreChunk(chunk: DocumentChunk, query: string) {
   return score / Math.max(1, Math.sqrt(chunk.tokenEstimate));
 }
 
-function toSource(id: string, locator: string, content: string): EvidenceSource {
-  return { id, locator, content };
+function toSource(id: string, locator: string, content: string,chunk:DocumentChunk & {id?:string;file_id?:string;file_hash?:string}): EvidenceSource {
+  const page=locator.match(/· trang (\d+)$/);
+  return { id, locator, content, fileId:chunk.file_id,fileHash:chunk.file_hash,chunkId:chunk.id,page:page?Number(page[1]):undefined };
 }
 
 export function retrieveEvidence(
@@ -67,7 +68,7 @@ export function retrieveEvidence(
       if (selectedKeys.has(key)) continue;
       const tokenEstimate = candidate.chunk.tokenEstimate;
       if (usedTokens + tokenEstimate > maxTokens) break;
-      selected.push(toSource(`C${selected.length + 1}`, candidate.chunk.locator, candidate.chunk.content));
+      selected.push(toSource(`C${selected.length + 1}`, candidate.chunk.locator, candidate.chunk.content,candidate.chunk));
       selectedKeys.add(key);
       usedTokens += tokenEstimate;
       added += 1;
@@ -80,7 +81,7 @@ export function retrieveEvidence(
       const key = `${candidate.chunk.locator}:${candidate.chunk.content}`;
       if (selectedKeys.has(key)) continue;
       if (usedTokens + candidate.chunk.tokenEstimate > maxTokens) break;
-      selected.push(toSource(`C${selected.length + 1}`, candidate.chunk.locator, candidate.chunk.content));
+      selected.push(toSource(`C${selected.length + 1}`, candidate.chunk.locator, candidate.chunk.content,candidate.chunk));
       selectedKeys.add(key);
       usedTokens += candidate.chunk.tokenEstimate;
       if (selected.length >= 4) break;

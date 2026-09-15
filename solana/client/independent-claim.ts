@@ -57,6 +57,7 @@ export async function independentClaimInstructions(
   rpc: string,
   escrow: string,
   recipient: string,
+  ataPayer: string = recipient,
 ): Promise<Instruction[]> {
   const inspected = await inspectReward(rpc, escrow, recipient);
   if (!inspected.claimable)
@@ -90,7 +91,7 @@ export async function independentClaimInstructions(
     instructions.push({
       programAddress: address(ATA),
       accounts: [
-        meta(recipient, AccountRole.WRITABLE_SIGNER),
+        meta(ataPayer, AccountRole.WRITABLE_SIGNER),
         meta(destination, AccountRole.WRITABLE),
         meta(recipient),
         meta(DEVNET_USDC),

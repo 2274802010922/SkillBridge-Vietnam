@@ -69,6 +69,20 @@ body :where(.auth-page, .legal-page, .product-app, .solana-landing) { background
 .product-app .wallet-pill { box-shadow: none; border-radius: 8px; }
 .product-app .wallet-summary-menu { border-radius: 12px; z-index: 100; max-height: calc(100dvh - 120px); overflow-y: auto; }
 .wallet-refresh { padding: 9px 0; border: 0; background: transparent; color: var(--blue); font-size: 13px; text-decoration: underline; }
+.review-panel-tabs { display:none; }
+.product-app .review-assessment-columns.evidence-columns { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; align-items:start; }
+.product-app .review-assessment-columns.evidence-columns.manual-only { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.evidence-columns>[data-panel] { min-width:0; }
+.evidence-columns blockquote button { display:block; margin-top:12px; white-space:normal; }
+@media(max-width:1600px){
+ .review-panel-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+ .review-panel-tabs button { min-height:44px; padding:10px 14px; border:1px solid var(--line); border-radius:8px; background:var(--paper); }
+ .review-panel-tabs button[aria-pressed="true"] { background:var(--lime); color:var(--ink); }
+ .product-app .review-assessment-columns.evidence-columns,.product-app .review-assessment-columns.evidence-columns.manual-only { grid-template-columns:minmax(0,1fr); }
+ .evidence-columns[data-active-panel="human"]>[data-panel]:not([data-panel="human"]),
+ .evidence-columns[data-active-panel="evidence"]>[data-panel]:not([data-panel="evidence"]),
+ .evidence-columns[data-active-panel="ai"]>[data-panel]:not([data-panel="ai"]) { display:none; }
+}
 .product-app .app-layout { max-width: 1440px; width: calc(100% - 48px); grid-template-columns: 210px minmax(0, 1fr); gap: 32px; padding-top: 32px; }
 .product-app .app-sidebar { top: 104px; padding-right: 16px; max-height: calc(100dvh - 120px); overflow-y: auto; }
 .product-app .app-sidebar > a, .product-app .sidebar-advanced > a {

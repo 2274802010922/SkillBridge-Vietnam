@@ -12,6 +12,7 @@ Start with the guide that matches your task.
 | Deployment | [Vercel setup](deployment/vercel.md) |
 | Tests | [Commands and scope](testing/README.md) |
 | Manual QA | [Role-by-role checklist](testing/manual-test-guide.md) |
+| Competition upgrades | [Applications, progress, citations and sponsored claims](testing/competition-upgrades.md) |
 | Solana | [Evidence index](solana/README.md), [escrow runbook](solana/escrow-runbook.md) |
 | Design | [Shared design system](design/system.md), [landing rules](design/pages/landing.md) |
 | UI decisions | [Clarity and loading implementation](design/decisions/stitch-clarity-redesign.md) |

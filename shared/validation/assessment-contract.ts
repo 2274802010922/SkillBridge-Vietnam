@@ -2,6 +2,10 @@ export type EvidenceSource = {
   id: string;
   locator: string;
   content: string;
+  fileId?: string;
+  fileHash?: string;
+  chunkId?: string;
+  page?: number;
 };
 
 export type AssessmentCitation = {
