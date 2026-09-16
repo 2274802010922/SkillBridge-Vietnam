@@ -2,8 +2,15 @@
 
 Start with the guide that matches your task.
 
+For a new session: read [AGENTS.md](../AGENTS.md), then
+[Current Project State](harness/context/CURRENT_STATE.md), then choose a guide below.
+Load only the relevant plan/module/code, not this entire documentation tree.
+
 | Area | Guide |
 | --- | --- |
+| Repository harness | [Context, plans and decisions](harness/README.md) |
+| Resume work | [Active plans](harness/plans/active/), [plan lifecycle](harness/plans/README.md), [session handoff](harness/context/HANDOFF.md) |
+| Durable decisions | [Architecture Decision Records](harness/decisions/README.md) |
 | Product | [Overview and user journeys](product/overview.md) |
 | Blockchain core | [Proof-to-payout contract](product/proof-to-payout.md), [independent claim tool](solana/independent-verifier.md) |
 | AI setup | [OpenRouter on Vercel](deployment/openrouter.md) |

@@ -12,6 +12,12 @@ npm test
 The default suite includes a production build and regression tests for server
 rendering, authorization, assessments, profiles, payments and escrow contracts.
 
+For context/checker-only changes, run the focused negative/positive fixtures with
+`node --test tests/tooling/repo-harness.test.mjs`, plus `npm run check:repo` and
+`npm run lint`. These fixtures also run in `npm test`. The checker validates local
+link targets, required context files and plan locations/statuses; it does not
+prove documentation freshness or validate external URLs/Markdown anchor fragments.
+
 ## Explicit chain tests
 
 - `npm run test:devnet`: issuer-to-access lifecycle on Devnet; requires configured

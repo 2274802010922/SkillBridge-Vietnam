@@ -2,6 +2,14 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## Unreleased — Repository context harness
+
+- Add a concise current checkpoint, execution-plan lifecycle, ADRs and session handoff.
+- Group persistent context documentation under `docs/harness/` with one entry index.
+- Extend AGENTS routing while preserving Next.js instructions; add Solana-specific invariants.
+- Validate required context files and plan state/location through the existing checker,
+  with isolated regression fixtures. No product behavior or deployment changes.
+
 ## 2026-09-16 — Connect wallet
 
 - Consistent Connect wallet / Disconnect terminology across Vietnamese and English UI.

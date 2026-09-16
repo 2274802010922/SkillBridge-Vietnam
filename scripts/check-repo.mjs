@@ -42,7 +42,40 @@ for(const file of source){
       problems.push(from+": shared module imports server code: "+to);
   }
 }
-const markdown=["README.md","README.vi.md","CONTRIBUTING.md","CHANGELOG.md",
+// Small persistent-context invariants; factual freshness still needs human review.
+const harnessFiles=[
+  "AGENTS.md","solana/AGENTS.md","docs/README.md",
+  "docs/harness/README.md",
+  "docs/harness/context/CURRENT_STATE.md","docs/harness/context/HANDOFF.md",
+  "docs/harness/plans/README.md","docs/harness/plans/PLAN_TEMPLATE.md",
+  "docs/harness/decisions/README.md","docs/harness/decisions/ADR_TEMPLATE.md",
+];
+for(const file of harnessFiles){
+  const target=path.join(root,file);
+  if(!fs.existsSync(target)||!fs.statSync(target).isFile()||!fs.readFileSync(target,"utf8").trim())
+    problems.push("Missing or empty harness file: "+file);
+}
+const planNames=new Set();
+for(const [folder,allowed] of [["active",["active","blocked"]],["completed",["completed","cancelled"]]]){
+  const dir=path.join(root,"docs/harness/plans",folder);
+  if(!fs.existsSync(dir)||!fs.statSync(dir).isDirectory()){
+    problems.push("Missing plan directory: docs/harness/plans/"+folder);continue;
+  }
+  for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+    if(entry.name===".gitkeep"&&entry.isFile())continue;
+    const file=path.join(dir,entry.name);
+    if(!entry.isFile()||!entry.name.endsWith(".md")){
+      problems.push(relative(file)+": plans must be flat Markdown files");continue;
+    }
+    const name=entry.name.toLowerCase();
+    if(planNames.has(name))problems.push("Duplicate active/completed plan: "+entry.name);
+    planNames.add(name);
+    const statuses=[...fs.readFileSync(file,"utf8").matchAll(/^Status:[\t ]*([^\r\n]+)\r?$/gm)];
+    if(statuses.length!==1||!allowed.includes(statuses[0][1].trim()))
+      problems.push(relative(file)+": expected one Status: "+allowed.join(" or "));
+  }
+}
+const markdown=["AGENTS.md","README.md","README.vi.md","CONTRIBUTING.md","CHANGELOG.md",
   ...["docs","frontend","backend","solana","shared","tests","tooling"].flatMap(d=>walk(d)).filter(f=>f.endsWith(".md")&&!f.includes("agent-skills"))];
 for(const file of markdown){
   if(!fs.existsSync(file)){problems.push("Missing "+file);continue;}
