@@ -29,6 +29,8 @@ prove documentation freshness or validate external URLs/Markdown anchor fragment
 
 ## Local HTTP checks
 
+Wallet onboarding: [browser checks and physical-device acceptance](wallet-onboarding.md).
+
 `tests/integration/wallet-profile-http.mjs` and `escrow-http.mjs` target
 isolated local servers. Read their environment options before running.
 Use a separate local database; these scripts create test records.

@@ -2,6 +2,14 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-16 — Beginner wallet onboarding
+
+- Optional VI/EN install/create/connect guide with official Phantom/Solflare downloads.
+- Device-specific help, wallet rediscovery and clear cancellation feedback without changing SIWS.
+- Safe same-origin mobile handoff preserving language and internal return destination.
+- Compact mobile auth layout and regression coverage; physical-device installation/signing
+  remains an explicit [manual check](docs/testing/wallet-onboarding.md).
+
 ## Unreleased — Repository context harness
 
 - Add a concise current checkpoint, execution-plan lifecycle, ADRs and session handoff.

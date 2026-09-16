@@ -155,8 +155,8 @@ const messages = {
     "wallet.empty": "Chưa tìm thấy ví tương thích",
     "wallet.install": "Cài Phantom, Solflare hoặc ví hỗ trợ Solana Wallet Standard, sau đó tải lại trang.",
     "wallet.reload": "Tải lại",
-    "wallet.noSeed": "✓ Không yêu cầu seed phrase",
-    "wallet.noTransaction": "✓ Không tự động gửi transaction",
+    "wallet.noSeed": "✓ Không yêu cầu cụm từ khôi phục",
+    "wallet.noTransaction": "✓ Không tự động chuyển tiền",
     "wallet.genericError": "Kết nối ví không thành công.",
     "wallet.noAccount": "Ví không cung cấp tài khoản Solana.",
     "wallet.challengeError": "Không thể chuẩn bị yêu cầu xác minh ví.",
@@ -1577,7 +1577,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("vi");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("skillbridge-locale");
+    let saved: string | null = null;
+    try { saved = window.localStorage.getItem("skillbridge-locale"); } catch { /* Storage may be unavailable inside a wallet browser. */ }
+    const handoffLanguage = window.location.pathname === "/auth" ? new URLSearchParams(window.location.search).get("lang") : null;
+    if (handoffLanguage === "vi" || handoffLanguage === "en") {
+      saved = handoffLanguage;
+      try { window.localStorage.setItem("skillbridge-locale", saved); } catch { /* Optional device-local preference. */ }
+    }
     if (saved !== "vi" && saved !== "en") return;
     const timer = window.setTimeout(() => setLocaleState(saved), 0);
     return () => window.clearTimeout(timer);
@@ -1591,7 +1597,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<I18nContext>(() => ({
     locale,
     setLocale(nextLocale) {
-      window.localStorage.setItem("skillbridge-locale", nextLocale);
+      try { window.localStorage.setItem("skillbridge-locale", nextLocale); } catch { /* Language switching still works without storage. */ }
       setLocaleState(nextLocale);
     },
     t(key) {

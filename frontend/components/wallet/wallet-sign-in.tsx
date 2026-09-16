@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getWallets } from "@wallet-standard/app";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
@@ -14,6 +14,10 @@ import {
 } from "@solana/wallet-standard-features";
 import { createSignInMessage } from "@solana/wallet-standard-util";
 import { useLanguage } from "../../i18n/i18n";
+import { walletOnboardingCopy } from "../../i18n/wallet-onboarding";
+import { preferredDetectedWallet, safeWalletReturnTo, walletRequestWasCancelled } from "../../../shared/validation/wallet-onboarding";
+import { WalletOnboarding } from "./wallet-onboarding";
+import styles from "./wallet-onboarding.module.css";
 
 type CompatibleWallet = Wallet & {
   features: StandardConnectFeature & Partial<SolanaSignInFeature & SolanaSignMessageFeature>;
@@ -32,26 +36,48 @@ function supportsSolana(wallet: Wallet): wallet is CompatibleWallet {
 
 export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const copy = walletOnboardingCopy[locale];
   const [wallets, setWallets] = useState<readonly CompatibleWallet[]>([]);
   const [selected, setSelected] = useState("");
   const [busy, setBusy] = useState(false);
   const [stage,setStage]=useState<"connecting"|"preparing"|"signing"|"verifying">("connecting");
   const [error, setError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [intent, setIntent] = useState<"auto" | "existing" | "new">("auto");
+  const [checked, setChecked] = useState(false);
+  const [incompatible, setIncompatible] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
+  const connection = useRef<HTMLDivElement>(null);
+  const refreshWallets = useCallback(() => {
+    const discovered = getWallets().get();
+    const compatible = discovered.filter(supportsSolana);
+    setWallets(compatible);
+    setSelected(current => preferredDetectedWallet(compatible.map(item => item.name), current));
+    setIncompatible(discovered.length > 0 && compatible.length === 0);
+    setReady(true);
+    return compatible;
+  }, []);
 
   useEffect(() => {
     const registry = getWallets();
-    const refresh = () => {
-      const compatible = registry.get().filter(supportsSolana);
-      setWallets(compatible);
-      setSelected((current) => current || compatible[0]?.name || "");
-    };
-    refresh();
-    const offRegister = registry.on("register", refresh);
-    const offUnregister = registry.on("unregister", refresh);
-    return () => { offRegister(); offUnregister(); };
-  }, []);
+    const visible = () => { if (document.visibilityState === "visible") refreshWallets(); };
+    const timer = window.setTimeout(refreshWallets, 0);
+    const offRegister = registry.on("register", refreshWallets);
+    const offUnregister = registry.on("unregister", refreshWallets);
+    window.addEventListener("focus", refreshWallets);
+    document.addEventListener("visibilitychange", visible);
+    return () => { window.clearTimeout(timer); offRegister(); offUnregister(); window.removeEventListener("focus", refreshWallets); document.removeEventListener("visibilitychange", visible); };
+  }, [refreshWallets]);
+
+  function checkWallets() {
+    if (busy) return;
+    const found = refreshWallets();
+    setChecked(true);
+    if (found.length) { setIntent("existing"); requestAnimationFrame(() => connection.current?.focus()); }
+  }
+  const showGuide = !busy && (intent === "new" || (intent === "auto" && ready && wallets.length === 0));
 
   const wallet = useMemo(() => wallets.find((item) => item.name === selected) ?? null, [wallets, selected]);
 
@@ -60,6 +86,7 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
     setBusy(true);
     setStage("connecting");
     setError(null);
+    setCancelled(false);
     try {
       let account: WalletAccount | undefined = wallet.accounts.find((item) => item.chains.some((chain) => chain.startsWith("solana:")));
       if (!account) {
@@ -114,9 +141,10 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
       });
       const verified = await verifyResponse.json() as { error?: string };
       if (!verifyResponse.ok) throw new Error(verified.error ?? t("wallet.verifyError"));
-      router.push(returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/app");
+      router.push(safeWalletReturnTo(returnTo));
       router.refresh();
     } catch (signInError) {
+      setCancelled(walletRequestWasCancelled(signInError));
       setError(signInError instanceof Error ? signInError.message : t("wallet.genericError"));
     } finally {
       setBusy(false);
@@ -124,14 +152,20 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
   }
 
   return (
-    <div className="wallet-login-card">
+    <div className={`wallet-login-card ${styles.root}`}>
       <div className="wallet-login-heading">
-        <span>SOLANA DEVNET</span>
-        <h2>{t("wallet.heading")}</h2>
-        <p>{t("wallet.description")}</p>
+        <span className={styles.network}>{copy.testNetwork}</span>
+        <h2>{copy.heading}</h2>
+        <p>{copy.description}</p>
       </div>
-      {wallets.length ? (
-        <>
+      <div className={styles.choices} role="group" aria-label={copy.choices}>
+        <button type="button" className={styles.choice} disabled={busy} aria-pressed={!showGuide} onClick={() => setIntent("existing")}>{copy.existing}</button>
+        <button type="button" className={styles.choice} disabled={busy} aria-pressed={showGuide} onClick={() => setIntent("new")}>{copy.beginner}</button>
+      </div>
+      {checked && <p role="status" className={`${styles.status} ${wallets.length ? styles.success : ""}`}>{wallets.length ? copy.found : copy.stillMissing}</p>}
+      {!ready && <p role="status">{copy.detecting}</p>}
+      {showGuide ? <WalletOnboarding returnTo={returnTo} onCheck={checkWallets} onSkip={() => setIntent("existing")} /> : ready && wallets.length ? (
+        <div className={styles.connection} ref={connection} tabIndex={-1}>
           <label className="field-label" htmlFor="wallet-select">{t("wallet.detected")}</label>
           <select disabled={busy} id="wallet-select" value={selected} onChange={(event) => setSelected(event.target.value)}>
             {wallets.map((item) => <option value={item.name} key={item.name}>{item.name}</option>)}
@@ -143,15 +177,17 @@ export function WalletSignIn({ returnTo = "/app" }: { returnTo?: string }) {
           <button aria-busy={busy} className="button button-primary wallet-login-button" disabled={busy || !wallet || !accepted} onClick={signIn}>
             {busy ? t(stage === "connecting" ? "wallet.connecting" : stage === "preparing" ? "wallet.preparing" : stage === "verifying" ? "wallet.verifying" : "wallet.signing") : `${t("wallet.continue")} ${wallet?.name ?? "wallet"}`}
           </button>
-        </>
-      ) : (
-        <div className="wallet-empty">
-          <strong>{t("wallet.empty")}</strong>
-          <p>{t("wallet.install")}</p>
-          <button className="button button-dark" onClick={() => window.location.reload()}>{t("wallet.reload")}</button>
+          <p className={styles.note} role="status">{busy ? stage === "signing" ? copy.signHelp : copy.connectHelp : copy.noFunds}</p>
         </div>
-      )}
-      {error && <p className="demo-error" role="alert">{error}</p>}
+      ) : ready ? (
+        <div className="wallet-empty">
+          <strong>{copy.notDetected}</strong>
+          <p>{incompatible ? copy.incompatible : copy.notDetectedHint}</p>
+          <div className={styles.actions}><button type="button" className={`${styles.action} ${styles.primary}`} onClick={checkWallets}>{copy.check}</button><button type="button" className={styles.action} onClick={() => setIntent("new")}>{copy.guide}</button></div>
+        </div>
+      ) : null}
+      {error && <div role="alert"><p className="demo-error">{cancelled ? copy.cancelled : copy.failed}</p>{!cancelled && <details className={styles.help}><summary>{copy.details}</summary><p>{error}</p></details>}</div>}
+      <details className={styles.help}><summary>{copy.help}</summary><p>{copy.desktopHelp}</p><p>{copy.mobileHelp}</p><div className={styles.actions}><button type="button" className={styles.link} disabled={busy} onClick={checkWallets}>{copy.check}</button><button type="button" className={styles.link} disabled={busy} onClick={() => window.location.reload()}>{copy.reload}</button></div></details>
       <div className="wallet-safety"><span>{t("wallet.noSeed")}</span><span>{t("wallet.noTransaction")}</span></div>
     </div>
   );

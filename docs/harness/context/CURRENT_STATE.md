@@ -1,6 +1,6 @@
 # Current Project State
 
-Verified: 2026-09-16 against repository baseline `e70d4fe` plus the harness changes.
+Verified: 2026-09-16 against repository baseline `3a90c6b` plus wallet onboarding changes.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
@@ -20,6 +20,7 @@ Repository-based handoff is grouped in [docs/harness](../README.md).
 
 ## Recently completed
 
+- Beginner wallet install/create/connect guide, safe mobile handoff and discovery recovery.
 - Wallet connection/signature/session feedback and matching-wallet disconnect.
 - Credential applications, progress timeline, hash-bound citations and sponsored claims.
 - Wallet-only verification and fund links; [context harness](../plans/completed/2026-09-16-repository-harness.md).
@@ -34,6 +35,7 @@ Check [active plans](../plans/active/) and `git status`; do not infer work from 
 
 [Competition runbook](../../testing/competition-upgrades.md): owner-run live OpenRouter,
 funded live USDC sponsorship and post-deploy role checks remain to be verified.
+Wallet install/signing on physical phones remains [manual acceptance](../../testing/wallet-onboarding.md).
 These gaps do not authorize deployments, spending or new features.
 
 ## Important decisions
@@ -72,8 +74,8 @@ These gaps do not authorize deployments, spending or new features.
 ## Validation status
 
 2026-09-16, Node 24.16.0, baseline above: `npm run check:repo`, `npm run lint`,
-`npm test` passed (production build + 122 tests, including 6 harness tests).
-`git diff --check` passed. Exact scope: [completed plan](../plans/completed/2026-09-16-repository-harness.md).
+`npm test` passed (production build + 131 tests).
+`git diff --check` passed. Latest scope: [wallet onboarding plan](../plans/completed/2026-09-16-wallet-onboarding.md).
 Live AI/Devnet, Rust/validator and deployed browser checks were not run.
 
 ## Recent relevant commits

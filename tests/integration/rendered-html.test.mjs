@@ -86,6 +86,17 @@ test("keeps the public landing static and free of the retired animation runtime"
   assert.doesNotMatch(packageJson, /"three"|"lenis"|"@types\/three"/);
 });
 
+test("wallet entry explains zero-funds onboarding before any wallet is detected", async () => {
+  const response = await render("/auth?returnTo=%2Fchallenge%2Finvitation-test&lang=en");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Tôi đã có ví/);
+  assert.match(html, /Tôi chưa có ví/);
+  assert.match(html, /chưa cần nạp tiền/);
+  assert.match(html, /cụm từ khôi phục/);
+  assert.doesNotMatch(html, /Đăng nhập bằng ví Solana/);
+});
+
 test("server-renders the three-role end-to-end sandbox", async () => {
   const response = await render("/sandbox");
   assert.equal(response.status, 200);
