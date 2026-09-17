@@ -1,10 +1,11 @@
 import { env } from "@/backend/config/runtime-env";
 import type { AssessmentDraft } from "../../../shared/validation/assessment-contract";
-import { auditStatement } from "../../services/audit/audit";
 import { assertSameOrigin, jsonError, requireSessionUser, sha256 } from "../../auth/auth";
 import { requireCredentialIssuer } from "../../auth/authorization";
 import { consumeRateLimit } from "../../auth/rate-limit";
-import { explorerAddress, explorerTransaction, issueAttestation } from "../../../solana/server/solana-credentials";
+import { explorerAddress, explorerTransaction } from "../../../solana/server/solana-credentials";
+import { reserveIssuance, recoverIssuance, issuanceOperation } from "../../services/credentials/issuance";
+import { issuanceTransport } from "../../../solana/server/credential-issuance";
 
 export async function GET(request: Request) {
   try {
@@ -70,53 +71,30 @@ export async function POST(request: Request) {
     const officialDraft = approvedReview?.finalDraft ?? envelope.draft;
     const score = Math.round(officialDraft.totalScore);
     if (score < Number(row.minimum_score || 0)) return Response.json({ error: "Điểm chính thức chưa đạt ngưỡng nhận credential/phần thưởng." }, { status: 409 });
-    const slots = await env.DB.prepare("SELECT reward_slots FROM challenges WHERE id=?").bind(row.challenge_id).first<{ reward_slots: number | null }>();
-    const issuedCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM skill_credentials WHERE challenge_id=? AND status IN ('active','issued')").bind(row.challenge_id).first<{ count: number }>();
-    if (Number(slots?.reward_slots ?? 1) <= Number(issuedCount?.count ?? 0)) return Response.json({ error: "Challenge đã đủ số lượng phần thưởng." }, { status: 409 });
-    const commitment = await env.DB.prepare("SELECT evidence_hash FROM escrow_submission_locks WHERE submission_id=(SELECT submission_id FROM assessments WHERE id=?)").bind(row.assessment_id).first<{evidence_hash:string}>();
-    const evidenceHash = commitment?.evidence_hash ?? await sha256(row.evidence_json);
-    const expiryUnix = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
-    const issued = await issueAttestation(env, {
-      credentialAddress: row.credential_address,
-      schemaAddress: row.schema_address,
-      studentWallet: row.student_wallet,
-      challengeId: row.challenge_id,
-      score,
-      evidenceHash,
-      reviewerRole: row.reviewer_organization_kind === "business" ? "BUSINESS_HUMAN_REVIEWER" : "UNIVERSITY_HUMAN_REVIEWER",
-      nonceSeed: row.assessment_id,
-      expiryUnix,
-    });
-    const id = crypto.randomUUID();
-    const expiresAt = new Date(expiryUnix * 1000).toISOString();
-    await env.DB.batch([
-      env.DB.prepare(`
-        INSERT INTO skill_credentials
-          (id, assessment_id, challenge_id, student_user_id, student_wallet,
-           issuer_organization_id, nonce_address, attestation_address,
-           schema_address, score, skills_json, evidence_hash, status, issue_tx, expires_at, issued_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, CURRENT_TIMESTAMP)
-      `).bind(id,row.assessment_id,row.challenge_id,row.student_user_id,row.student_wallet,row.reviewer_organization_id,issued.nonceAddress,issued.attestationAddress,row.schema_address,String(score),JSON.stringify(officialDraft.skillSignals ?? []),evidenceHash,issued.signature,expiresAt),
-      env.DB.prepare(`
-        UPDATE participations SET state = 'credential_issued', updated_at = CURRENT_TIMESTAMP
-        WHERE id = (SELECT participation_id FROM submissions
-          WHERE id = (SELECT submission_id FROM assessments WHERE id = ?))
-      `).bind(row.assessment_id),
-      auditStatement(env.DB, {
-        actorUserId:user.id,organizationId:row.reviewer_organization_id,
-        action:"credential.issued",targetType:"credential",targetId:id,
-        metadata:{studentWallet:row.student_wallet,attestationAddress:issued.attestationAddress,score,transaction:issued.signature},
-      }),
-    ]);
-    return Response.json({
-      credential: {
-        id, status:"active", score, studentWallet:row.student_wallet,
-        attestationAddress:issued.attestationAddress, schemaAddress:row.schema_address,
-        expiresAt, transaction:issued.signature,
-        explorer:explorerTransaction(issued.signature),
-        attestationExplorer:explorerAddress(issued.attestationAddress),
-      },
-    }, { status: 201 });
+    const pending = await issuanceOperation(env.DB,row.assessment_id);
+    if (!pending) {
+      const commitment = await env.DB.prepare("SELECT evidence_hash FROM escrow_submission_locks WHERE submission_id=(SELECT submission_id FROM assessments WHERE id=?)").bind(row.assessment_id).first<{evidence_hash:string}>();
+      await reserveIssuance(env.DB, {
+        assessmentId: row.assessment_id, challengeId: row.challenge_id,
+        organizationId: row.reviewer_organization_id, studentUserId: row.student_user_id,
+        studentWallet: row.student_wallet, credentialAddress: row.credential_address,
+        schemaAddress: row.schema_address, score, evidenceHash: commitment?.evidence_hash ?? await sha256(row.evidence_json),
+        resultHash: row.final_result_hash, skills: officialDraft.skillSignals ?? [],
+        reviewerRole: row.reviewer_organization_kind === "business" ? "BUSINESS_HUMAN_REVIEWER" : "UNIVERSITY_HUMAN_REVIEWER",
+      });
+    }
+    const outcome = await recoverIssuance(env.DB,row.assessment_id,user.id,issuanceTransport(env));
+    if (outcome.credential) {
+      const c=outcome.credential as Record<string,unknown>;
+      return Response.json({credential:{...c,studentWallet:c.student_wallet,attestationAddress:c.attestation_address,
+        transaction:c.issue_tx,explorer:c.issue_tx?explorerTransaction(String(c.issue_tx)):null,
+        attestationExplorer:explorerAddress(String(c.attestation_address))},operation:outcome.operation},{status:201});
+    }
+    const status=outcome.operation.status;
+    return Response.json({operation:outcome.operation, message:"Yêu cầu đã được lưu. Kiểm tra lại để đồng bộ, không tạo yêu cầu mới. / Saved; check again to reconcile.",
+      ...(status==="failed"||status==="needs_review"?{error:"Cần kiểm tra giao dịch trước khi cấp lại. / Operator reconciliation required."}:{})},
+      {status:status==="failed"||status==="needs_review"?409:202,headers:{"cache-control":"no-store"}});
+
   } catch (error) {
     return jsonError(error);
   }

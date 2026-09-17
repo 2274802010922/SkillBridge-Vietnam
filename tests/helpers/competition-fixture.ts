@@ -7,6 +7,7 @@ import bs58 from "bs58";
 import { address, getProgramDerivedAddress } from "gill";
 import {
   getAttestationEncoder,
+  deriveAttestationPda,
   getSchemaEncoder,
   getCredentialEncoder,
   serializeAttestationData,
@@ -142,9 +143,9 @@ export async function competitionFixture() {
     );
   const issuerKey = key(30),
     schemaKey = key(31),
-    attestation = key(32),
     authority = key(33),
     receipt = key(34);
+  const [attestation]=await deriveAttestationPda({credential:issuerKey,schema:schemaKey,nonce:key(35)});
   const schema = {
     discriminator: 2,
     credential: issuerKey,
@@ -225,6 +226,7 @@ export async function competitionFixture() {
             ? null
             : map.get(body.params[0]) || null,
       };
+    else if(body.method === "getMultipleAccounts")result={context:{slot:1},value:body.params[0].map((key:string)=>revoked&&key===String(attestation)?null:map.get(key)||null)};
     else {
       res.writeHead(400);
       res.end(

@@ -10,7 +10,7 @@
 
 [Trải nghiệm sản phẩm](https://404-eight-rho.vercel.app/) · [Tra cứu ví](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Dành cho giám khảo](docs/judging/README.md) · [Kiến trúc](docs/architecture/README.md)
 
-[![CI](https://github.com/2274802010922/404/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/404/actions/workflows/ci.yml)
+[![CI](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml)
 ![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-6941C6?logo=solana&logoColor=white)
 
 </div>
@@ -23,6 +23,26 @@ khi sinh viên ứng tuyển.
 Dự án phục vụ **UniHackFest**, có giao diện Việt/Anh và hoạt động blockchain trên
 Solana Devnet. Bằng chứng on-chain, dữ liệu kiểm thử và phần còn chờ kiểm tra thủ công
 được phân biệt rõ bên dưới.
+
+## Bằng chứng dùng được cho cơ hội tiếp theo
+
+Sinh viên và freelancer có thể tạo **bộ hồ sơ theo mục tiêu** từ bài làm đã được
+đánh giá và chứng nhận của mình. Chủ hồ sơ chọn phiên bản và người được xem;
+doanh nghiệp không tự được đọc tệp bài nộp riêng tư.
+
+- **Người tìm việc/nhận dự án:** viết hồ sơ thủ công hoặc yêu cầu OpenRouter hỗ trợ
+  bản nháp có dẫn nguồn; chính người dùng kiểm tra, sửa và duyệt giới thiệu.
+- **Doanh nghiệp:** so sánh tối đa ba ứng viên, xem bằng chứng được chia sẻ,
+  kiểm tra lại hiệu lực và lưu ghi chú nội bộ. Không xếp hạng chung điểm khác rubric.
+- **Độ tin cậy:** cấp chứng nhận có giữ suất nguyên tử và nhật ký giao dịch trước
+  khi gửi; khôi phục khi blockchain đã hoàn tất nhưng database bị gián đoạn.
+- **Minh họa mô hình kinh doanh:** gói thử nghiệm có hạn mức và số lượt dùng thật.
+  Chưa thu tiền, không tuyên bố có doanh thu. Xác minh và quyền nhận thưởng đã phân
+  bổ không bị khóa khi hết gói.
+
+[Hướng dẫn nghiệm thu và khôi phục](docs/testing/evidence-portfolios.md) ·
+[Kiểm thử API hồ sơ](tests/integration/portfolio-flow.test.ts) ·
+[Kiểm thử lỗi cấp chứng nhận](tests/backend/credential-issuance.test.ts)
 
 ## Một hành trình xuyên suốt
 
@@ -80,7 +100,7 @@ Chấm thủ công hoạt động độc lập. AI không có quyền phê duy�
 | Không ký giao dịch đã bị sửa | [Kiểm thử đồng ký](tests/solana/sponsored-claim.test.ts) |
 | Gửi lặp không tạo đơn trùng | [Kiểm thử ứng tuyển](tests/backend/applications.test.ts) |
 
-Bộ kiểm thử mặc định đã qua **116 ca** ở mốc phát hành này. CI chạy build, kiểm tra
+Bộ kiểm thử mặc định đã qua **151 ca** ở mốc phát hành này. CI chạy build, kiểm tra
 cấu trúc repo, lint và kiểm thử tự động. Kiểm thử Devnet được chạy riêng và dùng SOL thử nghiệm.
 
 **Còn kiểm tra thủ công:** chủ dự án sẽ kiểm tra OpenRouter thật sau khi triển khai.

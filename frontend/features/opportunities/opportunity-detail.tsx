@@ -6,6 +6,7 @@ import { ContentSkeleton } from "../../components/feedback/loading-ui";
 import type { Eligibility } from "../../../solana/client/opportunity-verification";
 import type { ApplicationProfile } from "../../../shared/validation/job-application";
 import styles from "./opportunities.module.css";
+import { CandidateComparison } from "../portfolios/candidate-comparison";
 type Application = {
   id: string;
   status: string;
@@ -13,6 +14,7 @@ type Application = {
   verification_json: string;
   receipt_address: string | null;
   submitted_at: string;
+  notes?: Array<{id:string;body:string;author:string;created_at:string}>;
 };
 type Detail = {
   opportunity: {
@@ -248,6 +250,7 @@ export function OpportunityDetail({ id }: { id: string }) {
       </section>
       {detail.canManage ? (
         <>
+          <CandidateComparison opportunityId={id} applications={apps}/>
           <div className={styles.actions}>
             {op.status === "draft" && (
               <button
@@ -305,6 +308,7 @@ export function OpportunityDetail({ id }: { id: string }) {
                 {expanded === a.id && (
                   <>
                     <p>{p.introduction}</p>
+                    {a.notes?.map(n=><blockquote key={n.id}><p>{n.body}</p><small>{n.author} · {n.created_at}</small></blockquote>)}
                     {p.portfolio && (
                       <a href={p.portfolio} target="_blank" rel="noreferrer">
                         Portfolio

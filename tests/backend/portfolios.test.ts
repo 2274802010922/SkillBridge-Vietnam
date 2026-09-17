@@ -1,0 +1,83 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { credentialFixture } from "../helpers/credential-fixture.ts";
+import { portfolioSources, readPack, savePack, grantPack } from "../../backend/services/portfolios/packs.ts";
+import { personalUsage } from "../../backend/services/portfolios/features.ts";
+import { reserveCareer } from "../../backend/services/portfolios/career.ts";
+import { validateCareerDraft } from "../../shared/validation/career-assistance.ts";
+import { packInput, sameRubric } from "../../shared/validation/portfolio.ts";
+const draft={title:"My portfolio",purpose:"employment",target:"Research role",introduction:"My introduction",sources:[]};
+test("portfolios are private, versioned and cannot be overwritten by stale clients",async()=>{
+  const db=await credentialFixture();const p=await savePack(db,"student",draft);
+  await assert.rejects(readPack(db,p.id,"student-b"));
+  await assert.rejects(savePack(db,"student-b",draft,p.id,1));
+  await savePack(db,"student",{...draft,introduction:"Second"},p.id,1);
+  assert.equal((await readPack(db,p.id,"student",{version:1})).content.introduction,"My introduction");
+  assert.equal((await readPack(db,p.id,"student")).version,2);
+  await assert.rejects(savePack(db,"student",draft,p.id,1));
+});
+test("a draft edit does not change the published version, and target text stays private",async()=>{
+  const db=await credentialFixture(),p=await savePack(db,"student",draft);
+  await db.prepare("UPDATE portfolio_packs SET published_version=1 WHERE id=?").bind(p.id).run();
+  await savePack(db,"student",{...draft,introduction:"Not public"},p.id,1);
+  const publicPack=await readPack(db,p.id,null);
+  assert.equal(publicPack.version,1);assert.equal(publicPack.content.target,"");
+  assert.equal(publicPack.content.introduction,"My introduction");
+});
+test("review summaries require organization permission; revocation blocks old shared versions",async()=>{
+  const db=await credentialFixture();
+  await db.prepare("UPDATE assessments SET assessment_json=? WHERE id='a'").bind(JSON.stringify({draft:{summary:"Official review",totalScore:90,rubric:[{id:"research",label:"Research",score:90,maxScore:100}]}})).run();
+  const input={...draft,sources:[{kind:"assessment",id:"a"}]};
+  const p=await savePack(db,"student",input);
+  await db.prepare("UPDATE portfolio_packs SET published_version=1 WHERE id=?").bind(p.id).run();
+  await assert.rejects(readPack(db,p.id,null));
+  await db.prepare("INSERT INTO evidence_publication_permissions(assessment_id,allowed,actor_id) VALUES('a',1,'owner')").run();
+  assert.equal((await readPack(db,p.id,"student")).staleSources,true);
+  await savePack(db,"student",input,p.id,1);
+  await db.prepare("UPDATE portfolio_packs SET published_version=2 WHERE id=?").bind(p.id).run();
+  assert.equal((await readPack(db,p.id,null)).sources.length,1);
+  await db.prepare("UPDATE evidence_publication_permissions SET allowed=0").run();
+  await assert.rejects(readPack(db,p.id,null));
+});
+test("application grants are scoped to the owning applicant and organization, then revocable",async()=>{
+  const db=await credentialFixture();
+  await db.prepare("INSERT INTO opportunities(id,organization_id,created_by_user_id,title,description,required_issuer_organization_id,minimum_score) VALUES('op','org','owner','QA','Test','org','0')").run();
+  await db.prepare("INSERT INTO skill_credentials(id,assessment_id,challenge_id,student_user_id,student_wallet,issuer_organization_id,nonce_address,attestation_address,schema_address,score,evidence_hash,expires_at) VALUES('cred','a','challenge','student','wallet','org','n','a','s','90','h','2099-01-01')").run();
+  await db.prepare("INSERT INTO opportunity_applications(id,opportunity_id,user_id,credential_id,wallet_address,profile_json,verification_json) VALUES('app','op','student','cred','wallet','{}','{}')").run();
+  await db.prepare("INSERT INTO memberships(id,organization_id,user_id,role) VALUES('m','org','owner','business_admin')").run();
+  const p=await savePack(db,"student",draft);
+  await assert.rejects(grantPack(db,"student-b",p.id,"app"));
+  const grant=await grantPack(db,"student",p.id,"app");
+  assert.equal((await readPack(db,p.id,"owner",{applicationId:"app",organizationId:"org"})).version,1);
+  await assert.rejects(readPack(db,p.id,"student-b",{applicationId:"app",organizationId:"org"}));
+  await db.prepare("UPDATE portfolio_grants SET revoked_at=CURRENT_TIMESTAMP WHERE id=?").bind(grant.id).run();
+  await assert.rejects(readPack(db,p.id,"owner",{applicationId:"app",organizationId:"org"}));
+});
+test("expired trial limits new packs but does not hide existing portfolios",async()=>{
+  const db=await credentialFixture();const a=await savePack(db,"student",draft);await savePack(db,"student",draft);
+  await db.prepare("UPDATE feature_trials SET expires_at='2000-01-01'").run();
+  assert.equal((await personalUsage(db,"student")).trial.active,false);
+  await assert.rejects(savePack(db,"student",draft));
+  assert.equal((await readPack(db,a.id,"student")).version,1);
+  await savePack(db,"student",draft,a.id,1);
+});
+test("career daily quota is reserved atomically; retries/cache do not reserve twice",async()=>{
+  const db=await credentialFixture(),p=await savePack(db,"student",draft);
+  const input={owner:"student",packId:p.id,version:1,locale:"vi",fingerprint:"one",limit:1};
+  const results=await Promise.allSettled([reserveCareer(db,input),reserveCareer(db,{...input,fingerprint:"two"})]);
+  assert.equal(results.filter(r=>r.status==="fulfilled").length,1);
+  const winner=results.find(r=>r.status==="fulfilled") as PromiseFulfilledResult<Awaited<ReturnType<typeof reserveCareer>>>;
+  const op=winner.value.operation;
+  await db.prepare("UPDATE career_operations SET status='complete',result_json='{}' WHERE id=?").bind(op.id).run();
+  const key=(await db.prepare("SELECT fingerprint FROM career_operations WHERE id=?").bind(op.id).first<{fingerprint:string}>())!.fingerprint;
+  assert.equal((await reserveCareer(db,{...input,fingerprint:key})).acquired,false);
+  assert.equal((await personalUsage(db,"student")).aiUsed,1);
+});
+test("career output rejects invented citations and comparisons reject different rubric origins",async()=>{
+  const sources=[{id:"S1",content:"A real customer research project"}];
+  const valid={claims:[{text:"Research experience",sourceId:"S1",quote:"customer research"}],gaps:[],questions:[]};
+  assert.equal(validateCareerDraft(valid,sources).claims.length,1);
+  assert.throws(()=>validateCareerDraft({...valid,claims:[{...valid.claims[0],quote:"invented evidence"}]},sources));
+  assert.throws(()=>packInput({...draft,sources:[{kind:"file",id:"private"}]}));
+  const db=await credentialFixture();assert.equal(sameRubric(await portfolioSources(db,"student")),false);
+});

@@ -10,14 +10,14 @@
 
 [Try SkillBridge](https://404-eight-rho.vercel.app/) · [Wallet lookup](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Judge's walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md)
 
-[![CI](https://github.com/2274802010922/404/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/404/actions/workflows/ci.yml)
+[![CI](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-16-091426?logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-6941C6?logo=solana&logoColor=white)
 
 </div>
 
-SkillBridge connects students, businesses and reviewing organizations through real work:
+SkillBridge connects students, independent professionals, businesses and reviewing organizations through real work:
 a business funds a challenge, a human reviews the submission, and the student receives
 verifiable skill credentials and allocated rewards. Another business can accept that
 credential when the student applies for an opportunity.
@@ -43,6 +43,27 @@ flowchart LR
 **For students:** know the next step, inspect official feedback, claim rewards and apply
 with a credential. **For organizations:** fund work, evaluate evidence and select candidates
 with a clear verification history.
+
+## Evidence you can use, not just badges you can collect
+
+Students and freelancers can create **purpose-specific evidence portfolios** from
+their own reviewed work and credentials. Owners choose the saved version and audience;
+private submission files are never implicitly shared with an employer.
+
+- **For people seeking work:** write a portfolio manually or request a cited OpenRouter
+  draft, inspect its sources, and approve the introduction yourself.
+- **For employers:** compare up to three applicants, inspect permitted evidence,
+  recheck credential validity and record private decision notes. Different rubrics
+  are not silently combined into an overall ranking.
+- **For reliability:** issuance reserves capacity and journals the signed transaction
+  before broadcast, recovering finalized chain success after a database interruption.
+- **For the business-model demo:** server-issued launch trials show actual limits and
+  usage. They are not paid subscriptions or evidence of revenue; core verification
+  and allocated reward claims are never paywalled.
+
+[Acceptance and recovery guide](docs/testing/evidence-portfolios.md) ·
+[Portfolio HTTP tests](tests/integration/portfolio-flow.test.ts) ·
+[Issuance fault tests](tests/backend/credential-issuance.test.ts)
 
 ## What makes it useful
 
@@ -90,7 +111,7 @@ The evidence-reader image uses labeled local QA data, not real user research or 
 | Changed claim message is rejected | [Co-signing tests](tests/solana/sponsored-claim.test.ts) |
 | Duplicate application requests do not duplicate records | [Application tests](tests/backend/applications.test.ts) |
 
-The current default suite passed **116 tests** locally at this release checkpoint.
+The current default suite passed **151 tests** locally at this release checkpoint.
 CI runs the build, repository checks, lint and automated suite. Live Devnet tests are
 opt-in and spend test SOL.
 

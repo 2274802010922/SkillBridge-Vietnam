@@ -1,13 +1,14 @@
 # Current Project State
 
-Verified: 2026-09-16 against repository baseline `3a90c6b` plus wallet onboarding changes.
+State reviewed: 2026-09-17 against `3c16444` plus the evidence-portfolio release.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
 
 Maintain the UniHackFest proof-to-opportunity flow: funded challenge → committed
 submission → human decision → claimable reward/credential → another employer.
-Repository-based handoff is grouped in [docs/harness](../README.md).
+Latest release: [evidence portfolios](../../testing/evidence-portfolios.md), employer
+comparison, career drafts and recoverable issuance. Handoff stays in [docs/harness](../README.md).
 
 ## Product state
 
@@ -20,6 +21,9 @@ Repository-based handoff is grouped in [docs/harness](../README.md).
 
 ## Recently completed
 
+- Versioned evidence packs, explicit sharing/revocation and reviewer summary permissions.
+- Employer comparison/private notes; cited OpenRouter career drafts and server-side trials.
+- Atomic issuance reservation and finalized chain-to-DB recovery; no Anchor upgrade.
 - Beginner wallet install/create/connect guide, safe mobile handoff and discovery recovery.
 - Wallet connection/signature/session feedback and matching-wallet disconnect.
 - Credential applications, progress timeline, hash-bound citations and sponsored claims.
@@ -28,8 +32,8 @@ Repository-based handoff is grouped in [docs/harness](../README.md).
 
 ## In progress
 
-No active product implementation task is confirmed by the inspected tree/history.
-Check [active plans](../plans/active/) and `git status`; do not infer work from old plans.
+No active implementation task. See the [completed plan](../plans/completed/2026-09-17-evidence-to-opportunity.md)
+for release scope, validation and external acceptance still pending.
 
 ## Next priorities
 
@@ -56,6 +60,8 @@ These gaps do not authorize deployments, spending or new features.
 ## Known issues / limitations
 
 - No mainnet/audit claim; program upgrade authority still exists.
+- Launch trials do not charge money. Live career AI/real-wallet acceptance remain pending.
+- RPC uncertainty keeps issuance recoverable; failed/mismatched operations need operator review.
 - Opportunity gate stores verifier-authorized receipts; fresh SAS checks run in
   the service, not the program. Stalled review can lock funds indefinitely.
 - Scanned/unsupported documents need manual inspection; legacy unbound citations
@@ -73,14 +79,15 @@ These gaps do not authorize deployments, spending or new features.
 
 ## Validation status
 
-2026-09-16, Node 24.16.0, baseline above: `npm run check:repo`, `npm run lint`,
-`npm test` passed (production build + 131 tests).
-`git diff --check` passed. Latest scope: [wallet onboarding plan](../plans/completed/2026-09-16-wallet-onboarding.md).
-Live AI/Devnet, Rust/validator and deployed browser checks were not run.
+2026-09-17: `check:repo`, lint, TypeScript and `git diff --check` passed;
+`npm test` passed (production build + 151 tests). Chrome QA covered portfolio/comparison
+VI/EN at 375/768/1024/1440px with mock AI/RPC. See the completed plan for scope.
+No new live AI/Devnet transfer, Rust build, Vercel deployment or physical-wallet QA.
 
 ## Recent relevant commits
 
 - `b510897` — wallet connection/session UX.
+- `3c16444` — beginner wallet onboarding and recovery guidance.
 - `2739e09` — applications, progress, citations, sponsored rewards and evidence.
 - `04fe73d` — wallet lookup and visible fund proofs.
 - `cb64ee7` — independent verification/claim and OpenRouter assistance.

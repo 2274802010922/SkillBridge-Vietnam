@@ -104,8 +104,9 @@ export async function GET(
     )
       .bind(id)
       .all();
+    const notes=await env.DB.prepare("SELECT n.application_id,n.id,n.body,n.created_at,u.display_name AS author FROM application_notes n JOIN opportunity_applications a ON a.id=n.application_id JOIN users u ON u.id=n.actor_id WHERE a.opportunity_id=? AND n.organization_id=? ORDER BY n.created_at DESC").bind(id,op.organization_id).all<{application_id:string;id:string;body:string;created_at:string;author:string}>();
     return Response.json(
-      { applications: rows.results },
+      { applications: rows.results.map(row=>({...row as Record<string,unknown>,notes:notes.results.filter(n=>n.application_id===(row as {id:string}).id)})) },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch (e) {
@@ -156,11 +157,14 @@ export async function PATCH(
     }
     if (!["reviewing", "shortlisted", "rejected"].includes(b.action))
       return Response.json({ error: "Invalid action" }, { status: 400 });
-    await env.DB.prepare(
-      "UPDATE opportunity_applications SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-    )
-      .bind(b.action, row.id)
-      .run();
+    if(b.action==="shortlisted"){
+      const check=await checkApplication(env.DB,env.SOLANA_RPC_URL||"https://api.devnet.solana.com",op,{id:row.user_id,walletAddress:row.wallet_address},row.credential_id,true);
+      if(!check.eligibility.valid)return Response.json({error:"Chứng nhận không còn đủ điều kiện. / Credential no longer eligible."},{status:409});
+    }
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO application_events(id,application_id,organization_id,actor_id,status) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM opportunity_applications WHERE id=? AND status<>?)").bind(crypto.randomUUID(),row.id,op.organization_id,user.id,b.action,row.id,b.action),
+      env.DB.prepare("UPDATE opportunity_applications SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status<>?").bind(b.action,row.id,b.action),
+    ]);
     return Response.json({ status: b.action });
   } catch (e) {
     return jsonError(e);

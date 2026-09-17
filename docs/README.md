@@ -20,6 +20,7 @@ Load only the relevant plan/module/code, not this entire documentation tree.
 | Tests | [Commands and scope](testing/README.md) |
 | Manual QA | [Role-by-role checklist](testing/manual-test-guide.md) |
 | Competition upgrades | [Applications, progress, citations and sponsored claims](testing/competition-upgrades.md) |
+| Evidence portfolios | [Sharing, employer comparison, career AI and issuance recovery](testing/evidence-portfolios.md) |
 | Solana | [Evidence index](solana/README.md), [escrow runbook](solana/escrow-runbook.md) |
 | Design | [Shared design system](design/system.md), [landing rules](design/pages/landing.md) |
 | UI decisions | [Clarity and loading implementation](design/decisions/stitch-clarity-redesign.md) |

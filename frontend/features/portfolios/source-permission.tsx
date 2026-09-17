@@ -1,0 +1,10 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n/i18n";
+export function SourcePermission({assessmentId}:{assessmentId:string}){
+  const {locale}=useLanguage(),vi=locale==="vi";
+  const [allowed,setAllowed]=useState(false),[ready,setReady]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
+  useEffect(()=>{let active=true;fetch(`/api/portfolio/sources/${assessmentId}/permission`,{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error();return await r.json() as {allowed:boolean};}).then(d=>{if(active){setAllowed(d.allowed);setReady(true);}}).catch(()=>{if(active)setNotice(vi?"Chưa tải được quyền chia sẻ.":"Sharing permission unavailable.");});return()=>{active=false;};},[assessmentId,vi]);
+  async function toggle(){setBusy(true);try{const r=await fetch(`/api/portfolio/sources/${assessmentId}/permission`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({allowed:!allowed})});if(!r.ok)throw Error();setAllowed(!allowed);setNotice(vi?"Đã cập nhật quyền chia sẻ.":"Sharing permission updated.");}catch{setNotice(vi?"Không cập nhật được quyền chia sẻ.":"Could not update sharing permission.");}finally{setBusy(false);}}
+  return <section className="app-panel" style={{marginTop:20}}><h3>{vi?"Quyền dùng tóm tắt đánh giá":"Assessment summary permission"}</h3><p>{vi?"Cho phép chủ bài đưa tóm tắt và điểm chính thức vào bộ hồ sơ hoặc gửi cho AI hỗ trợ nghề nghiệp. Không chia sẻ tệp gốc, trích dẫn riêng hoặc ghi chú nội bộ. Chủ bài vẫn phải chọn chia sẻ.":"Allow the subject to use the official summary and scores in a portfolio or career AI. Original files, private quotes and internal notes are excluded. The subject must still choose to share."}</p><button className="button button-secondary" disabled={!ready||busy} onClick={()=>void toggle()}>{allowed?(vi?"Thu hồi quyền dùng tóm tắt":"Revoke summary permission"):(vi?"Cho phép dùng tóm tắt":"Allow summary use")}</button>{notice&&<p role="status">{notice}</p>}</section>;
+}

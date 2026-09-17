@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { WalletProfile } from "@/backend/services/profiles/wallet-profile";
 import { ProfileAvatar, WalletProfileView } from "./wallet-profile-view";
 import { useLanguage } from "../../i18n/i18n";
@@ -166,6 +167,7 @@ export function ProfileWorkspace() {
   if (loading) return <div id="workspace-main" tabIndex={-1} className="workspace-product-content"><ContentSkeleton delayed variant="profile" /></div>;
   return (
     <div id="workspace-main" tabIndex={-1} className="workspace-product-content profile-workspace">
+      <p><Link className="button button-primary" href="/app/profile/packs">{vi?"Tạo bộ hồ sơ theo mục tiêu":"Build an evidence portfolio"}</Link></p>
       <div className="profile-page-heading">
         <span className="panel-kicker">
           {vi

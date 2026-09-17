@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+export * from "./schema/evidence-opportunity-tables";
 import {
   index,
   integer,
@@ -6,6 +7,17 @@ import {
   uniqueIndex,
   sqliteTable,
 } from "drizzle-orm/sqlite-core";
+
+export const credentialIssuanceOperations = sqliteTable("credential_issuance_operations", {
+  assessmentId: text("assessment_id").primaryKey().references(()=>assessments.id), challengeId: text("challenge_id").notNull().references(()=>challenges.id),
+  organizationId: text("organization_id").notNull().references(()=>organizations.id), studentUserId: text("student_user_id").notNull().references(()=>users.id),
+  fingerprint: text("fingerprint").notNull(), payloadJson: text("payload_json").notNull(),
+  status: text("status").notNull().default("reserved"), preparedJson: text("prepared_json"),
+  signature: text("signature"), attestationAddress: text("attestation_address"), lease: text("lease"),
+  leaseUntil: integer("lease_until").notNull().default(0), lastError: text("last_error"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, table=>[index("idx_issuance_capacity").on(table.challengeId,table.status)]);
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),

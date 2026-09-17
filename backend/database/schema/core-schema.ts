@@ -1,6 +1,7 @@
 import { PROFILE_SCHEMA } from '../../services/profiles/wallet-profile.ts';
 import { ESCROW_SCHEMA, ESCROW_TRIGGERS } from './escrow-schema.ts';
 import { COMPETITION_SCHEMA } from './competition-schema.ts';
+import { EVIDENCE_OPPORTUNITY_SCHEMA } from './evidence-opportunity-schema.ts';
 
 const statements = [
   `CREATE TABLE IF NOT EXISTS users (
@@ -882,5 +883,6 @@ export async function ensureCoreSchema(db: D1Database) {
     }
   }
   for(const statement of COMPETITION_SCHEMA) await db.prepare(statement).run();
+  for(const statement of EVIDENCE_OPPORTUNITY_SCHEMA) await db.prepare(statement).run();
   initialized.add(db);
 }

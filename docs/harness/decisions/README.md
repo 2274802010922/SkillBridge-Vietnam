@@ -21,3 +21,4 @@ No need to convert every historical design document into an ADR.
 
 - [ADR-001: Repository-owned context](ADR-001-repository-context.md)
 - [ADR-002: Escrow and legacy custody boundary](ADR-002-escrow-compatibility.md)
+- [ADR-003: Evidence portfolios and journaled issuance](ADR-003-evidence-portfolios.md)

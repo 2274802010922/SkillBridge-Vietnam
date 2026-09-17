@@ -2,6 +2,15 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-17 — Evidence portfolios
+
+- Target-specific versioned portfolios with explicit publication and application-scoped grants.
+- Reviewer permission for summary reuse; source revocation invalidates sharing and cached career drafts.
+- Employer comparison, internal notes and fresh eligibility before shortlist; no cross-rubric ranking.
+- OpenRouter career drafts with checked citations, atomic service-credit limits and clearly labeled free trials.
+- Journaled credential issuance with atomic capacity reservation and finalized chain-to-database recovery.
+- Isolated HTTP, fault/concurrency and browser QA; no new mainnet, bank payout or paid billing claim.
+
 ## 2026-09-16 — Beginner wallet onboarding
 
 - Optional VI/EN install/create/connect guide with official Phantom/Solflare downloads.
