@@ -1,6 +1,6 @@
 # Current Project State
 
-State reviewed: 2026-09-18; Demo Day README/architecture update is ready after `50aeb32`.
+State reviewed: 2026-09-18; Demo Day README/architecture update `7d0d76b` is pushed.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
