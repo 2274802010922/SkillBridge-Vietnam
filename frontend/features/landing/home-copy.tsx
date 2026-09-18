@@ -189,6 +189,9 @@ export function HomeCopy() {
                 <span className="solana-net-val">{isEn ? "Human decision · optional AI" : "Con người quyết định · AI tùy chọn"}</span>
               </div>
             </div>
+            <p className="solana-demo-scope" role="note">
+              {t("home.demoScope")}
+            </p>
             </div>
 
             <aside className="solana-hero-proof" aria-label={isEn ? "SkillBridge protocol" : "Quy trình SkillBridge"}>
@@ -269,7 +272,7 @@ export function HomeCopy() {
                   <h3 className="solana-flow-title">{t(titleKey)}</h3>
                   <p className="solana-flow-desc">{t(detailKey)}</p>
                 </div>
-                <span className="solana-flow-status">VERIFIED</span>
+                <span className="solana-flow-status">{t("home.flowStatus")}</span>
               </div>
             ))}
           </div>

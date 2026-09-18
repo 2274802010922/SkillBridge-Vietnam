@@ -582,6 +582,16 @@ textarea:focus { border-color: var(--blue); outline: 0; box-shadow: 0 0 0 3px rg
 .solana-landing .solana-net-item + .solana-net-item { border-left-color: var(--line); }
 .solana-landing .solana-net-label { color: var(--muted); }
 .solana-landing .solana-net-val { color: var(--ink); font-weight: 700; }
+.solana-landing .solana-demo-scope {
+  margin: 12px 0 0;
+  padding: 11px 14px;
+  border: 1px solid #cbd8b1;
+  border-radius: 10px;
+  background: #f1f8df;
+  color: #365416;
+  font-size: 13px;
+  line-height: 1.55;
+}
 
 .solana-landing .solana-hero-proof { min-height: 354px; padding: 22px; border: 1px solid var(--ink); border-radius: 16px; background: var(--paper); box-shadow: 6px 6px 0 var(--ink); }
 .solana-landing .solana-hero-proof-bar { border-bottom-color: var(--line); color: var(--muted); }

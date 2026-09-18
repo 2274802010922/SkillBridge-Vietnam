@@ -2,6 +2,13 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-18 — Demo-day copy clarity
+
+- Landing page now labels AI as optional assistance and human review as the final decision.
+- Reward language explicitly says USDC Devnet and user-signed; removed the inaccurate non-custodial claim.
+- Static flow labels are now inspectable rather than implying every step is already verified.
+- Added a visible demo-scope note: Solana Devnet, sandbox VND cashout and no real bank payment.
+
 ## 2026-09-18 — Recoverable sandbox off-ramp
 
 - Pinned sandbox adapter, immutable quote/funding snapshots and separate crypto/payout states.
