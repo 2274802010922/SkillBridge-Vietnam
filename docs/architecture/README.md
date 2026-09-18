@@ -35,6 +35,9 @@ flowchart TD
 
 ## Persistence
 
+Sandbox cashout uses [pinned adapters and recoverable journals](offramp.md),
+separate from reward escrow and from any future real-money provider integration.
+
 Runtime schema initialization and the migration history both remain present.
 The migration directory is now `backend/database/migrations/`; SQL names,
 snapshots and journal identifiers are preserved.

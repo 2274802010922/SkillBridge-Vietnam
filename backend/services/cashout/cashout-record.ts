@@ -1,6 +1,8 @@
 import { solanaPayCashoutUrl } from "./cashout.ts";
 
 export type CashoutRow = {
+  user_id: string;
+  metadata_json: string;
   id: string;
   beneficiary_id: string | null;
   wallet_address: string;
@@ -65,8 +67,17 @@ export const SELECT_CASHOUT = `
   LEFT JOIN cashout_beneficiaries b ON b.id = s.beneficiary_id
 `;
 
-export function serializeCashout(row: CashoutRow, mint: string) {
+export function serializeCashout(row: CashoutRow, _mint: string) {
+  void _mint; // Historical callers may pass config, but existing orders never use it.
+  const metadata = JSON.parse(row.metadata_json || "{}");
+  const mint = metadata.offramp?.mint || metadata.mint;
   return {
+    network: metadata.offramp?.network || metadata.network,
+    mint: mint || null,
+    fundingDeadline: metadata.offramp?.fundingDeadline || row.quote_expires_at,
+    quoteKind: "test",
+    kycStatus: "not_required_for_sandbox",
+    cryptoStatus: row.payment_tx ? "confirmed" : row.submitted_tx ? "pending" : "not_received",
     id: row.id,
     beneficiaryId: row.beneficiary_id,
     walletAddress: row.wallet_address,
@@ -121,7 +132,7 @@ export function serializeCashout(row: CashoutRow, mint: string) {
         }
       : null,
     solanaPayUrl:
-      row.settlement_wallet && row.reference_key
+      mint && row.settlement_wallet && row.reference_key && row.status === "awaiting_wallet_signature" && !row.submitted_tx && !row.payment_tx
         ? solanaPayCashoutUrl({
             settlementWallet: row.settlement_wallet,
             amountUsdc: row.amount_usdc,

@@ -46,6 +46,11 @@ unresolved conflict. Stored evidence is dated proof, not a fresh runtime check.
 
 ## Session handoff
 
+For a workstream with a dedicated `handoff.md`, update its latest checkpoint after
+each meaningful implementation/test slice and before interruption/account changes,
+not just at the end. Record actual diff, validation, unresolved operations and next
+safe action; an interrupted session may leave newer code than its last checkpoint.
+
 After a substantial task or before ending a long workstream:
 
 - Update `CURRENT_STATE.md` only when project state materially changes.

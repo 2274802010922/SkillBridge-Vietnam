@@ -14,6 +14,7 @@ import {
 import { DEFAULT_USDC_DEVNET_MINT, type UsdcAmount } from "../../../solana/server/payments.ts";
 import { rewardVaultAddress } from "../../../solana/server/reward-vault.ts";
 import type { FxEnvironment, FxReference } from "./fx-rates.ts";
+import { configuredProvider } from "./providers/registry.ts";
 
 export const CASHOUT_PROVIDER = "skillbridge_devnet_offramp";
 export const CASHOUT_NETWORK = "solana:devnet";
@@ -203,17 +204,10 @@ export function createDevnetCashoutQuote(
     25_000,
     1_000_000,
   );
-  const referenceRate = Number(reference.usdcVnd);
-  const rate = BigInt(
-    Math.max(
-      1,
-      Math.floor(
-        Number.isFinite(referenceRate) && referenceRate > 0
-          ? referenceRate
-          : configuredFallback,
-      ),
-    ),
-  );
+  // Floor the reference to a whole VND test rate without floating-point money math.
+  const rateText = /^\d{1,9}(\.\d{1,12})?$/.test(reference.usdcVnd)
+    ? reference.usdcVnd.split(".")[0] : String(configuredFallback);
+  const rate = BigInt(rateText) > BigInt(0) ? BigInt(rateText) : BigInt(1);
   const providerFeeBps = BigInt(
     positiveInteger(environment.CASHOUT_PROVIDER_FEE_BPS, 80, 10_000),
   );
@@ -261,13 +255,16 @@ export async function cashoutSettlementWallet(environment: CashoutEnvironment) {
       throw new Error(
         "CASHOUT_DEVNET_SETTLEMENT_WALLET không phải địa chỉ Solana hợp lệ.",
       );
+    if ((environment.SOLANA_REWARD_VAULT_SECRET || environment.SOLANA_AUTHORIZED_SIGNER_SECRET) && configured === String(await rewardVaultAddress(environment)))
+      throw new Error("Settlement wallet must be separate from the challenge reward vault.");
     return configured;
   }
-  return String(await rewardVaultAddress(environment));
+  throw new Error("Cấu hình ví riêng CASHOUT_DEVNET_SETTLEMENT_WALLET trước khi tạo lệnh. Không gửi thêm USDC.");
 }
 
 export async function cashoutCapabilities(environment: CashoutEnvironment) {
   try {
+    configuredProvider(environment);
     const settlementWallet = await cashoutSettlementWallet(environment);
     const methods = cashoutMethodCapabilities(environment);
     return {
@@ -347,6 +344,9 @@ export async function buildCashoutTransferTransaction(
   const solana = createSolanaClient({
     urlOrMoniker: (environment.SOLANA_RPC_URL || "devnet") as "devnet",
   });
+  const genesis = await solana.rpc.getGenesisHash().send();
+  if (String(genesis) !== "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG")
+    throw new Error("Cashout signing is restricted to Solana Devnet.");
   const { value: latestBlockhash } = await solana.rpc
     .getLatestBlockhash({ commitment: "confirmed" })
     .send();
@@ -385,6 +385,8 @@ export function cashoutStatusLabel(status: string, locale: "vi" | "en") {
     ],
     sandbox_completed: ["Đã hoàn tất trên Devnet", "Completed on Devnet"],
     onchain_failed: ["Xác minh thất bại", "Verification failed"],
+    reconciliation_required: ["Cần đối soát · không gửi thêm tiền", "Reconciliation required · do not send again"],
+    payout_failed: ["Chi trả thử nghiệm thất bại · USDC đã xác minh", "Test payout failed · USDC verified"],
   };
   return (
     labels[status]?.[locale === "vi" ? 0 : 1] ?? status.replaceAll("_", " ")

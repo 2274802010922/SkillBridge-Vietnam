@@ -19,6 +19,14 @@ deployment evidence. A file's existence does not prove a feature was tested.
 
 ## Old session: leave a recoverable checkpoint
 
+For a workstream with a dedicated handoff, update it after each meaningful slice
+and validation result, not only when the entire feature is done. Keep its latest
+checkpoint short; record current HEAD, changed files, partial work, failed/unrun
+checks, pending external operations and the next exact step. Before account changes,
+confirm whether files are local-only or shared through Git. New sessions must inspect
+diffs because abrupt interruptions can leave code newer than the saved checkpoint.
+Current off-ramp work uses [its own handoff](../workstreams/offramp/handoff.md).
+
 1. Complete the task or stop at an explicit checkpoint; inspect staged/unstaged
    changes and preserve work belonging to others. Do not hide unfinished work.
 2. Run relevant validation from [the test guide](../../testing/README.md). Record

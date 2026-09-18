@@ -8,6 +8,7 @@ then use the [project documentation index](../README.md) to load only task-relev
 | [context/](context/) | Current checkpoint and [session handoff](context/HANDOFF.md) |
 | [plans/](plans/README.md) | Template, [active work](plans/active/) and [completed plans](plans/completed/) |
 | [decisions/](decisions/README.md) | Architecture decisions and ADR template |
+| [Off-ramp handoff](workstreams/offramp/handoff.md) | Current workstream checkpoint and cross-account resume prompt |
 
 Existing architecture/product/module guides remain in their original locations;
 this harness links to them instead of copying them.

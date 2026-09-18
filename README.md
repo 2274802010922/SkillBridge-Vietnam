@@ -67,6 +67,13 @@ private submission files are never implicitly shared with an employer.
 
 ## What makes it useful
 
+**Recoverable off-ramp lab:** optional Devnet USDC → simulated VND now uses a
+pinned provider adapter, separate settlement wallet, immutable test quotes,
+finalized deposit verification and durable inbox/outbox recovery. Repeated callbacks
+or page reloads do not create another payout. Late/partial/excess deposits retain
+their transaction for reconciliation. **Not a live bank integration or real VND payout.**
+[Setup and test guide](docs/testing/offramp.md) · [Trust boundaries](docs/architecture/offramp.md)
+
 | Capability | What users can actually do |
 | --- | --- |
 | Funded challenges | Publish public or invitation-only challenges with structured briefs, escrow and visible fund proofs |

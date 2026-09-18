@@ -19,7 +19,7 @@ Add values in Vercel Environment Variables and redeploy.
 | Private files | `BLOB_STORE_ID`; client uploads also require `BLOB_READ_WRITE_TOKEN` |
 | Optional AI | `AI_PROVIDER`, OpenRouter/Gemini/TokenRouter credentials and model settings; [OpenRouter guide](openrouter.md) |
 | Solana Devnet | `SOLANA_RPC_URL`, mint and server signer configuration |
-| Legacy funds / cashout | Dedicated reward-vault and cashout settings |
+| Legacy funds / cashout | Separate reward-vault and cashout wallets; [off-ramp setup / webhook v2](../testing/offramp.md) |
 | FX references | Optional data-provider credentials and freshness limits |
 
 These values are server-only. Do not prefix signing keys or provider secrets with
@@ -27,6 +27,11 @@ These values are server-only. Do not prefix signing keys or provider secrets wit
 
 The folder refactor requires no new environment variables, database reset or
 program deployment.
+
+The subsequent off-ramp release **does** require a dedicated public
+`CASHOUT_DEVNET_SETTLEMENT_WALLET` for new quotes (no reward-vault fallback).
+It adds runtime migration 0021 without resetting existing orders; follow the
+linked off-ramp guide before upgrading webhook producers.
 
 ## Verify after deployment
 

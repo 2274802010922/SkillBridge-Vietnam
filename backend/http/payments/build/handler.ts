@@ -4,6 +4,9 @@ import { env } from "@/backend/config/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../../auth/auth";
 import { requireOrganizationRole } from "../../../auth/authorization";
 import { buildCashoutTransferTransaction } from "../../../services/cashout/cashout";
+import { readFundingSnapshot } from "../../../services/cashout/offramp-snapshot";
+import { ensureProviderOrder } from "../../../services/cashout/offramp-operations";
+import type { CashoutRow } from "../../../services/cashout/cashout-record";
 import { buildRewardFundingTransaction, type RewardAsset } from "../../../../solana/server/reward-vault";
 
 /** Build an unsigned USDC transfer. The connected wallet signs and sends it in the browser. */
@@ -38,26 +41,25 @@ export async function POST(request: Request) {
       const senderWallet = body.senderWallet.trim();
       if (user.walletAddress !== senderWallet) return Response.json({ error: "Ví gửi USDC phải là ví đang đăng nhập." }, { status: 403 });
       const order = await env.DB.prepare(`
-        SELECT id, wallet_address, amount_usdc, amount_atomic, status, quote_expires_at,
-          settlement_wallet, reference_key, submitted_tx, payment_tx
+        SELECT *
         FROM cashout_sessions WHERE id = ? AND user_id = ?
-      `).bind(body.cashoutId, user.id).first<{
-        id: string; wallet_address: string; amount_usdc: string; amount_atomic: string; status: string;
-        quote_expires_at: string | null; settlement_wallet: string | null; reference_key: string | null; submitted_tx: string | null; payment_tx: string | null;
-      }>();
+      `).bind(body.cashoutId, user.id).first<CashoutRow>();
       if (!order) return Response.json({ error: "Không tìm thấy lệnh rút tiền." }, { status: 404 });
       if (order.payment_tx || order.submitted_tx) return Response.json({ error: "Lệnh đã có transaction. Hãy xác minh lại, không gửi thêm USDC." }, { status: 409 });
       if (order.status !== "awaiting_wallet_signature") return Response.json({ error: "Hãy xác nhận báo giá trước khi ký giao dịch." }, { status: 409 });
-      if (!order.quote_expires_at || new Date(order.quote_expires_at).getTime() <= Date.now()) {
-        await env.DB.prepare("UPDATE cashout_sessions SET status = 'quote_expired', updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(order.id).run();
+      const snapshot = readFundingSnapshot(order);
+      if (new Date(snapshot.fundingDeadline).getTime() <= Date.now()) {
+        await env.DB.prepare("UPDATE cashout_sessions SET status = 'quote_expired', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'awaiting_wallet_signature' AND payment_tx IS NULL AND submitted_tx IS NULL").bind(order.id).run();
         return Response.json({ error: "Báo giá đã hết hạn. Hãy tạo báo giá mới.", code: "QUOTE_EXPIRED" }, { status: 409 });
       }
       if (!order.settlement_wallet || !order.reference_key) return Response.json({ error: "Off-ramp Devnet chưa được cấu hình." }, { status: 503 });
-      const transaction = await buildCashoutTransferTransaction(env, {
+      await ensureProviderOrder(env.DB, snapshot);
+      const transaction = await buildCashoutTransferTransaction({ ...env, SOLANA_USDC_MINT: snapshot.mint }, {
         senderWallet, settlementWallet: order.settlement_wallet, amountAtomic: order.amount_atomic, reference: order.reference_key,
       });
       return Response.json({
         transaction, amountUsdc: order.amount_usdc, recipientWallet: order.settlement_wallet,
+        network: snapshot.network, mint: snapshot.mint, amountAtomic: snapshot.amountAtomic, fundingDeadline: snapshot.fundingDeadline,
         reference: order.reference_key, purpose: "cashout_devnet_deposit",
       });
     }

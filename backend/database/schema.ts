@@ -8,6 +8,27 @@ import {
   sqliteTable,
 } from "drizzle-orm/sqlite-core";
 
+export const offrampOperations = sqliteTable("offramp_operations", {
+  operationKey: text("operation_key").primaryKey(), orderId: text("order_id").notNull().references(() => cashoutSessions.id),
+  payloadHash: text("payload_hash").notNull(), status: text("status").notNull().default("pending"),
+  leaseToken: text("lease_token"), leaseUntil: integer("lease_until").notNull().default(0),
+  attempts: integer("attempts").notNull().default(0), resultJson: text("result_json"), lastError: text("last_error"),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+export const offrampInbox = sqliteTable("offramp_inbox", {
+  identity: text("identity").primaryKey(), provider: text("provider").notNull(), mode: text("mode").notNull(),
+  eventId: text("event_id").notNull(), orderId: text("order_id").notNull(), payloadHash: text("payload_hash").notNull(),
+  eventJson: text("event_json").notNull(), status: text("status").notNull().default("received"),
+  leaseToken: text("lease_token"), leaseUntil: integer("lease_until").notNull().default(0),
+  attempts: integer("attempts").notNull().default(0), lastError: text("last_error"),
+  nextRetryAt: integer("next_retry_at").notNull().default(0), processedAt: text("processed_at"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (t) => [index("idx_offramp_inbox_order").on(t.orderId, t.status)]);
+export const offrampSignatureClaims = sqliteTable("offramp_signature_claims", {
+  signature: text("signature").primaryKey(), orderId: text("order_id").notNull().unique().references(() => cashoutSessions.id),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const credentialIssuanceOperations = sqliteTable("credential_issuance_operations", {
   assessmentId: text("assessment_id").primaryKey().references(()=>assessments.id), challengeId: text("challenge_id").notNull().references(()=>challenges.id),
   organizationId: text("organization_id").notNull().references(()=>organizations.id), studentUserId: text("student_user_id").notNull().references(()=>users.id),

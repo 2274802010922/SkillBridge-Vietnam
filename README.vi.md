@@ -60,6 +60,13 @@ flowchart LR
 
 ## Những tính năng nổi bật
 
+**Luồng off-ramp có thể khôi phục:** USDC Devnet → VND mô phỏng đi qua adapter,
+ví nhận riêng và báo giá test cố định. Giao dịch được xác minh finalized; journal
+inbox/outbox cho phép kiểm tra lại khi reload hoặc webhook bị gián đoạn. Nạp thiếu,
+thừa hoặc muộn giữ lại bằng chứng để đối soát, không yêu cầu gửi tiền lần nữa.
+**Chưa tích hợp chi trả ngân hàng thật, không chuyển VND thật.**
+[Cấu hình và kiểm thử](docs/testing/offramp.md) · [Ranh giới tin cậy](docs/architecture/offramp.md)
+
 | Tính năng | Người dùng có thể làm gì |
 | --- | --- |
 | Thử thách có quỹ bảo đảm | Tạo đề bài rõ ràng, chọn công khai/chỉ mời, kiểm tra địa chỉ và trạng thái quỹ |

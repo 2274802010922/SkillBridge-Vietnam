@@ -2,6 +2,17 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-18 — Recoverable sandbox off-ramp
+
+- Pinned sandbox adapter, immutable quote/funding snapshots and separate crypto/payout states.
+- Dedicated new-order settlement wallet; existing orders retain stored funding details.
+- Fenced DB inbox/outbox and signature reservations; webhook v2 binds timestamp, ID and raw body.
+- Retain partial/excess/late deposits for reconciliation; payout failure cannot erase finalized crypto.
+- Wallet message inspection before signing, public-signature reload recovery and VI/EN exception states.
+- Additive migration 0021, fault/concurrency/HTTP tests, setup guide and persistent handoff.
+- Compatibility: no reward-vault fallback for new orders; legacy body-only webhook signatures rejected.
+- Still Devnet USDC / simulated VND. No production adapter, real-bank payout or automatic refund.
+
 ## 2026-09-17 — Evidence portfolios
 
 - Target-specific versioned portfolios with explicit publication and application-scoped grants.

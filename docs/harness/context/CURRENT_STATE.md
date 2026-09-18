@@ -1,6 +1,6 @@
 # Current Project State
 
-State reviewed: 2026-09-17 against `3c16444` plus the evidence-portfolio release.
+State reviewed: 2026-09-18; sandbox off-ramp implementation validated on top of `d8615d1`.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
@@ -9,6 +9,7 @@ Maintain the UniHackFest proof-to-opportunity flow: funded challenge → committ
 submission → human decision → claimable reward/credential → another employer.
 Latest release: [evidence portfolios](../../testing/evidence-portfolios.md), employer
 comparison, career drafts and recoverable issuance. Handoff stays in [docs/harness](../README.md).
+Latest addition: recoverable sandbox off-ramp; [publication checkpoint](../workstreams/offramp/handoff.md).
 
 ## Product state
 
@@ -21,6 +22,10 @@ comparison, career drafts and recoverable issuance. Handoff stays in [docs/harne
 
 ## Recently completed
 
+- Pinned off-ramp adapter, dedicated settlement address, immutable test quote and
+  replay-safe journals; partial/late deposits retain proof for reconciliation.
+  [Off-ramp architecture](../../architecture/offramp.md), [setup guide](../../testing/offramp.md).
+
 - Versioned evidence packs, explicit sharing/revocation and reviewer summary permissions.
 - Employer comparison/private notes; cited OpenRouter career drafts and server-side trials.
 - Atomic issuance reservation and finalized chain-to-DB recovery; no Anchor upgrade.
@@ -32,10 +37,15 @@ comparison, career drafts and recoverable issuance. Handoff stays in [docs/harne
 
 ## In progress
 
-No active implementation task. See the [completed plan](../plans/completed/2026-09-17-evidence-to-opportunity.md)
-for release scope, validation and external acceptance still pending.
+No active product implementation is confirmed. The [off-ramp plan](../plans/completed/2026-09-18-offramp-adapters.md)
+is complete; publication status remains in its [handoff](../workstreams/offramp/handoff.md).
+The evidence-portfolio [plan](../plans/completed/2026-09-17-evidence-to-opportunity.md)
+is completed; do not restart it when resuming off-ramp work.
 
 ## Next priorities
+
+Off-ramp: owner configures the dedicated public wallet and performs post-deploy
+acceptance from its runbook. No real provider/corridor or production access is established.
 
 [Competition runbook](../../testing/competition-upgrades.md): owner-run live OpenRouter,
 funded live USDC sponsorship and post-deploy role checks remain to be verified.
@@ -56,6 +66,8 @@ These gaps do not authorize deployments, spending or new features.
   requires an explicit model, strict output, no automatic fallback. [AI/cache rules](../../deployment/openrouter.md).
 - Private files stay off-chain; locked submission versions cannot be rewritten.
   Citations bind to file ID/hash; AI cannot approve, allocate or pay.
+- New cashout orders never reuse the reward vault. Old orders retain stored funding
+  snapshots; production config fails closed. [Off-ramp ADR](../decisions/ADR-004-offramp-sandbox-boundary.md).
 
 ## Known issues / limitations
 
@@ -79,6 +91,10 @@ These gaps do not authorize deployments, spending or new features.
 
 ## Validation status
 
+2026-09-18: standard `npm test` (production build + 168 tests), lint, repository check,
+TypeScript and diff check passed. Off-ramp HTTP/RPC fixtures and VI/EN reconciliation
+view at 375/768/1024/1440px passed; no new live transfer or bank payout.
+
 2026-09-17: `check:repo`, lint, TypeScript and `git diff --check` passed;
 `npm test` passed (production build + 151 tests). Chrome QA covered portfolio/comparison
 VI/EN at 375/768/1024/1440px with mock AI/RPC. See the completed plan for scope.
@@ -86,6 +102,7 @@ No new live AI/Devnet transfer, Rust build, Vercel deployment or physical-wallet
 
 ## Recent relevant commits
 
+- `d8615d1` — evidence portfolios, career AI, employer comparison and issuance recovery.
 - `b510897` — wallet connection/session UX.
 - `3c16444` — beginner wallet onboarding and recovery guidance.
 - `2739e09` — applications, progress, citations, sponsored rewards and evidence.

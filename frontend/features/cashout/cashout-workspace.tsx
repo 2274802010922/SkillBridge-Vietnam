@@ -57,6 +57,13 @@ type FxReference = {
   warning: string | null;
 };
 type CashoutSession = {
+  network: string;
+  mint: string | null;
+  amountAtomic: string;
+  reference: string;
+  submittedTx: string | null;
+  fundingDeadline: string | null;
+  cryptoStatus: string;
   id: string;
   beneficiaryId: string | null;
   amountUsdc: string;
@@ -129,6 +136,8 @@ const STATUS_RANK: Record<string, number> = {
   onchain_failed: 2,
   bank_processing: 3,
   sandbox_completed: 4,
+  reconciliation_required: 3,
+  payout_failed: 3,
 };
 
 function vnd(value: string | number | null | undefined) {
@@ -265,6 +274,7 @@ export function CashoutWorkspace() {
     }
     if (referenceResponse.ok)
       setReference((await referenceResponse.json()) as FxReference);
+    setClock(Date.now());
   }, []);
   useEffect(() => {
     const initial = window.setTimeout(() => {
@@ -306,14 +316,15 @@ export function CashoutWorkspace() {
       null,
     [beneficiaryId, methodBeneficiaries],
   );
-  const secondsLeft = active?.quoteExpiresAt
+  const currentDeadline = active?.termsAcceptedAt ? active.fundingDeadline : active?.quoteExpiresAt;
+  const secondsLeft = currentDeadline
     ? Math.max(
         0,
-        Math.ceil((new Date(active.quoteExpiresAt).getTime() - clock) / 1_000),
+        Math.ceil((new Date(currentDeadline).getTime() - clock) / 1_000),
       )
     : 0;
   const quoteExpired = Boolean(
-    active?.quoteExpiresAt && secondsLeft <= 0 && !active.paymentTx,
+    currentDeadline && secondsLeft <= 0 && !active?.paymentTx && !active?.submittedTx,
   );
   const activeRank = active ? STATUS_RANK[active.status] || 0 : 0;
   const currentStep =
@@ -533,6 +544,7 @@ export function CashoutWorkspace() {
     mode: "automatic" | "manual",
   ) {
     if (!active || !signature) return;
+    setManualSignature(signature);
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -554,15 +566,16 @@ export function CashoutWorkspace() {
               ? "Không thể xác minh giao dịch."
               : "Unable to verify the transaction."),
         );
-      setManualSignature("");
       setNotice(
         vi
           ? "Đã gửi yêu cầu đối chiếu on-chain. Nếu chưa finalized, bạn chỉ cần kiểm tra lại signature này."
           : "The on-chain check was submitted. If it is not finalized yet, recheck this same signature.",
       );
       await load();
+      return { status: data.session?.paymentTx ? "funded" as const : "pending" as const };
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
+      return { status: "pending" as const };
     } finally {
       setBusy(false);
     }
@@ -590,7 +603,7 @@ export function CashoutWorkspace() {
         );
       setActive(data.session);
       setNotice(
-        vi
+        data.session.status !== "sandbox_completed" ? (vi ? "Đã kiểm tra trạng thái. Không gửi thêm USDC." : "Status checked. Do not send more USDC.") : vi
           ? "Luồng Devnet đã hoàn tất. Không có VND thật được chuyển."
           : "The Devnet flow is complete. No real VND was transferred.",
       );
@@ -622,6 +635,8 @@ export function CashoutWorkspace() {
       onchain_failed: ["Cần kiểm tra giao dịch", "Transaction needs review"],
       bank_processing: ["Đang đối soát sandbox", "Sandbox reconciliation"],
       sandbox_completed: ["Luồng Devnet hoàn tất", "Devnet flow completed"],
+      reconciliation_required: ["Cần đối soát giao dịch", "Deposit needs reconciliation"],
+      payout_failed: ["Chi trả thử nghiệm thất bại", "Test payout failed"],
     };
     return (labels[status] || [status, status])[vi ? 0 : 1];
   }
@@ -1031,12 +1046,14 @@ export function CashoutWorkspace() {
                 : "TIME-LIMITED QUOTE · DEVNET TEST"}
             </span>
             <strong>{active.amountUsdc} USDC</strong>
-            <small>Quote ID {active.quoteId || "—"}</small>
+            <small>{vi ? "Mã báo giá" : "Quote ID"} {active.quoteId || "—"}</small>
             <div
               className={"cashout-countdown " + (quoteExpired ? "expired" : "")}
             >
               <span aria-hidden="true">◷</span>
-              {quoteExpired
+              {!["quote_ready", "awaiting_wallet_signature"].includes(active.status)
+                ? (vi ? "Báo giá đã lưu" : "Saved quote")
+                : quoteExpired
                 ? vi
                   ? "Đã hết hạn"
                   : "Expired"
@@ -1153,7 +1170,7 @@ export function CashoutWorkspace() {
           )}
         </section>
       )}
-      {active && !["quote_ready", "quote_expired"].includes(active.status) && (
+      {active && active.status !== "quote_ready" && (
         <section className="app-panel cashout-wallet-panel">
           <div className="cashout-section-heading">
             <div>
@@ -1174,12 +1191,13 @@ export function CashoutWorkspace() {
           <div className="cashout-wallet-layout">
             <div className="cashout-payment-actions">
               {active.status === "awaiting_wallet_signature" &&
-                !quoteExpired && (
+                !quoteExpired && !active.submittedTx && !active.paymentTx && active.mint && active.settlementWallet && (
                   <>
                     <WalletPaymentButton
                       cashoutId={active.id}
+                      cashoutExpectation={{ network: active.network, mint: active.mint, recipientWallet: active.settlementWallet, amountAtomic: active.amountAtomic, reference: active.reference }}
                       onSubmitted={(signature) =>
-                        void verifyPayment(signature, "automatic")
+                        verifyPayment(signature, "automatic")
                       }
                       label={
                         vi
@@ -1201,6 +1219,7 @@ export function CashoutWorkspace() {
                 "awaiting_wallet_signature",
                 "onchain_pending",
                 "onchain_failed",
+                "quote_expired",
               ].includes(active.status) && (
                 <div className="cashout-manual-verify">
                   <label htmlFor="cashout-signature">
@@ -1209,7 +1228,7 @@ export function CashoutWorkspace() {
                       : "Already sent? Paste transaction signature"}
                     <input
                       id="cashout-signature"
-                      value={manualSignature}
+                      value={manualSignature || active.submittedTx || ""}
                       onChange={(event) =>
                         setManualSignature(event.target.value)
                       }
@@ -1228,9 +1247,9 @@ export function CashoutWorkspace() {
                   <button
                     className="button button-secondary"
                     type="button"
-                    disabled={busy || !manualSignature.trim()}
+                    disabled={busy || !(manualSignature.trim() || active.submittedTx)}
                     onClick={() =>
-                      void verifyPayment(manualSignature.trim(), "manual")
+                      void verifyPayment(manualSignature.trim() || active.submittedTx || "", "manual")
                     }
                   >
                     {active.status === "onchain_pending"
@@ -1275,6 +1294,18 @@ export function CashoutWorkspace() {
                   </button>
                 </div>
               )}
+              {["reconciliation_required", "payout_failed"].includes(active.status) && (
+                <div className="cashout-bank-sandbox" role="status" aria-live="polite">
+                  <strong>{vi ? "USDC đã được ghi nhận — không gửi thêm." : "USDC has been recorded — do not send again."}</strong>
+                  <p>{vi
+                    ? "Số tiền, thời điểm nhận hoặc chi trả mô phỏng cần được kiểm tra. Không có hoàn tiền tự động. Giữ mã lệnh và transaction để người vận hành đối soát."
+                    : "The deposit amount, arrival time or simulated payout needs review. There is no automatic refund. Keep this order ID and transaction for operator reconciliation."}</p>
+                  <p>{vi ? "Mã kiểm tra: " : "Review code: "}{active.lastErrorCode || "RECONCILIATION_REQUIRED"}</p>
+                  <button className="button button-secondary" type="button" disabled={busy} onClick={() => void reconcileSandbox()}>
+                    {vi ? "Kiểm tra lại trạng thái" : "Recheck status"}
+                  </button>
+                </div>
+              )}
               {active.status === "sandbox_completed" && (
                 <div className="cashout-complete">
                   <span aria-hidden="true">✓</span>
@@ -1303,6 +1334,10 @@ export function CashoutWorkspace() {
             <div className="cashout-order-proof">
               <span>{vi ? "CHI TIẾT LỆNH" : "ORDER DETAILS"}</span>
               <dl>
+                <div><dt>{vi ? "Mạng / tài sản" : "Network / asset"}</dt><dd>Solana Devnet · USDC</dd></div>
+                <div><dt>{vi ? "Hạn nhận USDC" : "Funding deadline"}</dt><dd>{active.fundingDeadline ? new Date(active.fundingDeadline).toLocaleString(vi ? "vi-VN" : "en-US") : "—"}</dd></div>
+                <div><dt>{vi ? "USDC on-chain" : "On-chain USDC"}</dt><dd>{active.paymentTx ? (vi ? "Đã nhận · finalized" : "Received · finalized") : active.submittedTx ? (vi ? "Đang xác minh" : "Verification pending") : (vi ? "Chưa xác minh" : "Not verified")}</dd></div>
+                <div><dt>{vi ? "VND / KYC" : "VND / KYC"}</dt><dd>{vi ? "Mô phỏng · không yêu cầu KYC sandbox" : "Simulated · no sandbox KYC required"}</dd></div>
                 <div>
                   <dt>{vi ? "Mã lệnh" : "Order"}</dt>
                   <dd>{active.providerReference}</dd>

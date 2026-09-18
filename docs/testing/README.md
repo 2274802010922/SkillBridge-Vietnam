@@ -29,6 +29,8 @@ prove documentation freshness or validate external URLs/Markdown anchor fragment
 
 ## Local HTTP checks
 
+Off-ramp sandbox: [setup, webhook v2 and manual recovery](offramp.md).
+
 Wallet onboarding: [browser checks and physical-device acceptance](wallet-onboarding.md).
 
 `tests/integration/wallet-profile-http.mjs` and `escrow-http.mjs` target

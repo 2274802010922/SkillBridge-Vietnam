@@ -221,37 +221,45 @@ test("supports Wallet Standard sign-and-send and sign-only Devnet payment flows"
 });
 
 test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", async () => {
-  const [challengeRoute, fundingRoute, payoutRoute, cashoutRoute, cashoutVerify, cashoutUi, walletAssets, webhookRoute, fxReference, beneficiaryVerification] = await Promise.all([
+  const [challengeRoute, fundingRoute, payoutRoute, cashoutRoute, cashoutVerify, cashoutUi, walletAssets, webhookRoute, fxReference, beneficiaryVerification, verificationService, sandboxProvider, inbox] = await Promise.all([
     readFile(new URL("../../backend/http/challenges/[id]/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/challenges/[id]/funding/verify/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/payouts/handler.ts", import.meta.url), "utf8"),
-    readFile(new URL("../../backend/http/cashout/handler.ts", import.meta.url), "utf8"),
+    readFile(new URL("../../backend/services/cashout/offramp-create.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/cashout/[id]/verify/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../frontend/features/cashout/cashout-workspace.tsx", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/wallet/assets/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/webhooks/offramp/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/fx/reference/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/cashout/beneficiaries/verify/handler.ts", import.meta.url), "utf8"),
+    readFile(new URL("../../backend/services/cashout/offramp-verification.ts", import.meta.url), "utf8"),
+    readFile(new URL("../../backend/services/cashout/providers/sandbox.ts", import.meta.url), "utf8"),
+    readFile(new URL("../../backend/services/cashout/offramp-inbox.ts", import.meta.url), "utf8"),
   ]);
   assert.match(challengeRoute, /funding_status !== "funded"/);
   assert.match(fundingRoute, /verifySolPayment/);
   assert.match(fundingRoute, /verifyUsdcPayment/);
   assert.match(payoutRoute, /journaledVaultTransfer/);
-  assert.match(cashoutRoute, /createDevnetCashoutQuote/);
+  assert.match(cashoutRoute, /provider.getQuote/);
+  assert.match(sandboxProvider, /createDevnetCashoutQuote/);
   assert.match(cashoutRoute, /getFxReference/);
   assert.match(cashoutRoute, /fx_rate_snapshots/);
   assert.match(cashoutRoute, /quote_expires_at/);
-  assert.match(cashoutVerify, /verifyUsdcPayment/);
-  assert.match(cashoutVerify, /requireFinalized: true/);
-  assert.match(cashoutVerify, /TX_ALREADY_USED/);
+  assert.match(cashoutVerify, /verifyCashoutFunding/);
+  assert.match(verificationService, /verifyUsdcPayment/);
+  assert.match(verificationService, /requireFinalized: true/);
+  assert.match(verificationService, /TX_ALREADY_USED/);
   assert.match(cashoutUi, /WalletPaymentButton\s+cashoutId/);
   assert.match(cashoutUi, /Keep USDC in wallet/);
   assert.match(cashoutUi, /Giá thị trường tham chiếu/);
   assert.match(cashoutUi, /Đã kiểm tra định dạng/);
   assert.match(cashoutUi, /no real VND has moved/);
   assert.match(cashoutUi, /private key or seed phrase/);
-  assert.match(webhookRoute, /x-skillbridge-signature/);
-  assert.match(webhookRoute, /provider_event_id/);
+  assert.match(webhookRoute, /verifyAndNormalizeWebhook/);
+  assert.match(sandboxProvider, /x-skillbridge-signature/);
+  assert.match(sandboxProvider, /x-skillbridge-timestamp/);
+  assert.match(webhookRoute, /receivePayoutEvent/);
+  assert.match(inbox, /payload_hash/);
   assert.match(walletAssets, /getTokenAccountsByOwner/);
   assert.match(fxReference, /getFxReference/);
   assert.match(beneficiaryVerification, /sandbox_confirmed/);

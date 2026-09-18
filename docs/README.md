@@ -16,6 +16,7 @@ Load only the relevant plan/module/code, not this entire documentation tree.
 | AI setup | [OpenRouter on Vercel](deployment/openrouter.md) |
 | Judging | [Walkthrough and verifiable evidence](judging/README.md) |
 | Architecture | [Folders, dependencies and runtime](architecture/README.md) |
+| Off-ramp sandbox | [Adapter and recovery architecture](architecture/offramp.md), [setup and tests](testing/offramp.md) |
 | Deployment | [Vercel setup](deployment/vercel.md) |
 | Tests | [Commands and scope](testing/README.md) |
 | Manual QA | [Role-by-role checklist](testing/manual-test-guide.md) |

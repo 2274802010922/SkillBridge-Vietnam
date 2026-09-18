@@ -207,6 +207,8 @@ export async function verifyUsdcPayment(input: {
   expectedSenderWallet?: string;
   requireFinalized?: boolean;
   allowMissingReference?: boolean;
+  /** Cashout reconciliation may record a positive partial deposit; default remains full payment. */
+  observePartialDeposit?: boolean;
 }): Promise<UsdcPaymentVerification> {
   if (!signatureIsValid(input.signature)) throw new PaymentVerificationError("TX_INVALID", "Transaction signature không hợp lệ.", 400, false);
   if (!validSolanaAddress(input.recipientWallet)) throw new PaymentVerificationError("WRONG_RECIPIENT", "Ví nhận không hợp lệ.", 422, false);
@@ -221,7 +223,7 @@ export async function verifyUsdcPayment(input: {
   const pre = meta.preTokenBalances;
   const post = meta.postTokenBalances;
   const received = aggregateBalances(post, mint, input.recipientWallet) - aggregateBalances(pre, mint, input.recipientWallet);
-  if (received < expected) throw new PaymentVerificationError("INSUFFICIENT_AMOUNT", `Số USDC nhận được chưa đủ. Đã nhận ${formatUsdcAtomic(received.toString())} USDC.`, 422, false);
+  if (received <= BigInt(0) || (received < expected && !input.observePartialDeposit)) throw new PaymentVerificationError("INSUFFICIENT_AMOUNT", `Số USDC nhận được chưa đủ. Đã nhận ${formatUsdcAtomic(received.toString())} USDC.`, 422, false);
   const senderWallet = senderFromBalances(pre, post, mint, input.recipientWallet);
   assertExpectedSender(senderWallet, input.expectedSenderWallet);
   const blockTime = transaction.blockTime ?? null;

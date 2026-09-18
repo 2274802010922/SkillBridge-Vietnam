@@ -12,6 +12,7 @@ import {
 } from "@solana/wallet-standard-features";
 import bs58 from "bs58";
 import { useLanguage } from "../../i18n/i18n";
+import { assertCashoutTransaction, type CashoutSigningExpectation } from "../../../solana/client/cashout-transaction";
 
 const DEVNET_CHAIN = "solana:devnet";
 export type WalletPaymentResult = { status: "funded" | "pending" };
@@ -35,7 +36,7 @@ function findSolanaAccount(accounts: readonly WalletAccount[]) {
     ?? accounts.find((item) => item.chains.some((chain) => chain.startsWith("solana:")));
 }
 
-export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, escrowRequest, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; escrowRequest?: {challengeId:string;action:string;submissionId?:string}; onSubmitted: (signature: string, operationId?: string) => Promise<WalletPaymentResult | void> | WalletPaymentResult | void; label?: string }) {
+export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, cashoutExpectation, escrowRequest, onSubmitted, label = "Thanh toán bằng ví" }: { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; cashoutExpectation?: CashoutSigningExpectation; escrowRequest?: {challengeId:string;action:string;submissionId?:string}; onSubmitted: (signature: string, operationId?: string) => Promise<WalletPaymentResult | void> | WalletPaymentResult | void; label?: string }) {
   const { t, locale } = useLanguage();
   const [wallets, setWallets] = useState<readonly PaymentWallet[]>([]);
   const [selected, setSelected] = useState("");
@@ -57,22 +58,36 @@ export function WalletPaymentButton({ invoiceId, payoutSubmissionId, fundingChal
       let account: WalletAccount | undefined = findSolanaAccount(wallet.accounts);
       if (!account) account = findSolanaAccount((await wallet.features[StandardConnect].connect()).accounts);
       if (!account) throw new Error("Ví không cung cấp tài khoản Solana.");
-      const savedKey=escrowRequest ? "skillbridge-escrow:"+escrowRequest.challengeId+":"+escrowRequest.action+":"+(escrowRequest.submissionId||"")+":"+account.address : null;
+      const savedKey=escrowRequest ? "skillbridge-escrow:"+escrowRequest.challengeId+":"+escrowRequest.action+":"+(escrowRequest.submissionId||"")+":"+account.address : cashoutId ? "skillbridge-cashout:"+cashoutId+":"+account.address : null;
       setPendingKey(savedKey);
       const prior=savedKey ? window.localStorage.getItem(savedKey) : null;
-      if(prior){const saved=JSON.parse(prior) as {signature:string;operationId?:string};setStage("verifying");const result=await onSubmitted(saved.signature,saved.operationId);setStage(result?.status==="pending"?"pending":"success");if(result?.status==="funded" && savedKey)window.localStorage.removeItem(savedKey);return;}
+      if(prior){const saved=JSON.parse(prior) as {signature?:string;operationId?:string};
+        if(!saved.signature)throw new Error(locale === "vi" ? "Lần gửi trước chưa rõ kết quả. Kiểm tra lịch sử ví và dán signature vào lệnh này; không gửi thêm USDC." : "The previous send has an uncertain outcome. Check wallet history and paste its signature into this order; do not send again.");
+        setStage("verifying");const result=await onSubmitted(saved.signature,saved.operationId);setStage(result?.status==="pending"?"pending":"success");if(result?.status==="funded" && savedKey)window.localStorage.removeItem(savedKey);return;}
       const buildResponse = await fetch(escrowRequest ? "/api/challenges/"+escrowRequest.challengeId+"/escrow" : "/api/payments/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ invoiceId, payoutSubmissionId, fundingChallengeId, cashoutId, ...escrowRequest, senderWallet: account.address }) });
       const built = await buildResponse.json() as { transaction?: string; error?: string; operationId?:string };
       if (!buildResponse.ok || !built.transaction) throw new Error(built.error ?? "Không thể tạo giao dịch thanh toán.");
       const transaction = fromBase64(built.transaction);
+      if (cashoutId) {
+        if (!cashoutExpectation) throw new Error("Missing accepted cashout snapshot");
+        await assertCashoutTransaction(transaction, account.address, cashoutExpectation);
+      }
       let signature: string | null = null;
       const signAndSend = wallet.features[SolanaSignAndSendTransaction];
       const signOnly = wallet.features[SolanaSignTransaction];
 
       setStage("signing");
       if (signAndSend?.supportedTransactionVersions.includes("legacy")) {
-        const [output] = await signAndSend.signAndSendTransaction({ account, chain: DEVNET_CHAIN, transaction, options: { commitment: "confirmed", maxRetries: 3 } });
-        signature = bs58.encode(output.signature);
+        if(cashoutId && savedKey)window.localStorage.setItem(savedKey,JSON.stringify({uncertain:true}));
+        try {
+          const [output] = await signAndSend.signAndSendTransaction({ account, chain: DEVNET_CHAIN, transaction, options: { commitment: "confirmed", maxRetries: 3 } });
+          signature = bs58.encode(output.signature);
+        } catch (cause) {
+          // Explicit user rejection happens before send. All other outcomes stay recoverable, not retry-as-new.
+          if(cashoutId && savedKey && cause && typeof cause === "object" && "code" in cause && cause.code === 4001)
+            window.localStorage.removeItem(savedKey);
+          throw cause;
+        }
       } else if (signOnly?.supportedTransactionVersions.includes("legacy")) {
         const [output] = await signOnly.signTransaction({ account, chain: DEVNET_CHAIN, transaction, options: { preflightCommitment: "confirmed" } });
         if(savedKey){const tx=output.signedTransaction;window.localStorage.setItem(savedKey,JSON.stringify({signature:bs58.encode(tx.slice(1,65)),operationId:built.operationId}));}

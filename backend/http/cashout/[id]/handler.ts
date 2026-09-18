@@ -1,7 +1,7 @@
 import { env } from "@/backend/config/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../../auth/auth";
-import { auditStatement } from "../../../services/audit/audit";
 import { SELECT_CASHOUT, serializeCashout, type CashoutRow } from "../../../services/cashout/cashout-record";
+import { reconcileCashout, acceptCashoutQuote } from "../../../services/cashout/offramp-orchestrator";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -32,28 +32,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (!body.acceptedTerms) return Response.json({ error: "Bạn cần xác nhận đây là giao dịch Devnet và VND chỉ là đối soát thử nghiệm." }, { status: 400 });
       if (session.status !== "quote_ready") return Response.json({ error: "Báo giá không còn ở trạng thái có thể xác nhận." }, { status: 409 });
       if (!session.quote_expires_at || new Date(session.quote_expires_at).getTime() <= Date.now()) {
-        await env.DB.prepare("UPDATE cashout_sessions SET status = 'quote_expired', updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(id).run();
+        await env.DB.prepare("UPDATE cashout_sessions SET status = 'quote_expired', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'quote_ready' AND payment_tx IS NULL AND submitted_tx IS NULL").bind(id).run();
         return Response.json({ error: "Báo giá đã hết hạn. Hãy tạo báo giá mới.", code: "QUOTE_EXPIRED" }, { status: 409 });
       }
-      const acceptedAt = new Date().toISOString();
-      await env.DB.batch([
-        env.DB.prepare("UPDATE cashout_sessions SET status = 'awaiting_wallet_signature', terms_accepted_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND status = 'quote_ready'")
-          .bind(acceptedAt, id, user.id),
-        env.DB.prepare("INSERT OR IGNORE INTO cashout_events (id, cashout_session_id, event_key, event_type, status, metadata_json) VALUES (?, ?, ?, 'quote.accepted', 'awaiting_wallet_signature', '{}')")
-          .bind(crypto.randomUUID(), id, `${id}:quote.accepted`),
-        auditStatement(env.DB, { actorUserId: user.id, action: "cashout.quote_accepted", targetType: "cashout_session", targetId: id, metadata: { devnet: true, sandboxBankPayout: true } }),
-      ]);
+      await acceptCashoutQuote(env.DB, session);
     } else if (body.action === "refresh") {
-      if (session.status === "sandbox_completed") return Response.json({ session: serializeCashout(session, env.SOLANA_USDC_MINT), reused: true });
-      if (session.status !== "bank_processing" || !session.payment_tx) return Response.json({ error: "Chưa có giao dịch USDC finalized để đối soát." }, { status: 409 });
-      const bankReference = session.bank_reference || `VND-SANDBOX-${id.slice(0, 8).toUpperCase()}`;
-      await env.DB.batch([
-        env.DB.prepare("UPDATE cashout_sessions SET status = 'sandbox_completed', payout_status = 'sandbox_completed', bank_reference = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND status = 'bank_processing'")
-          .bind(bankReference, id, user.id),
-        env.DB.prepare("INSERT OR IGNORE INTO cashout_events (id, cashout_session_id, event_key, event_type, status, metadata_json) VALUES (?, ?, ?, 'bank.sandbox_reconciled', 'sandbox_completed', ?)")
-          .bind(crypto.randomUUID(), id, `${id}:bank.sandbox_reconciled`, JSON.stringify({ bankReference, realBankTransfer: false })),
-        auditStatement(env.DB, { actorUserId: user.id, action: "cashout.sandbox_bank_reconciled", targetType: "cashout_session", targetId: id, metadata: { bankReference, realBankTransfer: false } }),
-      ]);
+      await reconcileCashout(env.DB, id);
     } else {
       return Response.json({ error: "Action cash-out không hợp lệ." }, { status: 400 });
     }
