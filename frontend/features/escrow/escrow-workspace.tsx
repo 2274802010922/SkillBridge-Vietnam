@@ -72,7 +72,9 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
     [submitEnd, setSubmitEnd] = useState(""),
     [reviewEnd, setReviewEnd] = useState(""),
     [consent, setConsent] = useState(false),
-    [signature, setSignature] = useState("");
+    [signature, setSignature] = useState(""),
+    [syncing, setSyncing] = useState(false),
+    [syncMessage, setSyncMessage] = useState("");
   const load = useCallback(async () => {
     if (!id) return;
     const r = await fetch("/api/challenges/" + id + "/escrow", {
@@ -144,23 +146,20 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
     operationId?: string,
   ): Promise<WalletPaymentResult> {
     setError("");
+    setSyncMessage("");
     const r = await fetch("/api/challenges/" + id + "/escrow", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ action: "sync", signature: sig, operationId }),
     });
-    const d = (await r.json()) as { error?: string; finalized?: boolean };
-    if (!r.ok) throw new Error(d.error);
+    const d = (await r.json()) as { error?: string; message?: string; finalized?: boolean; code?: string };
+    if (!r.ok) throw new Error(d.error || "Không thể kiểm tra giao dịch.");
     await load();
-    setNotice(
-      d.finalized
-        ? vi
-          ? "Giao dịch đã được xác nhận."
-          : "Transaction confirmed."
-        : vi
-          ? "Đang đồng bộ trạng thái. Bạn không cần gửi lại."
-          : "Synchronizing. You do not need to send again.",
-    );
+    const message = d.finalized
+      ? vi ? "Đã xác nhận quỹ. Bạn có thể tiếp tục công bố hoặc giải ngân." : "Funding confirmed. You can continue to publish or release rewards."
+      : d.message || (vi ? "Chưa xác nhận được quỹ; không cần nạp lại." : "Funding is not confirmed yet; do not deposit again.");
+    setSyncMessage(message);
+    setNotice(message);
     return { status: d.finalized ? "funded" : "pending" };
   }
   function button(action: EscrowAction, submissionId?: string) {
@@ -616,13 +615,18 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
             <button
               type="button"
               className="button button-secondary"
-              disabled={!signature}
-              onClick={() =>
-                void sync(signature).catch((e) => setError(String(e.message)))
-              }
+              disabled={!signature || syncing}
+              onClick={() => {
+                setSyncing(true);
+                void sync(signature)
+                  .catch((e) => setError(String(e.message)))
+                  .finally(() => setSyncing(false));
+              }}
             >
-              {vi ? "Kiểm tra giao dịch" : "Check transaction"}
+              {syncing ? (vi ? "Đang kiểm tra…" : "Checking…") : vi ? "Kiểm tra giao dịch" : "Check transaction"}
             </button>
+            {syncMessage && <p className="app-notice" role="status">{syncMessage}</p>}
+            {error && <p className="demo-error" role="alert">{error}</p>}
           </section>
         </>
       )}

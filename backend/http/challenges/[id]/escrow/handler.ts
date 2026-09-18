@@ -282,13 +282,14 @@ export async function POST(
     }
     if (!row) throw new Response("Hãy thiết lập quỹ trước.", { status: 409 });
     if (body.action === "sync") {
+      const signature = body.signature?.trim();
       // Check the signature first. The escrow account can lag behind a finalized
       // transaction on the first RPC read, so never decide from a pre-status snapshot.
-      const statuses = body.signature
+      const statuses = signature
         ? await escrowRpc<{
             value: Array<{ confirmationStatus?: string; err: unknown } | null>;
           }>(rpc, "getSignatureStatuses", [
-            [body.signature],
+            [signature],
             { searchTransactionHistory: true },
           ])
         : null;
@@ -303,15 +304,44 @@ export async function POST(
           },
           { status: 409 },
         );
-      if (body.signature && status?.confirmationStatus !== "finalized") {
+      if (signature && status?.confirmationStatus !== "finalized") {
         return Response.json({
           ok: true,
           finalized: false,
           code: status ? "NOT_FINALIZED" : "TX_NOT_FOUND",
+          message: status
+            ? "Giao dịch chưa finalized. Hãy chờ thêm rồi kiểm tra lại; không nạp thêm tiền."
+            : "Không tìm thấy transaction signature trên Solana Devnet.",
+          escrowAddress: row.escrow_address,
           state: null,
         });
       }
-      if (body.signature && body.operationId) {
+      if (signature) {
+        const tx = await escrowRpc<{
+          meta: { err: unknown } | null;
+          transaction: {
+            message: { accountKeys: Array<string | { pubkey: string }> };
+          };
+        } | null>(rpc, "getTransaction", [
+          signature,
+          { encoding: "json", commitment: "finalized", maxSupportedTransactionVersion: 0 },
+        ]);
+        const accounts = tx?.transaction.message.accountKeys.map((k) =>
+          typeof k === "string" ? k : k.pubkey,
+        ) ?? [];
+        if (!tx || tx.meta?.err) {
+          return Response.json({ error: "Giao dịch đã thất bại trên Devnet.", code: "TX_FAILED", escrowAddress: row.escrow_address }, { status: 409 });
+        }
+        if (!accounts.includes(row.escrow_address)) {
+          return Response.json({
+            error: "Transaction không thuộc escrow của challenge này.",
+            code: "ESCROW_MISMATCH",
+            expectedEscrow: row.escrow_address,
+            transactionAccounts: accounts.filter((account) => account !== ESCROW_PROGRAM),
+          }, { status: 409 });
+        }
+      }
+      if (signature && body.operationId) {
         const op = await env.DB.prepare(
           "SELECT id FROM escrow_operations WHERE id=? AND challenge_id=? AND actor_user_id=?",
         )
@@ -324,7 +354,7 @@ export async function POST(
               message: { accountKeys: Array<string | { pubkey: string }> };
             };
           } | null>(rpc, "getTransaction", [
-            body.signature,
+            signature,
             {
               encoding: "json",
               commitment: "finalized",
@@ -342,18 +372,28 @@ export async function POST(
             await env.DB.prepare(
               "UPDATE escrow_operations SET signature=? WHERE id=?",
             )
-              .bind(body.signature, body.operationId)
+              .bind(signature, body.operationId)
               .run();
         }
       }
       // Re-read finalized account state after the signature check. This is the
       // important recovery path for Initialize + Fund transactions.
-      const synced = await readAndSyncEscrow(row);
+      let synced;
+      try {
+        synced = await readAndSyncEscrow(row);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Không thể đồng bộ trạng thái escrow.";
+        return Response.json({ error: message, code: "ESCROW_SYNC_FAILED", escrowAddress: row.escrow_address }, { status: 409 });
+      }
       return Response.json({
         ok: true,
         state: synced.state,
         finalized: Boolean(synced.state),
         code: synced.state ? "ESCROW_FINALIZED" : "ESCROW_STATE_PENDING",
+        message: synced.state
+          ? "Quỹ đã được đồng bộ từ Devnet."
+          : "Chưa đọc được trạng thái escrow; hãy thử lại sau ít giây.",
+        escrowAddress: row.escrow_address,
       });
     }
     const data = await readAndSyncEscrow(row);
