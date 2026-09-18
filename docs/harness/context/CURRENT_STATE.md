@@ -1,6 +1,6 @@
 # Current Project State
 
-State reviewed: 2026-09-18; sandbox off-ramp implementation validated on top of `d8615d1`.
+State reviewed: 2026-09-18; sandbox off-ramp implementation `91198d6` validated and pushed.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
@@ -101,6 +101,8 @@ VI/EN at 375/768/1024/1440px with mock AI/RPC. See the completed plan for scope.
 No new live AI/Devnet transfer, Rust build, Vercel deployment or physical-wallet QA.
 
 ## Recent relevant commits
+
+- `91198d6` — pinned sandbox off-ramp, durable recovery, pre-sign inspection and 168-test regression.
 
 - `d8615d1` — evidence portfolios, career AI, employer comparison and issuance recovery.
 - `b510897` — wallet connection/session UX.

@@ -1,7 +1,7 @@
 # Handoff — Off-ramp adapters
 
 Updated: 2026-09-18 (Asia/Saigon)
-Checkpoint: OFFRAMP-05 — implementation complete, final standard regression passed; commit/push next.
+Checkpoint: OFFRAMP-06 — implementation 91198d6 committed and pushed to origin/main.
 Baseline: `d8615d110430b108846112e55d16125dbf45e9cc` trên `main`.
 
 ## Đọc trước khi tiếp tục
@@ -39,18 +39,18 @@ Không bao gồm deploy/mainnet/VND thật, tạo/fund ví hay gửi giao dịch
 | Mục | Trạng thái |
 | --- | --- |
 | Đã xong | S1–S4 implementation; 16 fault/domain tests + HTTP journey; VI/EN reconciliation view QA at 375/768/1024/1440 |
-| Đang làm | Publication only; implementation and final regression complete |
-| Product code đã đổi | Có, chưa commit; inspect git diff before resuming |
+| Đang làm | No active implementation; owner-run post-deploy acceptance remains |
+| Product code đã đổi | Committed/pushed in 91198d6; compare new diffs before resuming |
 | File chạm trong checkpoint | backend/services/cashout; HTTP cashout/webhook/build; database runtime/Drizzle/migration; solana/server/payments.ts |
 | Validation mới | Final npm test with STANDARD production build 168/168 pass; lint/check/tsc pass. Browser no overflow/clipped details or console errors; recheck preserves reconciliation |
 | Validation lịch sử | Release d8615d1 có 151 tests và CI pass; không phải bằng chứng cho refactor |
 | Blocker | Earlier sandbox/font restrictions resolved after environment permission update; standard build now passes. Live wallets/provider/Vercel unrun |
-| Running jobs/processes | No live transactions; QA preview stopped. Final docs checks/publication only |
-| Git publication | All source/docs ready locally; commit/push authorized and next |
-| Next safe action | Review staged diff, commit as O Bao Tri and push main; confirm remote HEAD. Then owner-run Vercel setup/test |
+| Running jobs/processes | No live transactions; QA preview stopped; no build/test jobs left running |
+| Git publication | Feature commit 91198d6 pushed to origin/main as O Bao Tri. This handoff records that publication; Git log identifies its own docs follow-up |
+| Next safe action | Owner sets dedicated public wallet if missing, redeploys/verifies intended Git revision, follows docs/testing/offramp.md; never resend an uncertain deposit |
 
-Live RPC/funding/provider calls have not run. Implementation is locally validated;
-read Git publication row before assuming GitHub/Vercel has it.
+Live RPC/funding/provider calls have not run. GitHub push succeeded; Vercel deployment
+status and real-wallet acceptance have not been inspected or claimed.
 
 ## Bước đầu cho account/session mới
 
