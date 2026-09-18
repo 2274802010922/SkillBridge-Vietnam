@@ -15,7 +15,7 @@ Load only the relevant plan/module/code, not this entire documentation tree.
 | Blockchain core | [Proof-to-payout contract](product/proof-to-payout.md), [independent claim tool](solana/independent-verifier.md) |
 | AI setup | [OpenRouter on Vercel](deployment/openrouter.md) |
 | Judging | [Walkthrough and verifiable evidence](judging/README.md) |
-| Architecture | [Folders, dependencies and runtime](architecture/README.md) |
+| Architecture | [System map, proof flow and trust boundaries](architecture/README.md) |
 | Off-ramp sandbox | [Adapter and recovery architecture](architecture/offramp.md), [setup and tests](testing/offramp.md) |
 | Deployment | [Vercel setup](deployment/vercel.md) |
 | Tests | [Commands and scope](testing/README.md) |

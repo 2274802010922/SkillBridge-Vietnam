@@ -8,7 +8,7 @@
 
 [Tiếng Việt](README.vi.md) · **English**
 
-[Try SkillBridge](https://404-eight-rho.vercel.app/) · [Wallet lookup](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Judge's walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md)
+[Open the demo](https://404-eight-rho.vercel.app/) · [Independent wallet verifier](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Judge walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md)
 
 [![CI](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-16-091426?logo=nextdotjs)
@@ -17,173 +17,195 @@
 
 </div>
 
-SkillBridge connects students, independent professionals, businesses and reviewing organizations through real work:
-a business funds a challenge, a human reviews the submission, and the student receives
-verifiable skill credentials and allocated rewards. Another business can accept that
-credential when the student applies for an opportunity.
+> **Demo scope:** Solana Devnet · AI is optional · a human makes the official decision · VND cashout is sandbox-only.
 
-Built for **UniHackFest**, with Vietnamese/English interfaces and a Solana Devnet
-implementation. Live chain evidence, automated QA and pending manual checks are identified
-separately below.
+SkillBridge turns a real student or freelancer submission into evidence that can be reviewed by a person, committed to a verifiable credential, and reused when the owner applies to a second opportunity.
 
-## Follow one student's journey
+The core promise is simple: **a business funds a challenge, a participant submits a fixed version, a reviewer owns the decision, and the participant can carry the resulting proof to another organization.**
+
+## Product in one minute
+
+| User | Problem | What SkillBridge gives them |
+| --- | --- | --- |
+| Student / freelancer | Good work is trapped in files and hard to compare fairly | A private evidence record, human-approved result, Skill Passport and independent claim path |
+| Business | Applications contain claims with little comparable proof | Funded challenges, shared rubrics, visible fund evidence and credential-gated opportunities |
+| University / reviewer | Assessment work is difficult to reuse and audit | Evidence reader, optional AI draft, manual scoring, provenance and revocable credentials |
 
 ```mermaid
 flowchart LR
-    A["Business A: fund a challenge"] --> B["Student: submit a fixed version"]
-    B --> C["Human: inspect evidence and score"]
-    AI["Optional AI suggestions"] -.-> C
-    C --> D["Revocable skill credential"]
-    C --> E["Allocate a reward"]
-    E --> F["Student claims to their wallet"]
-    D --> G["Business B: verify and receive application"]
-    S["Optional fee sponsor"] -.-> F
+    A["Business A\nfunds challenge"] --> B["Student\nsubmits fixed evidence"]
+    B --> C["Reviewer\nchecks evidence"]
+    AI["Optional AI\nsource-grounded draft"] -.-> C
+    C --> D["Human-approved\nresult"]
+    D --> E["Credential or\nallocated reward"]
+    E --> F["Student\nclaims to wallet"]
+    D --> G["Business B\nchecks eligibility"]
 ```
 
-**For students:** know the next step, inspect official feedback, claim rewards and apply
-with a credential. **For organizations:** fund work, evaluate evidence and select candidates
-with a clear verification history.
+**For students:** know the next step, inspect official feedback, claim rewards and apply with a credential. **For organizations:** fund work, evaluate evidence and select candidates with a clear verification history.
 
-## Evidence you can use, not just badges you can collect
+## UI showcase
 
-Students and freelancers can create **purpose-specific evidence portfolios** from
-their own reviewed work and credentials. Owners choose the saved version and audience;
-private submission files are never implicitly shared with an employer.
+These screenshots come from the current local build. Workflow screenshots use explicitly labelled QA fixtures; they demonstrate interface behavior and permission boundaries, not customer traction or revenue.
 
-- **For people seeking work:** write a portfolio manually or request a cited OpenRouter
-  draft, inspect its sources, and approve the introduction yourself.
-- **For employers:** compare up to three applicants, inspect permitted evidence,
-  recheck credential validity and record private decision notes. Different rubrics
-  are not silently combined into an overall ranking.
-- **For reliability:** issuance reserves capacity and journals the signed transaction
-  before broadcast, recovering finalized chain success after a database interruption.
-- **For the business-model demo:** server-issued launch trials show actual limits and
-  usage. They are not paid subscriptions or evidence of revenue; core verification
-  and allocated reward claims are never paywalled.
-
-[Acceptance and recovery guide](docs/testing/evidence-portfolios.md) ·
-[Portfolio HTTP tests](tests/integration/portfolio-flow.test.ts) ·
-[Issuance fault tests](tests/backend/credential-issuance.test.ts)
-
-## What makes it useful
-
-**Recoverable off-ramp lab:** optional Devnet USDC → simulated VND now uses a
-pinned provider adapter, separate settlement wallet, immutable test quotes,
-finalized deposit verification and durable inbox/outbox recovery. Repeated callbacks
-or page reloads do not create another payout. Late/partial/excess deposits retain
-their transaction for reconciliation. **Not a live bank integration or real VND payout.**
-[Setup and test guide](docs/testing/offramp.md) · [Trust boundaries](docs/architecture/offramp.md)
-
-| Capability | What users can actually do |
+| Public entry | Wallet connection |
 | --- | --- |
-| Funded challenges | Publish public or invitation-only challenges with structured briefs, escrow and visible fund proofs |
-| Evidence-linked review | Open an AI citation in the authorized source, inspect extracted text and PDF pages, then set the official human score |
-| Progress tracking | Follow submission, human assessment, allocation, claim and credential status in one place |
-| Credential-based applications | Business B accepts an issuer and score threshold; students preview and submit only the information they choose to share |
-| Fresh credential checks | Recheck a credential when reviewing an applicant; historical eligibility is distinct from current validity |
-| Sponsored claims | Recipient signs while a configured sponsor pays Devnet network fees, with fixed-message validation and budget limits |
-| Independent verification | Look up a wallet and claim an allocated reward through a separately hostable static tool |
+| ![SkillBridge landing](docs/assets/showcase/landing.webp) | ![Wallet connection](docs/assets/showcase/wallet-connect.webp) |
+| Understand the product thesis and demo scope. | Connect a Solana wallet; no funds are required to start. |
 
-Manual review is independent of AI. AI cannot approve work, allocate funds or sign a payout.
+| Challenge brief | Student submission |
+| --- | --- |
+| ![Challenge detail](docs/assets/showcase/challenge.webp) | ![Submission workspace](docs/assets/showcase/submission.webp) |
+| Read the brief, rubric, reward type and fund evidence. | Submit files, notes and a fixed evidence version. |
 
-<details>
-<summary><strong>Product screens</strong></summary>
-
-**Landing page**
-
-![SkillBridge landing](docs/assets/landing.png)
-
-**Open a citation and inspect the matching text**
+| Human review | Skill Passport |
+| --- | --- |
+| ![Human review](docs/assets/showcase/review.webp) | ![Credential passport](docs/assets/showcase/credential.webp) |
+| AI can suggest; the reviewer edits and owns the official score. | Inspect an active, revocable credential linked to a wallet. |
 
 ![Evidence reader](docs/assets/evidence-reader.png)
 
-The evidence-reader image uses labeled local QA data, not real user research or customer traction.
+The evidence reader uses explicitly labelled QA data and shows how a reviewer opens the source behind a citation.
 
-**Wallet sign-in and manual review**
-
-![Wallet sign-in](docs/assets/sign-in.png)
-
-![Manual review](docs/assets/manual-review.png)
-
-**Portfolio and employer workflow**
-
-![Student portfolio workspace](docs/assets/showcase/portfolio-workspace.png)
-
-![Employer comparison](docs/assets/showcase/employer-comparison.png)
-
-The portfolio and comparison captures use labeled local QA data. They demonstrate the
-interface and permission boundaries, not user traction, customers or revenue.
-
-</details>
-
-## Check the evidence
-
-| Claim | Evidence and scope |
+| Student portfolio | Employer comparison |
 | --- | --- |
-| Allocated reward can be claimed without the SkillBridge API | [Independent claim proof](docs/solana/evidence/independent-claim-proof.json): recipient-only SOL Devnet claim |
-| Recipient can start with zero SOL | [Sponsored claim proof](docs/solana/evidence/sponsored-claim-proof.json): 0 → 0.001 SOL; a separate sponsor paid the 10,000-lamport fee |
-| Revocation changes fresh eligibility | [Opportunity proof](docs/solana/evidence/opportunity-application-proof.json): accepted before revocation, denied afterward |
-| Review → application workflow and access controls | [HTTP integration test](tests/integration/competition-flow.test.ts), using an isolated database and explicit RPC fixtures |
-| Changed claim message is rejected | [Co-signing tests](tests/solana/sponsored-claim.test.ts) |
-| Duplicate application requests do not duplicate records | [Application tests](tests/backend/applications.test.ts) |
+| ![Student portfolio](docs/assets/showcase/portfolio.webp) | ![Employer comparison](docs/assets/showcase/comparison.webp) |
+| Select evidence and publish a purpose-specific version. | Compare permitted applicant evidence and keep private notes. |
 
-The current default suite passed **151 tests** locally at this release checkpoint.
-CI runs the build, repository checks, lint and automated suite. Live Devnet tests are
-opt-in and spend test SOL.
+| Devnet cashout sandbox |
+| --- |
+| ![Devnet cashout sandbox](docs/assets/showcase/cashout.webp) |
+| USDC Devnet verification is real; the VND receipt is explicitly simulated. |
 
-**Pending manual validation:** the owner will test the live OpenRouter provider after
-deployment. SOL sponsorship has live evidence; USDC sponsorship has instruction-level
-coverage and still needs a funded live USDC test. No mainnet-readiness or security-audit
-claim is made.
+## What makes the blockchain necessary
 
-## Why Solana matters
+Solana is used for facts that should remain independently checkable: custody, accepted roles, reward allocation, recipient binding, replay protection, credential status and access receipts. Private files, notes and personal data stay off-chain.
 
-- **Escrow:** the program holds funds and enforces accepted roles, allocation, fixed
-  recipients and protection against repeated claims.
-- **Credentials:** SAS records can be read outside the application and checked for
-  issuer authorization, expiry, schema state and revocation.
-- **Opportunity policies:** the program stores policies and verifier-authorized historical
-  access receipts. The verifier service performs fresh SAS checks before an application;
-  the current gate does not itself parse SAS inside the program.
-- **Exit path:** an already allocated reward can be claimed through the independent tool,
-  using a public RPC and a compatible wallet.
+```mermaid
+flowchart TB
+    subgraph App["SkillBridge application"]
+      Private["Private files, notes, permissions"]
+      Review["Human review and audit"]
+      Private --> Review
+    end
+    Review -->|"authorized transaction"| Chain["Solana Devnet"]
+    Chain --> Escrow["Challenge Escrow\nfunds, roles, allocation, claims"]
+    Chain --> SAS["SAS credential\nissuer, score, expiry, revocation"]
+    Chain --> Gate["Opportunity Gate\npolicy and access receipts"]
+    Public["Independent verifier"] -->|"public RPC read"| Chain
+    Public -->|"recipient signs fixed claim"| Escrow
+```
 
-Private documents and application profiles stay off-chain. Program upgrade authority
-still exists. If both reviewers fail to act, unresolved funds remain pending under the
-agreed policy. See the [product contract](docs/product/proof-to-payout.md) and
-[escrow runbook](docs/solana/escrow-runbook.md).
+The smart contracts do not prove that a human score is fair or that an issuer is trustworthy. They make committed ownership and state transitions inspectable; the verifier still applies its own issuer, wallet, score and freshness policy.
 
-## Run locally
+## AI supports the review; people decide
 
-Requires **Node.js 22.13+** and npm. Run from the repository root:
+```mermaid
+flowchart LR
+    Files["Private files + notes"] --> Extract["Local extraction\nand cached chunks"]
+    Extract --> Retrieve["Rubric-based retrieval"]
+    Retrieve --> Cache{"Cached assessment?"}
+    Cache -->|"yes"| Draft["Validated draft\nwith citations"]
+    Cache -->|"no"| Provider["One explicit AI request"]
+    Provider --> Validate["Strict JSON + citation checks"]
+    Validate --> Draft
+    Draft --> Human["Reviewer checks, edits\nand sets official score"]
+    Files -->|"manual path"| Human
+    Human --> Result["Approved or rejected result"]
+```
+
+The assessment route extracts documents locally, retrieves rubric-relevant evidence, caches chunks and results by hash, and makes one generation request per submission version. AI cannot approve, allocate rewards, issue credentials or sign transactions. Manual review remains available when AI is unavailable.
+
+## Claim without the application API
+
+An allocated reward can be checked and claimed through the standalone verifier. It reads current Devnet state through public RPC, checks recipient and allocation, then asks the recipient wallet to sign the fixed claim.
+
+```mermaid
+sequenceDiagram
+    actor Student as Recipient wallet
+    participant Tool as Independent static verifier
+    participant RPC as Solana Devnet RPC
+    participant Program as Challenge Escrow
+    Student->>Tool: Enter wallet or connect
+    Tool->>RPC: Read escrow, receipt, allocation and network
+    RPC-->>Tool: Finalized state
+    Tool->>Tool: Check recipient and replay state
+    Tool->>Student: Request signature for fixed claim
+    Student->>RPC: Submit signed transaction
+    RPC->>Program: Enforce recipient and claim-once rules
+    Program-->>Student: Transfer allocated Devnet reward
+    Tool->>RPC: Read finalized result
+```
+
+## Evidence portfolio and employer workflow
+
+```mermaid
+flowchart LR
+    Approved["Approved review or credential"] --> Consent["Reviewer allows summary reuse"]
+    Consent --> Version["Owner saves portfolio version"]
+    Version --> Grant["Owner grants application-scoped access"]
+    Grant --> Employer["Business B sees permitted evidence"]
+    Employer --> Fresh["Fresh credential eligibility check"]
+    Fresh --> Decision["Comparison and private decision note"]
+    Revoke["Owner or issuer revokes"] --> Next["Next check reflects revocation"]
+```
+
+The owner chooses what to share. Raw submission files and private reviewer notes are not implicitly exposed to an employer. Rechecking a credential is separate from the historical decision made when an application was submitted.
+
+## Off-ramp sandbox boundary
+
+```mermaid
+flowchart LR
+    Quote["Frozen test quote\nand funding snapshot"] --> Sign["User signs USDC Devnet transfer"]
+    Sign --> Wallet["Dedicated settlement wallet"]
+    Wallet --> Verify["Finalized sender, mint, recipient\nand amount verification"]
+    Verify -->|"valid"| Adapter["Sandbox adapter + inbox/outbox"]
+    Verify -->|"partial, excess or late"| Reconcile["Retain transaction\nfor reconciliation"]
+    Adapter --> VND["Simulated VND receipt"]
+    FX["FX reference"] -.-> Quote
+```
+
+The cashout experiment is separate from challenge escrow. New orders require a dedicated public Devnet settlement wallet, use immutable snapshots and preserve uncertain deposits. No bank transfer or real VND payout is claimed.
+
+## Business model hypothesis
+
+The first wedge is a Vietnam pilot with a university, club or employer running a small number of evidence-based challenges. Potential paid value is operational: challenge setup, reviewer workflow, credential issuance, employer verification and portfolio access. The repository demonstrates the product and usage limits; it does not claim paying customers or revenue.
+
+## Verifiable evidence
+
+| Claim | Evidence |
+| --- | --- |
+| Allocated reward can be claimed without the SkillBridge API | [Independent claim proof](docs/solana/evidence/independent-claim-proof.json) |
+| Recipient can start with zero SOL | [Sponsored claim proof](docs/solana/evidence/sponsored-claim-proof.json) |
+| Revocation changes fresh eligibility | [Opportunity proof](docs/solana/evidence/opportunity-application-proof.json) |
+| Review, portfolio and employer permissions | [Competition flow tests](tests/integration/competition-flow.test.ts) and [portfolio flow tests](tests/integration/portfolio-flow.test.ts) |
+| Credential issuance survives DB/RPC uncertainty | [Issuance fault tests](tests/backend/credential-issuance.test.ts) |
+| Cashout recovery and webhook replay protection | [Off-ramp tests](tests/backend/offramp.test.ts) and [setup guide](docs/testing/offramp.md) |
+
+The current standard suite passes **168 tests** locally. Live Devnet and live OpenRouter checks are separate owner-run acceptance steps. This project makes no mainnet-readiness or security-audit claim.
+
+## Demo path
+
+1. Open the demo and connect a Devnet wallet.
+2. Use the business role to open the funded challenge and show the visible fund state.
+3. Switch to the student role, submit the labelled evidence file and open progress.
+4. Switch to the reviewer role. Show the evidence reader, optional AI suggestion and official manual score.
+5. Show the Skill Passport and public verification link.
+6. Use the independent verifier to explain how an allocated claim can exit the application API.
+7. Finish with the employer comparison view and the Devnet/sandbox scope note.
+
+For a judge checklist, use [docs/judging/README.md](docs/judging/README.md). For a role-by-role test, use [docs/testing/manual-test-guide.md](docs/testing/manual-test-guide.md).
+
+## Run and deploy
+
+Requires Node.js **22.13+** and npm.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Create `.env.local` from [.env.example](.env.example) before testing integrations.
-Local development uses SQLite when Turso is not configured.
-
-For the independently hosted verifier:
-
-```bash
-npm run preview:verifier
-```
-
-Open [localhost:3000](http://localhost:3000) for the product or
-[localhost:3219](http://localhost:3219) for the standalone verifier.
-
-## Deploy and verify
-
-Deploy one Next.js project on **Vercel**, with the repository root as Root Directory.
-Use `npm ci` and `npm run build`. Existing records migrate without a database reset;
-these upgrades do not require a new Solana program deployment.
-
-- [Vercel configuration](docs/deployment/vercel.md)
-- [OpenRouter configuration](docs/deployment/openrouter.md)
-- [Applications, progress, citations and sponsored-fee setup](docs/testing/competition-upgrades.md)
-- [Independent tool instructions](docs/solana/independent-verifier.md)
+Create `.env.local` from [.env.example](.env.example). Local development uses SQLite when Turso is not configured.
 
 ```bash
 npm run check:repo
@@ -191,32 +213,22 @@ npm run lint
 npm test
 ```
 
-For opt-in chain tests and expected results, see the [testing guide](docs/testing/README.md).
-Never commit `.env.local`, private keypairs or wallet secrets.
+Deploy one Next.js project on Vercel from the repository root. Follow [Vercel setup](docs/deployment/vercel.md), [OpenRouter setup](docs/deployment/openrouter.md) and [off-ramp sandbox setup](docs/testing/offramp.md). Never commit `.env.local`, wallet keypairs or provider secrets.
 
 ## Repository map
 
 ```text
-frontend/       Screens, components, bilingual copy and styles
-backend/        HTTP handlers, authorization, AI, database and storage
-solana/         Anchor programs, IDL, chain clients and server signing
-shared/         Shared validation and data contracts
-app/            Thin Next.js route/layout adapters
+app/            Thin Next.js route and layout adapters
+frontend/       React screens, components, bilingual copy and styles
+backend/        HTTP handlers, auth, AI, database, storage and services
+solana/         Anchor programs, IDL, chain clients and server verification
+shared/         Pure validation and data contracts
 tools/          Independently hostable wallet verifier
-tests/          Unit, HTTP integration and opt-in Devnet tests
-docs/           Product, architecture, evidence and deployment guides
+tests/          Unit, HTTP integration, browser fixtures and opt-in Devnet tests
+docs/           Product, architecture, evidence, deployment and harness guides
 public/         Public product assets
-tooling/        Archived guidance and optional legacy tools
 ```
 
-[Frontend](frontend/README.md) · [Backend](backend/README.md) · [Solana](solana/README.md) ·
-[Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [All documentation](docs/README.md)
+[Frontend](frontend/README.md) · [Backend](backend/README.md) · [Solana](solana/README.md) · [Architecture](docs/architecture/README.md) · [All documentation](docs/README.md) · [Changelog](CHANGELOG.md)
 
-## Scope and source use
-
-Invoices and VND cashout are supporting experiments; the VND settlement leg remains
-**sandbox**. They are separate from the challenge-to-opportunity flow.
-
-This repository does not currently grant an open-source license.
-Third-party brand assets retain their respective ownership; see
-[asset attribution](public/brands/README.md).
+Invoices and VND cashout are supporting experiments; the VND settlement leg remains sandbox. The repository does not currently grant an open-source license.

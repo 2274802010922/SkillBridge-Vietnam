@@ -1,6 +1,6 @@
 # Current Project State
 
-State reviewed: 2026-09-18; sandbox off-ramp implementation `91198d6` validated and pushed.
+State reviewed: 2026-09-18; Demo Day README/architecture update is ready after `50aeb32`.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
@@ -21,6 +21,10 @@ Latest addition: recoverable sandbox off-ramp; [publication checkpoint](../works
   invoices and sandbox VND cashout are supporting experiments, not the core proof.
 
 ## Recently completed
+
+- Self-contained English/Vietnamese README with current UI gallery, Demo Day path,
+  evidence matrix and architecture links; detailed Mermaid architecture diagrams are
+  in [docs/architecture](../../architecture/README.md).
 
 - Pinned off-ramp adapter, dedicated settlement address, immutable test quote and
   replay-safe journals; partial/late deposits retain proof for reconciliation.

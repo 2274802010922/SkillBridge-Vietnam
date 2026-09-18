@@ -2,6 +2,13 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-18 — Demo Day README and architecture
+
+- Rebuilt the English and Vietnamese READMEs as self-contained product pages with visible UI gallery, demo path, business hypothesis, evidence matrix and setup links.
+- Added current QA screenshots for landing, wallet, challenge, submission, review, credential, portfolio, employer comparison and cashout.
+- Added architecture diagrams for system boundaries, proof flow, AI/human review, credential access, independent claims and recovery.
+- Clearly label QA fixtures, Solana Devnet scope, optional AI and sandbox VND cashout.
+
 ## 2026-09-18 — Demo-day copy clarity
 
 - Landing page now labels AI as optional assistance and human review as the final decision.
