@@ -281,9 +281,36 @@ export async function POST(
       return Response.json({ ok: true });
     }
     if (!row) throw new Response("Hãy thiết lập quỹ trước.", { status: 409 });
-    const data = await readAndSyncEscrow(row);
-    const config = data.config;
     if (body.action === "sync") {
+      // Check the signature first. The escrow account can lag behind a finalized
+      // transaction on the first RPC read, so never decide from a pre-status snapshot.
+      const statuses = body.signature
+        ? await escrowRpc<{
+            value: Array<{ confirmationStatus?: string; err: unknown } | null>;
+          }>(rpc, "getSignatureStatuses", [
+            [body.signature],
+            { searchTransactionHistory: true },
+          ])
+        : null;
+      const status = statuses?.value[0] ?? null;
+      if (status?.err)
+        return Response.json(
+          {
+            error:
+              "Giao dịch bị từ chối. Kiểm tra ví, điều kiện và mã giao dịch.",
+            failed: true,
+            code: "TX_FAILED",
+          },
+          { status: 409 },
+        );
+      if (body.signature && status?.confirmationStatus !== "finalized") {
+        return Response.json({
+          ok: true,
+          finalized: false,
+          code: status ? "NOT_FINALIZED" : "TX_NOT_FOUND",
+          state: null,
+        });
+      }
       if (body.signature && body.operationId) {
         const op = await env.DB.prepare(
           "SELECT id FROM escrow_operations WHERE id=? AND challenge_id=? AND actor_user_id=?",
@@ -319,31 +346,18 @@ export async function POST(
               .run();
         }
       }
-      const statuses = body.signature
-        ? await escrowRpc<{
-            value: Array<{ confirmationStatus: string; err: unknown } | null>;
-          }>(rpc, "getSignatureStatuses", [
-            [body.signature],
-            { searchTransactionHistory: true },
-          ])
-        : null;
-      if (statuses?.value[0]?.err)
-        return Response.json(
-          {
-            error:
-              "Giao dịch bị từ chối. Kiểm tra ví, điều kiện và mã giao dịch.",
-            failed: true,
-          },
-          { status: 409 },
-        );
+      // Re-read finalized account state after the signature check. This is the
+      // important recovery path for Initialize + Fund transactions.
+      const synced = await readAndSyncEscrow(row);
       return Response.json({
         ok: true,
-        state: data.state,
-        finalized:
-          Boolean(data.state) &&
-          statuses?.value[0]?.confirmationStatus === "finalized",
+        state: synced.state,
+        finalized: Boolean(synced.state),
+        code: synced.state ? "ESCROW_FINALIZED" : "ESCROW_STATE_PENDING",
       });
     }
+    const data = await readAndSyncEscrow(row);
+    const config = data.config;
     if (body.senderWallet !== user.walletAddress)
       throw new Response("Dùng đúng ví đang đăng nhập để ký.", { status: 403 });
     const action = body.action as EscrowAction;

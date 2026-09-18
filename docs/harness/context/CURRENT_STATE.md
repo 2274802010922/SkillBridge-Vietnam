@@ -22,6 +22,10 @@ Latest addition: recoverable sandbox off-ramp; [publication checkpoint](../works
 
 ## Recently completed
 
+- Legacy `/app/escrow` recovery now checks transaction finalization before re-reading
+  the escrow account. A delayed first RPC snapshot no longer strands a successful
+  `Initialize + Fund` transaction in the UI; rendered route regression is covered.
+
 - Self-contained English/Vietnamese README with current UI gallery, Demo Day path,
   evidence matrix and architecture links; detailed Mermaid architecture diagrams are
   in [docs/architecture](../../architecture/README.md).

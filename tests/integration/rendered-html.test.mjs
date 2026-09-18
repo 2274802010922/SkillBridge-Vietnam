@@ -221,7 +221,7 @@ test("supports Wallet Standard sign-and-send and sign-only Devnet payment flows"
 });
 
 test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", async () => {
-  const [challengeRoute, fundingRoute, payoutRoute, cashoutRoute, cashoutVerify, cashoutUi, walletAssets, webhookRoute, fxReference, beneficiaryVerification, verificationService, sandboxProvider, inbox] = await Promise.all([
+  const [challengeRoute, fundingRoute, payoutRoute, cashoutRoute, cashoutVerify, cashoutUi, walletAssets, webhookRoute, fxReference, beneficiaryVerification, verificationService, sandboxProvider, inbox, escrowRoute] = await Promise.all([
     readFile(new URL("../../backend/http/challenges/[id]/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/challenges/[id]/funding/verify/handler.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/http/payouts/handler.ts", import.meta.url), "utf8"),
@@ -235,6 +235,7 @@ test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", a
     readFile(new URL("../../backend/services/cashout/offramp-verification.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/services/cashout/providers/sandbox.ts", import.meta.url), "utf8"),
     readFile(new URL("../../backend/services/cashout/offramp-inbox.ts", import.meta.url), "utf8"),
+    readFile(new URL("../../backend/http/challenges/[id]/escrow/handler.ts", import.meta.url), "utf8"),
   ]);
   assert.match(challengeRoute, /funding_status !== "funded"/);
   assert.match(fundingRoute, /verifySolPayment/);
@@ -263,6 +264,9 @@ test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", a
   assert.match(walletAssets, /getTokenAccountsByOwner/);
   assert.match(fxReference, /getFxReference/);
   assert.match(beneficiaryVerification, /sandbox_confirmed/);
+  assert.match(escrowRoute, /ESCROW_STATE_PENDING/);
+  assert.match(escrowRoute, /getSignatureStatuses/);
+  assert.ok(escrowRoute.indexOf("const synced = await readAndSyncEscrow(row);") < escrowRoute.lastIndexOf("const data = await readAndSyncEscrow(row);"));
 });
 
 test("removes temporary starter metadata and dependencies", async () => {

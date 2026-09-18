@@ -2,6 +2,13 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-19 — Escrow transaction verification recovery
+
+- Fixed the legacy `/app/escrow` sync order: check signature finalization before reading escrow state.
+- Re-read the finalized escrow account after `Initialize + Fund`, so a delayed first RPC snapshot no longer leaves the UI stuck on “synchronizing”.
+- Added explicit `NOT_FINALIZED`, `TX_NOT_FOUND`, `TX_FAILED`, `ESCROW_STATE_PENDING` and `ESCROW_FINALIZED` sync outcomes.
+- Added a rendered contract test that protects the recovery ordering.
+
 ## 2026-09-18 — Demo Day README and architecture
 
 - Rebuilt the English and Vietnamese READMEs as self-contained product pages with visible UI gallery, demo path, business hypothesis, evidence matrix and setup links.
