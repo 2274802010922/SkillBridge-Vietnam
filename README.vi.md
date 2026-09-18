@@ -94,6 +94,15 @@ Chấm thủ công hoạt động độc lập. AI không có quyền phê duy�
 
 ![Chấm thủ công với dữ liệu QA](docs/assets/manual-review.png)
 
+**Hồ sơ và quy trình doanh nghiệp**
+
+![Không gian hồ sơ sinh viên](docs/assets/showcase/portfolio-workspace.png)
+
+![So sánh ứng viên của doanh nghiệp](docs/assets/showcase/employer-comparison.png)
+
+Hai ảnh này dùng dữ liệu QA cục bộ có ghi nhãn. Chúng chỉ minh họa giao diện và
+phân quyền, không phải bằng chứng về người dùng, khách hàng hoặc doanh thu.
+
 </details>
 
 ## Bằng chứng có thể kiểm tra

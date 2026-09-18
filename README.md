@@ -105,6 +105,15 @@ The evidence-reader image uses labeled local QA data, not real user research or 
 
 ![Manual review](docs/assets/manual-review.png)
 
+**Portfolio and employer workflow**
+
+![Student portfolio workspace](docs/assets/showcase/portfolio-workspace.png)
+
+![Employer comparison](docs/assets/showcase/employer-comparison.png)
+
+The portfolio and comparison captures use labeled local QA data. They demonstrate the
+interface and permission boundaries, not user traction, customers or revenue.
+
 </details>
 
 ## Check the evidence
