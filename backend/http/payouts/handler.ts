@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         c.reward_amount_usdc, c.reward_amount_atomic,
         f.id AS fund_id, f.status AS fund_status, f.required_atomic, f.funded_atomic,
         f.disbursed_atomic, f.refunded_atomic,
-        e.id AS escrow_id,
+        e.challenge_id AS escrow_id,
         s.id AS submission_id, s.state AS submission_state, s.submitted_at,
         p.student_user_id, w.address AS recipient_wallet, u.display_name AS student_name,
         a.status AS assessment_status, cp.id AS payout_id, cp.status AS payout_status,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         p.student_user_id, w.address AS recipient_wallet, a.status AS assessment_status,
         cp.status AS payout_status, f.id AS fund_id, f.status AS fund_status,
         f.asset AS fund_asset, f.funded_atomic, f.disbursed_atomic, f.refunded_atomic
-        , e.id AS escrow_id
+        , e.challenge_id AS escrow_id
       FROM submissions s
       JOIN participations p ON p.id = s.participation_id
       JOIN challenges c ON c.id = p.challenge_id
