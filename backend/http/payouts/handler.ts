@@ -32,6 +32,7 @@ type PayoutRow = {
   payout_status: string | null;
   payment_tx: string | null;
   paid_at: string | null;
+  escrow_id?: string | null;
 };
 
 export async function GET(request: Request) {
@@ -43,6 +44,7 @@ export async function GET(request: Request) {
         c.reward_amount_usdc, c.reward_amount_atomic,
         f.id AS fund_id, f.status AS fund_status, f.required_atomic, f.funded_atomic,
         f.disbursed_atomic, f.refunded_atomic,
+        e.id AS escrow_id,
         s.id AS submission_id, s.state AS submission_state, s.submitted_at,
         p.student_user_id, w.address AS recipient_wallet, u.display_name AS student_name,
         a.status AS assessment_status, cp.id AS payout_id, cp.status AS payout_status,
@@ -57,6 +59,7 @@ export async function GET(request: Request) {
       JOIN users u ON u.id = p.student_user_id
       JOIN assessments a ON a.submission_id = s.id AND a.status = 'approved'
       LEFT JOIN challenge_funds f ON f.challenge_id = c.id
+      LEFT JOIN challenge_escrows e ON e.challenge_id = c.id
       LEFT JOIN challenge_payouts cp ON cp.submission_id = s.id
       WHERE c.reward_type IN ('usdc', 'sol') AND c.reward_amount_atomic IS NOT NULL
       ORDER BY s.submitted_at DESC
@@ -79,6 +82,7 @@ export async function POST(request: Request) {
         p.student_user_id, w.address AS recipient_wallet, a.status AS assessment_status,
         cp.status AS payout_status, f.id AS fund_id, f.status AS fund_status,
         f.asset AS fund_asset, f.funded_atomic, f.disbursed_atomic, f.refunded_atomic
+        , e.id AS escrow_id
       FROM submissions s
       JOIN participations p ON p.id = s.participation_id
       JOIN challenges c ON c.id = p.challenge_id
@@ -86,6 +90,7 @@ export async function POST(request: Request) {
       JOIN assessments a ON a.submission_id = s.id
       LEFT JOIN challenge_payouts cp ON cp.submission_id = s.id
       LEFT JOIN challenge_funds f ON f.challenge_id = c.id
+      LEFT JOIN challenge_escrows e ON e.challenge_id = c.id
       WHERE s.id = ?
     `).bind(submissionId).first<PayoutRow & { fund_asset: RewardAsset | null }>();
     if (!row) return Response.json({ error: "Bài nộp không tồn tại." }, { status: 404 });
