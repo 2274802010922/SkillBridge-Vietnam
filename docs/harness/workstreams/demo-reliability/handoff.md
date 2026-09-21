@@ -1,8 +1,8 @@
 # Demo reliability handoff
 
 Updated: 2026-09-21
-Baseline: main `0c6c4ff`; release is prepared for authorized commit/push.
-Use Git history for the publication commit.
+Baseline: `0c6c4ff`. Implementation commit: `7cdbe72`.
+Publication checkpoint follows that commit; verify origin/main before resuming.
 Scope: [active plan](../../plans/active/2026-09-20-demo-reliability.md).
 
 ## Checkpoint

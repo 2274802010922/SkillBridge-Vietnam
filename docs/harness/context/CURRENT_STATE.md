@@ -1,6 +1,6 @@
 # Current Project State
 
-State reviewed: 2026-09-21; reliability release built from `0c6c4ff`.
+State reviewed: 2026-09-21; reliability implementation commit `7cdbe72`.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
@@ -46,7 +46,7 @@ Latest addition: recoverable sandbox off-ramp; [publication checkpoint](../works
 ## In progress
 
 [Demo reliability](../plans/active/2026-09-20-demo-reliability.md) implementation
-is ready for publication and external acceptance. It addresses the audited reward,
+is committed and awaiting external acceptance. It addresses the audited reward,
 error handling, upload, issuer, milestone and AI paths without a program upgrade.
 [Handoff](../workstreams/demo-reliability/handoff.md) records validation and remaining
 live checks. The plan stays active until owner-run Vercel/wallet acceptance is recorded.
@@ -126,6 +126,8 @@ VI/EN at 375/768/1024/1440px with mock AI/RPC. See the completed plan for scope.
 No new live AI/Devnet transfer, Rust build, Vercel deployment or physical-wallet QA.
 
 ## Recent relevant commits
+
+- `7cdbe72` — demo reliability: reward guidance, eligibility, issuer/payment recovery, 184-test suite.
 
 - `91198d6` — pinned sandbox off-ramp, durable recovery, pre-sign inspection and 168-test regression.
 
