@@ -4,6 +4,8 @@ import { assertSameOrigin, jsonError, requireSessionUser } from "../../../../aut
 import { deleteEvidence, putEvidence } from "../../../../storage/evidence-store";
 import { consumeRateLimit } from "../../../../auth/rate-limit";
 
+import { evidenceMime, validTextEvidence } from "../../../../../shared/validation/evidence-file";
+
 const MAX_BYTES = 10 * 1024 * 1024;
 const allowedTypes = new Set([
   "application/pdf", "text/plain", "text/markdown", "application/json",
@@ -38,34 +40,37 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return Response.json({ error: "Thiếu file." }, { status: 400 });
-    if (file.size < 1 || file.size > MAX_BYTES || !allowedTypes.has(file.type)) {
+    const mime=evidenceMime(file.name,file.type);
+    if (file.size < 1 || file.size > MAX_BYTES || !allowedTypes.has(mime)) {
       return Response.json({ error: "File không hợp lệ hoặc vượt quá 10 MB." }, { status: 400 });
     }
     const bytes = await file.arrayBuffer();
+    if(!validTextEvidence(new Uint8Array(bytes),mime))return Response.json({error:"Tệp văn bản không đúng định dạng UTF-8."},{status:400});
     const idFile = crypto.randomUUID();
     const r2Key = `submissions/${id}/${idFile}-${safeName(file.name)}`;
     const sha256 = await hashBytes(bytes);
-    await putEvidence(r2Key, bytes, file.type);
+    await putEvidence(r2Key, bytes, mime);
     try {
-      await env.DB.batch([
+      const writes=await env.DB.batch([
         env.DB.prepare(`
           INSERT INTO submission_files
             (id, submission_id, r2_key, original_name, content_type, size_bytes, sha256, uploaded_by_user_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(idFile, id, r2Key, file.name, file.type, String(file.size), sha256, user.id),
+          SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS(SELECT 1 FROM submissions WHERE id=? AND state IN ('draft','changes_requested'))
+        `).bind(idFile, id, r2Key, file.name, mime, String(file.size), sha256, user.id, id),
         auditStatement(env.DB, {
           actorUserId: user.id,
           action: "evidence.uploaded",
           targetType: "submission_file",
           targetId: idFile,
-          metadata: { submissionId: id, contentType: file.type, sizeBytes: file.size, sha256 },
+          metadata: { submissionId: id, contentType: mime, sizeBytes: file.size, sha256 },
         }),
       ]);
+      if(!writes[0].meta.changes)throw new Error("Bài nộp đã khóa. Tệp chưa được thêm.");
     } catch (error) {
       await deleteEvidence(r2Key);
       throw error;
     }
-    return Response.json({ file: { id: idFile, originalName: file.name, contentType: file.type, sizeBytes: file.size, sha256 } }, { status: 201 });
+    return Response.json({ file: { id: idFile, originalName: file.name, contentType: mime, sizeBytes: file.size, sha256 } }, { status: 201 });
   } catch (error) {
     return jsonError(error);
   }
@@ -88,10 +93,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (row.state !== "draft" && row.state !== "changes_requested") {
       return Response.json({ error: "Bài nộp đã khóa." }, { status: 409 });
     }
-    await env.DB.batch([
-      env.DB.prepare("DELETE FROM submission_files WHERE id = ?").bind(fileId),
+    const writes=await env.DB.batch([
+      env.DB.prepare("DELETE FROM submission_files WHERE id = ? AND EXISTS(SELECT 1 FROM submissions WHERE id=submission_files.submission_id AND state IN ('draft','changes_requested'))").bind(fileId),
       auditStatement(env.DB, { actorUserId:user.id,action:"evidence.deleted",targetType:"submission_file",targetId:fileId,metadata:{submissionId:id} }),
     ]);
+    if(!writes[0].meta.changes)return Response.json({error:"Bài nộp đã khóa."},{status:409});
     await deleteEvidence(row.r2_key);
     return Response.json({ ok: true });
   } catch (error) {

@@ -1,6 +1,6 @@
 # Current Project State
 
-State reviewed: 2026-09-18; Demo Day README/architecture update `7d0d76b` is pushed.
+State reviewed: 2026-09-21; reliability release built from `0c6c4ff`.
 This is a short checkpoint, not a deployment report. Recheck Git before continuing.
 
 ## Current objective
@@ -45,12 +45,18 @@ Latest addition: recoverable sandbox off-ramp; [publication checkpoint](../works
 
 ## In progress
 
-No active product implementation is confirmed. The [off-ramp plan](../plans/completed/2026-09-18-offramp-adapters.md)
-is complete; publication status remains in its [handoff](../workstreams/offramp/handoff.md).
-The evidence-portfolio [plan](../plans/completed/2026-09-17-evidence-to-opportunity.md)
-is completed; do not restart it when resuming off-ramp work.
+[Demo reliability](../plans/active/2026-09-20-demo-reliability.md) implementation
+is ready for publication and external acceptance. It addresses the audited reward,
+error handling, upload, issuer, milestone and AI paths without a program upgrade.
+[Handoff](../workstreams/demo-reliability/handoff.md) records validation and remaining
+live checks. The plan stays active until owner-run Vercel/wallet acceptance is recorded.
 
 ## Next priorities
+
+Redeploy the reliability release, then follow [acceptance](../../testing/demo-reliability-acceptance.md).
+No additional env variable is needed; migration 0022 is additive. Confirm the active
+reviewer at the actual deadline, both consents, committed score and paid receipt.
+F07 audit was corrected: baseline triggers already protected locked escrow files.
 
 Off-ramp: owner configures the dedicated public wallet and performs post-deploy
 acceptance from its runbook. No real provider/corridor or production access is established.
@@ -98,6 +104,17 @@ These gaps do not authorize deployments, spending or new features.
   [standalone verifier](../../../tools/claim-verifier/), [test guide](../../testing/README.md).
 
 ## Validation status
+
+2026-09-21 reliability release: production build/TypeScript and 184/184 tests passed.
+Browser fixture refresh feedback and VI/EN next steps checked at 375/768/1024/1440px,
+no horizontal overflow. External live signing/AI/Blob/deployed acceptance remains pending.
+
+2026-09-20 audit: production build + 168 tests, lint and repository checks passed.
+Additional isolated HTTP/RPC probes reproduced below-threshold reward eligibility,
+missing paid-escrow state on payouts, account-exists/funded conflation, text/JSON
+error mismatch and one signature paying two milestone records. Read-only Devnet
+confirmed both reported funds; the short demo challenge is now backup-reviewer-only.
+No live signing, deployed authenticated session, live AI or Blob callback acceptance.
 
 2026-09-18: standard `npm test` (production build + 168 tests), lint, repository check,
 TypeScript and diff check passed. Off-ramp HTTP/RPC fixtures and VI/EN reconciliation

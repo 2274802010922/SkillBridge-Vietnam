@@ -8,10 +8,12 @@
 
 **Tiếng Việt** · [English](README.md)
 
-[Mở demo](https://404-eight-rho.vercel.app/) · [Tra cứu ví độc lập](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Hướng dẫn cho giám khảo](docs/judging/README.md) · [Kiến trúc](docs/architecture/README.md)
+[Mở demo](https://404-eight-rho.vercel.app/) · [Tra cứu ví độc lập](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Hướng dẫn cho giám khảo](docs/judging/README.md) · [Kiến trúc](docs/architecture/README.md) · [Nghiệm thu demo](docs/testing/demo-reliability-acceptance.md)
 
 [![CI](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-16-091426?logo=nextdotjs)
+> Bản sửa reliability (21/09): hiển thị đúng quyền reviewer và tiến trình thưởng, phục hồi issuer, chống dùng lại giao dịch milestone. Build và 184 test local đạt; nghiệm thu ví/provider thật theo [runbook](docs/testing/demo-reliability-acceptance.md).
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-6941C6?logo=solana&logoColor=white)
 

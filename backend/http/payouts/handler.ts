@@ -1,3 +1,5 @@
+import { escrowRow, readAndSyncEscrow } from "../../services/escrow/escrow-store";
+import { hashBytes } from "../../../solana/client/challenge-escrow";
 import { env } from "@/backend/config/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../auth/auth";
 import { requireOrganizationRole } from "../../auth/authorization";
@@ -64,7 +66,21 @@ export async function GET(request: Request) {
       WHERE c.reward_type IN ('usdc', 'sol') AND c.reward_amount_atomic IS NOT NULL
       ORDER BY s.submitted_at DESC
     `).bind(user.id).all<PayoutRow>();
-    return Response.json({ payouts: rows.results }, { headers: { "cache-control": "private, no-store" } });
+    const snapshots = new Map<string, Awaited<ReturnType<typeof readAndSyncEscrow>> | null>();
+    for (const row of rows.results) if (row.escrow_id && !snapshots.has(row.challenge_id)) {
+      try {const escrow=await escrowRow(row.challenge_id);snapshots.set(row.challenge_id,escrow?await readAndSyncEscrow(escrow):null);}
+      catch {snapshots.set(row.challenge_id,null);}
+    }
+    const payouts = await Promise.all(rows.results.map(async row => {
+      if(!row.escrow_id)return row;
+      const snapshot=snapshots.get(row.challenge_id);
+      const submissionHash=(await hashBytes(row.submission_id)).toString("hex");
+      const receipt=snapshot?.submissions.find(s=>s.student===row.recipient_wallet && s.submissionId===submissionHash);
+      return {...row, payout_status:receipt?.paid?"paid":receipt?.decision===3?"allocated":receipt?.decision===1?"eligible":"pending",
+        payment_tx:null, escrow_address: snapshot ? (await escrowRow(row.challenge_id))?.escrow_address:null,
+        chain_verified:Boolean(snapshot), fund_status:snapshot?.state && BigInt(snapshot.state.funded)>BigInt(0)?"funded":null};
+    }));
+    return Response.json({ payouts }, { headers: { "cache-control": "private, no-store" } });
   } catch (error) { return jsonError(error); }
 }
 

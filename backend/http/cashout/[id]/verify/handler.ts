@@ -15,7 +15,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     try {
       result = await verifyCashoutFunding(env.DB, session, body.signature?.trim() || "", body.mode === "manual" ? "manual" : "automatic", env.SOLANA_RPC_URL);
     } catch (error) {
-      const response = jsonError(error);
+      const response = await jsonError(error);
       const updated = await env.DB.prepare(`${SELECT_CASHOUT} WHERE s.id = ? AND s.user_id = ?`).bind(id, user.id).first<CashoutRow>();
       return Response.json({ ...await response.json() as Record<string, unknown>, session: updated ? serializeCashout(updated, env.SOLANA_USDC_MINT) : null }, { status: response.status });
     }

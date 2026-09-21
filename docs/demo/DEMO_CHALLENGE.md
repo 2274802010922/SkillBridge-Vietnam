@@ -8,8 +8,8 @@
 - **Tài sản thưởng:** 0.05 SOL Devnet
 - **Số người nhận:** 1
 - **Hình thức:** Công khai
-- **Thời hạn nộp:** 3 phút sau khi công bố trong buổi demo
-- **Thời hạn đánh giá:** 10 phút sau khi công bố
+- **Thời hạn nộp:** thời điểm tuyệt đối lưu ở Quỹ thưởng, đủ thời gian cho funding, reviewer consent và nộp bài
+- **Thời hạn đánh giá:** ít nhất 30 phút sau hạn nộp, lưu trước khi ký quỹ
 
 ## Bối cảnh
 
@@ -68,3 +68,13 @@ Bài đạt từ **80/100** được công nhận hoàn thành và đủ điều
 - Phần thưởng được phân bổ qua escrow program trên Solana Devnet.
 - Người nhận tự ký transaction claim về ví của mình.
 - Transaction funding, allocation và claim có thể kiểm chứng công khai.
+
+## Lưu ý sau bản sửa reliability
+
+- Nếu dùng ba ví, doanh nghiệp kiêm reviewer chính; vẫn cần reviewer dự phòng riêng và ví sinh viên.
+- Sau hạn đánh giá, **chỉ reviewer dự phòng** được ghi kết quả/phân bổ; giao diện chỉ rõ ví cần tiếp tục.
+- Phê duyệt bản chấm không tự phân bổ thưởng. Điểm chính thức phải đạt ngưỡng đã cam kết.
+- Cấp chứng nhận là luồng độc lập, không phải điều kiện để claim phần thưởng đã phân bổ.
+- Giao diện claim dùng ví sinh viên. Program cho phép caller khác trả phí claim, nhưng tiền luôn tới recipient cố định.
+- Deadline tính từ lúc thiết lập quỹ, không tự cộng lại từ lúc công bố; các quỹ cũ giữ deadline đã ký.
+- Chờ transaction finalized và kiểm tra trạng thái nghiệp vụ. HTTP 200 không tự chứng minh đã trả thưởng.

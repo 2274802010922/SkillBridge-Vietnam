@@ -15,20 +15,23 @@ export type EscrowRow = {
   escrow_address: string;
   config_json: string;
   chain_state_json: string | null;
+  chain_slot?:number;
 };
 export const escrowRow = (id: string) =>
   env.DB.prepare("SELECT * FROM challenge_escrows WHERE challenge_id=?")
     .bind(id)
     .first<EscrowRow>();
-export async function readAndSyncEscrow(row: EscrowRow) {
+export async function readAndSyncEscrow(row: EscrowRow, networkChecked = false) {
   const rpc = env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
-  await assertEscrowDevnet(rpc);
+  if (!networkChecked) await assertEscrowDevnet(rpc);
   const config = JSON.parse(row.config_json) as EscrowConfig;
+  if(config.challengeId!==row.challenge_id || (await hashBytes(config.termsText)).toString("hex")!==config.termsHash)throw new Error("Nội dung cam kết không khớp hash đã ký.");
   const key = await escrowAddress(config);
   if (row.program_id !== ESCROW_PROGRAM || row.escrow_address !== key)
     throw new Error("Cấu hình quỹ không khớp program.");
   const state = await readEscrowAccount(rpc, key, "Escrow");
   if (!state) return { config, state: null, submissions: [] };
+  if(typeof state.observedSlot!=="number" || state.observedSlot < (row.chain_slot??0))throw new Error("RPC đang trả snapshot cũ. Hãy kiểm tra lại.");
   if (
     state.funder !== config.funder ||
     state.terms !== config.termsHash ||

@@ -1,4 +1,6 @@
 import bs58 from "bs58";
+import { rewardProgress, operationSatisfied } from "@/shared/validation/reward-progress";
+import { rewardEligibility } from "@/backend/services/escrow/reward-assessment";
 import { createKeyPairSignerFromBytes } from "gill";
 import { env } from "@/backend/config/runtime-env";
 import {
@@ -15,6 +17,7 @@ import {
   SYSTEM,
   DEVNET_USDC,
   escrowAddress,
+  disc,
   hashBytes,
   assertEscrowDevnet,
   buildEscrowTransaction,
@@ -62,6 +65,28 @@ export async function access(id: string, user: { id: string; walletAddress: stri
     throw new Response("Bạn không có quyền xem quỹ này.", { status: 403 });
   return { c, row, config, membership };
 }
+async function presentEscrow(c: Record<string, unknown>, row: NonNullable<Awaited<ReturnType<typeof escrowRow>>>, user: {walletAddress: string}, data: Awaited<ReturnType<typeof readAndSyncEscrow>>) {
+  const isReviewer = [data.config.reviewer, data.config.backup].includes(user.walletAddress);
+  const rows = await env.DB.prepare(`
+    SELECT s.id,u.display_name AS name,w.address AS wallet,a.status AS assessment_status,a.final_result_hash,
+      (SELECT review_json FROM reviews r WHERE r.assessment_id=a.id ORDER BY r.created_at DESC,r.rowid DESC LIMIT 1) AS review_json
+    FROM submissions s JOIN participations p ON p.id=s.participation_id JOIN wallets w ON w.user_id=p.student_user_id
+    JOIN users u ON u.id=p.student_user_id LEFT JOIN assessments a ON a.submission_id=s.id
+    WHERE p.challenge_id=? AND (?=1 OR w.address=?)`)
+    .bind(c.id,isReviewer ? 1 : 0,user.walletAddress).all<{id:string;name:string;wallet:string;assessment_status:string|null;final_result_hash:string|null;review_json:string|null}>();
+  const now = Math.floor(Date.now()/1000);
+  const dbSubmissions = await Promise.all(rows.results.map(async sub => {
+    const eligible = await rewardEligibility({...sub,termsText:data.config.termsText});
+    const hash=(await hashBytes(sub.id)).toString("hex");
+    const receipt = data.submissions.find(s=>s.student===sub.wallet && s.submissionId===hash) || null;
+    return {id:sub.id,name:sub.name,wallet:sub.wallet,assessment_status:sub.assessment_status,eligible,
+      progress:rewardProgress(data.config,data.state,receipt,sub.assessment_status,eligible,sub.wallet,user.walletAddress,now)};
+  }));
+  return {challenge:{id:c.id,title:c.title,status:c.status,reward_type:c.reward_type},...data,
+    submissions:data.submissions.filter(s=>isReviewer||s.student===user.walletAddress),dbSubmissions,
+    wallet:user.walletAddress,escrowAddress:row.escrow_address,serverTime:now,checkedAt:new Date().toISOString()};
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -100,32 +125,7 @@ export async function GET(
         { headers: { "cache-control": "no-store" } },
       );
     const data = await readAndSyncEscrow(row);
-    const isReviewer =
-      user.walletAddress === data.config.reviewer ||
-      user.walletAddress === data.config.backup;
-    const dbSubmissions = await env.DB.prepare(
-      `SELECT s.id,u.display_name AS name,w.address AS wallet,a.status AS assessment_status FROM submissions s JOIN participations p ON p.id=s.participation_id JOIN wallets w ON w.user_id=p.student_user_id JOIN users u ON u.id=p.student_user_id LEFT JOIN assessments a ON a.submission_id=s.id WHERE p.challenge_id=? AND (?=1 OR w.address=?)`,
-    )
-      .bind(id, isReviewer ? 1 : 0, user.walletAddress)
-      .all();
-    return Response.json(
-      {
-        challenge: {
-          id: c.id,
-          title: c.title,
-          status: c.status,
-          reward_type: c.reward_type,
-        },
-        ...data,
-        submissions: data.submissions.filter(
-          (s) => isReviewer || s.student === user.walletAddress,
-        ),
-        dbSubmissions: dbSubmissions.results,
-        wallet: user.walletAddress,
-        escrowAddress: row.escrow_address,
-      },
-      { headers: { "cache-control": "no-store" } },
-    );
+    return Response.json(await presentEscrow(c, row, user, data), {headers:{"cache-control":"no-store"}});
   } catch (e) {
     return jsonError(e);
   }
@@ -316,23 +316,26 @@ export async function POST(
           state: null,
         });
       }
+      let observedInstructions:Array<{programId:string;accounts?:string[];data?:string}>=[];
       if (signature) {
         const tx = await escrowRpc<{
           meta: { err: unknown } | null;
           transaction: {
-            message: { accountKeys: Array<string | { pubkey: string }> };
+            message: { accountKeys: Array<string | { pubkey: string }>; instructions:Array<{programId:string;accounts?:string[];data?:string}> };
           };
         } | null>(rpc, "getTransaction", [
           signature,
-          { encoding: "json", commitment: "finalized", maxSupportedTransactionVersion: 0 },
+          { encoding: "jsonParsed", commitment: "finalized", maxSupportedTransactionVersion: 0 },
         ]);
+        observedInstructions=tx?.transaction.message.instructions??[];
         const accounts = tx?.transaction.message.accountKeys.map((k) =>
           typeof k === "string" ? k : k.pubkey,
         ) ?? [];
-        if (!tx || tx.meta?.err) {
+        if (!tx) return Response.json({ok:true,finalized:false,code:"TX_NOT_FOUND",message:"Chưa đọc được giao dịch. Hãy kiểm tra lại; không gửi thêm tiền."});
+        if (tx.meta?.err) {
           return Response.json({ error: "Giao dịch đã thất bại trên Devnet.", code: "TX_FAILED", escrowAddress: row.escrow_address }, { status: 409 });
         }
-        if (!accounts.includes(row.escrow_address)) {
+        if (!accounts.includes(row.escrow_address) || !accounts.includes(ESCROW_PROGRAM)) {
           return Response.json({
             error: "Transaction không thuộc escrow của challenge này.",
             code: "ESCROW_MISMATCH",
@@ -341,62 +344,44 @@ export async function POST(
           }, { status: 409 });
         }
       }
-      if (signature && body.operationId) {
-        const op = await env.DB.prepare(
-          "SELECT id FROM escrow_operations WHERE id=? AND challenge_id=? AND actor_user_id=?",
-        )
-          .bind(body.operationId, id, user.id)
-          .first();
-        if (op) {
-          const tx = await escrowRpc<{
-            meta: { err: unknown } | null;
-            transaction: {
-              message: { accountKeys: Array<string | { pubkey: string }> };
-            };
-          } | null>(rpc, "getTransaction", [
-            signature,
-            {
-              encoding: "json",
-              commitment: "finalized",
-              maxSupportedTransactionVersion: 0,
-            },
-          ]);
-          if (
-            tx &&
-            !tx.meta?.err &&
-            tx.transaction.message.accountKeys.some(
-              (k) =>
-                (typeof k === "string" ? k : k.pubkey) === row.escrow_address,
-            )
-          )
-            await env.DB.prepare(
-              "UPDATE escrow_operations SET signature=? WHERE id=?",
-            )
-              .bind(signature, body.operationId)
-              .run();
+      const op = body.operationId ? await env.DB.prepare(
+        "SELECT id,action,submission_id FROM escrow_operations WHERE id=? AND challenge_id=? AND actor_user_id=?"
+      ).bind(body.operationId,id,user.id).first<{id:string;action:string;submission_id:string|null}>() : null;
+      if (body.operationId && !op) return Response.json({error:"Không tìm thấy yêu cầu giao dịch này.",code:"OPERATION_NOT_FOUND"},{status:404});
+      if(op && signature){
+        const expectedDisc=await disc("global:"+op.action);
+        const matching=observedInstructions.find(ix=>ix.programId===ESCROW_PROGRAM && ix.accounts?.includes(row.escrow_address) && ix.accounts?.includes(user.walletAddress) && ix.data && Buffer.from(bs58.decode(ix.data)).subarray(0,8).equals(expectedDisc));
+        if(!matching)return Response.json({error:"Giao dịch không thực hiện thao tác đã chọn.",code:"OPERATION_MISMATCH"},{status:409});
+        const expected=await env.DB.prepare("SELECT instructions_json FROM escrow_operation_expectations WHERE operation_id=?").bind(op.id).first<{instructions_json:string}>();
+        if(expected){
+          const instructions=JSON.parse(expected.instructions_json) as Array<{data:string;accounts:string[]}>;
+          if(!instructions.every(e=>observedInstructions.some(ix=>ix.programId===ESCROW_PROGRAM && ix.data===e.data && JSON.stringify(ix.accounts)===JSON.stringify(e.accounts))))
+            return Response.json({error:"Nội dung giao dịch không khớp yêu cầu đã chuẩn bị.",code:"OPERATION_PAYLOAD_MISMATCH"},{status:409});
         }
       }
       // Re-read finalized account state after the signature check. This is the
       // important recovery path for Initialize + Fund transactions.
       let synced;
       try {
-        synced = await readAndSyncEscrow(row);
+        synced = await readAndSyncEscrow(row, true);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Không thể đồng bộ trạng thái escrow.";
         return Response.json({ error: message, code: "ESCROW_SYNC_FAILED", escrowAddress: row.escrow_address }, { status: 409 });
       }
+      const receiptHash = op?.submission_id ? (await hashBytes(op.submission_id)).toString("hex") : "";
+      const matchingReceipt = op?.submission_id
+        ? synced.submissions.find(s=>s.submissionId===receiptHash) : undefined;
+      const completed = op ? operationSatisfied(op.action,synced.config,synced.state,matchingReceipt,user.walletAddress) : false;
+      if (signature && op && completed) await env.DB.prepare("UPDATE escrow_operations SET signature=? WHERE id=? AND (signature IS NULL OR signature=?)").bind(signature,op.id,signature).run();
       return Response.json({
-        ok: true,
-        state: synced.state,
-        finalized: Boolean(synced.state),
-        code: synced.state ? "ESCROW_FINALIZED" : "ESCROW_STATE_PENDING",
-        message: synced.state
-          ? "Quỹ đã được đồng bộ từ Devnet."
-          : "Chưa đọc được trạng thái escrow; hãy thử lại sau ít giây.",
-        escrowAddress: row.escrow_address,
+        ok:true, finalized:Boolean(synced.state), operationComplete:completed,
+        funded:operationSatisfied("initialize",synced.config,synced.state),
+        code:synced.state?"ESCROW_FINALIZED":"ESCROW_STATE_PENDING",
+        detail:await presentEscrow(c,row,user,synced),
       });
+
     }
-    const data = await readAndSyncEscrow(row);
+    const data = await readAndSyncEscrow(row, true);
     const config = data.config;
     if (body.senderWallet !== user.walletAddress)
       throw new Response("Dùng đúng ví đang đăng nhập để ký.", { status: 403 });
@@ -457,7 +442,8 @@ export async function POST(
       ].includes(action)
     ) {
       const sub = await env.DB.prepare(
-        `SELECT s.*,p.student_user_id,w.address AS wallet,a.status AS assessment_status,a.final_result_hash FROM submissions s JOIN participations p ON p.id=s.participation_id JOIN wallets w ON w.user_id=p.student_user_id LEFT JOIN assessments a ON a.submission_id=s.id WHERE s.id=? AND p.challenge_id=?`,
+        `SELECT s.*,p.student_user_id,w.address AS wallet,a.status AS assessment_status,a.final_result_hash,
+        (SELECT review_json FROM reviews r WHERE r.assessment_id=a.id ORDER BY r.created_at DESC,r.rowid DESC LIMIT 1) AS review_json FROM submissions s JOIN participations p ON p.id=s.participation_id JOIN wallets w ON w.user_id=p.student_user_id LEFT JOIN assessments a ON a.submission_id=s.id WHERE s.id=? AND p.challenge_id=?`,
       )
         .bind(body.submissionId || "", id)
         .first<Record<string, unknown>>();
@@ -544,7 +530,11 @@ export async function POST(
             "Hãy chấm thủ công hoặc phê duyệt kết quả trong mục Đánh giá trước.",
             { status: 409 },
           );
-        extra.eligible = sub.assessment_status === "approved";
+        const eligible = await rewardEligibility({
+          assessment_status:String(sub.assessment_status),final_result_hash:sub.final_result_hash as string|null,
+          review_json:sub.review_json as string|null,termsText:config.termsText});
+        if (eligible === null) throw new Response("Điểm hoặc điều khoản chưa khớp; cần đối soát trước khi ghi kết quả.",{status:409});
+        extra.eligible = eligible;
         extra.resultHash = (
           await hashBytes(
             JSON.stringify({
@@ -555,14 +545,27 @@ export async function POST(
           )
         ).toString("hex");
       }
-      if (action === "allocate_award" && sub.assessment_status !== "approved")
+      if (action === "allocate_award" && await rewardEligibility({
+        assessment_status:sub.assessment_status as string|null,final_result_hash:sub.final_result_hash as string|null,
+        review_json:sub.review_json as string|null,termsText:config.termsText}) !== true)
         throw new Response("Bài chưa đạt theo kết quả chính thức.", {
           status: 409,
         });
+      if(["record_result","allocate_award","claim_award"].includes(action)){
+        const hash=(await hashBytes(String(sub.id))).toString("hex");
+        const receipt=data.submissions.find(s=>s.submissionId===hash && s.student===sub.wallet)??null;
+        const eligible=await rewardEligibility({assessment_status:sub.assessment_status as string|null,final_result_hash:sub.final_result_hash as string|null,review_json:sub.review_json as string|null,termsText:config.termsText});
+        const progress=rewardProgress(config,data.state,receipt,sub.assessment_status as string|null,eligible,String(sub.wallet),user.walletAddress,Math.floor(Date.now()/1000));
+        if(!progress.available || progress.action!==action)return Response.json({error:progress.reason.vi,code:"ACTION_NOT_READY",progress},{status:409});
+      }
       if (action === "claim_award" && sub.student_user_id !== user.id)
         throw new Response("Chỉ chủ bài nộp nhận thưởng qua giao diện này.", {
           status: 403,
         });
+    }
+    if (["record_result","allocate_award","finalize_results"].includes(action)) {
+      const activeReviewer = Date.now()/1000 > config.reviewDeadline ? config.backup : config.reviewer;
+      if (user.walletAddress !== activeReviewer) return Response.json({error:"Quyền đánh giá hiện thuộc ví: "+activeReviewer,code:"WRONG_ACTIVE_REVIEWER"},{status:403});
     }
     const instructions = await escrowInstructions(
       config,
@@ -577,11 +580,14 @@ export async function POST(
       partialSigner,
     );
     const operationId = crypto.randomUUID();
-    await env.DB.prepare(
-      "INSERT INTO escrow_operations(id,challenge_id,actor_user_id,action,submission_id) VALUES(?,?,?,?,?)",
-    )
-      .bind(operationId, id, user.id, action, body.submissionId || null)
-      .run();
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO escrow_operations(id,challenge_id,actor_user_id,action,submission_id) VALUES(?,?,?,?,?)")
+        .bind(operationId,id,user.id,action,body.submissionId||null),
+      env.DB.prepare("INSERT INTO escrow_operation_expectations(operation_id,instructions_json) VALUES(?,?)")
+        .bind(operationId,JSON.stringify(instructions.filter(ix=>String(ix.programAddress)===ESCROW_PROGRAM).map(ix=>({
+          data:bs58.encode(new Uint8Array(ix.data??[])),accounts:ix.accounts?.map(a=>String(a.address))??[]
+        }))))
+    ]);
     return Response.json(
       { transaction, operationId },
       { headers: { "cache-control": "no-store" } },

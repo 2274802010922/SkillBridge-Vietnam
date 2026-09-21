@@ -5,10 +5,10 @@
 ## 0. Chuẩn bị
 
 - [ ] Deploy Vercel đúng commit mới nhất và chọn Solana **Devnet**.
-- [ ] Chuẩn bị ba ví tách biệt: doanh nghiệp, sinh viên, reviewer.
+- [ ] Chuẩn bị bốn ví: doanh nghiệp, sinh viên, reviewer chính, reviewer dự phòng.
 - [ ] Nạp SOL Devnet cho phí giao dịch.
 - [ ] Dùng challenge mới, không dùng challenge có escrow/deadline cũ.
-- [ ] Cấu hình: `0.05 SOL`, `1` người nhận, public, deadline nộp 3 phút, deadline review 10 phút.
+- [ ] Cấu hình: `0.05 SOL`, `1` người nhận, public, hạn nộp đủ cho cả hai reviewer nhận nhiệm vụ và sinh viên ký nộp, hạn review ít nhất 30 phút sau hạn nộp.
 - [ ] Không đưa private key, seed phrase hay secret vault vào video.
 
 ## 1. Doanh nghiệp — tạo và ký quỹ
@@ -21,7 +21,8 @@
 6. Chờ transaction `finalized` trên Solana Devnet.
 7. Bấm **Kiểm tra lại quỹ** hoặc dán transaction signature.
 8. Xác nhận trạng thái **Đã nạp quỹ**.
-9. Đọc/ký điều khoản ký quỹ và bấm **Công bố challenge**.
+9. Reviewer chính kết nối ví và bấm **Nhận nhiệm vụ đánh giá**; reviewer dự phòng thực hiện tương tự.
+10. Doanh nghiệp đọc điều khoản, xác nhận và ký **Công bố challenge** sau khi có đủ 2/2 consent.
 
 **Cảnh cần quay:** escrow address, số tiền khóa, transaction funding trên Explorer (`cluster=devnet`), trạng thái funded và điều khoản hoàn quỹ.
 
@@ -102,3 +103,13 @@ Doanh nghiệp tạo challenge mới
 ```
 
 > SkillBridge biến bài nộp thành bằng chứng có người chịu trách nhiệm, phần thưởng được khóa on-chain, và quyền nhận thưởng có thể kiểm chứng độc lập trên Solana Devnet.
+
+## Lưu ý sau bản sửa reliability
+
+- Nếu dùng ba ví, doanh nghiệp kiêm reviewer chính; vẫn cần reviewer dự phòng riêng và ví sinh viên.
+- Sau hạn đánh giá, **chỉ reviewer dự phòng** được ghi kết quả/phân bổ; giao diện chỉ rõ ví cần tiếp tục.
+- Phê duyệt bản chấm không tự phân bổ thưởng. Điểm chính thức phải đạt ngưỡng đã cam kết.
+- Cấp chứng nhận là luồng độc lập, không phải điều kiện để claim phần thưởng đã phân bổ.
+- Giao diện claim dùng ví sinh viên. Program cho phép caller khác trả phí claim, nhưng tiền luôn tới recipient cố định.
+- Deadline tính từ lúc thiết lập quỹ, không tự cộng lại từ lúc công bố; các quỹ cũ giữ deadline đã ký.
+- Chờ transaction finalized và kiểm tra trạng thái nghiệp vụ. HTTP 200 không tự chứng minh đã trả thưởng.

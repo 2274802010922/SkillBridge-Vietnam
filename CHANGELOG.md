@@ -2,6 +2,16 @@
 
 Notable project changes. Git history remains the detailed record.
 
+## 2026-09-21 — Demo reliability
+
+- Reward steps now explain active reviewer/deadline ownership and distinguish fund observations, eligibility, allocation and claims.
+- Program payouts recognize paid receipts; approved grades must meet committed thresholds before eligible results/awards.
+- Normalized API errors, bounded request feedback, wallet/session matching and signed-byte recovery.
+- Added milestone intents/replay guards and issuer bootstrap journals (additive migration 0022).
+- Hardened upload completion, AI failure/cache handling and cashout partial-load feedback.
+- Added behavioral regressions and corrected demo role/consent instructions.
+- Deployment/live-wallet acceptance remains separate from automated fixture validation.
+
 ## 2026-09-19 — Escrow transaction verification recovery
 
 - Fixed the legacy `/app/escrow` sync order: check signature finalization before reading escrow state.

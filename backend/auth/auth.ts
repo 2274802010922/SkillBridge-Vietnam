@@ -122,8 +122,13 @@ export async function listMemberships(userId: string) {
   `).bind(userId).all();
 }
 
-export function jsonError(error: unknown) {
-  if (error instanceof Response) return error;
+export async function jsonError(error: unknown) {
+  if (error instanceof Response) {
+    if (error.status < 400 || error.headers.get("content-type")?.includes("application/json")) return error;
+    const headers = new Headers(error.headers);
+    headers.delete("content-type"); headers.delete("content-length"); headers.set("cache-control","no-store");
+    return Response.json({ error: await error.text(), code: "HTTP_" + error.status, requestId: crypto.randomUUID() }, { status: error.status, headers });
+  }
   const status = error instanceof Error && "status" in error
     ? Number((error as Error & { status: number }).status)
     : 500;

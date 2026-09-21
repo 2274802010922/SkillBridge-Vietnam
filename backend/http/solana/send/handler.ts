@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     }
 
     const response = await fetch(env.SOLANA_RPC_URL || "https://api.devnet.solana.com", {
+      signal: AbortSignal.timeout(15000),
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({

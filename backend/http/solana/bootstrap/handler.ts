@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
     const user = await requireSessionUser(request);
-    await consumeRateLimit(env.DB, "solana_bootstrap", user.id, 3, 24 * 60 * 60);
+    await consumeRateLimit(env.DB, "solana_bootstrap", user.id, 30, 24 * 60 * 60);
     const body = await request.json() as { organizationId?: string };
     if (!body.organizationId) return Response.json({ error: "Thiếu organizationId." }, { status: 400 });
     await requireOrganizationRole(user.id, body.organizationId, ["business_admin", "university_admin", "credential_issuer"]);
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     if (!env.SOLANA_FEE_PAYER_SECRET || !env.SOLANA_ISSUER_SECRET || !env.SOLANA_AUTHORIZED_SIGNER_SECRET) {
       return Response.json({ error: "Các secret Solana issuer chưa được cấu hình." }, { status: 503 });
     }
-    const setup = await bootstrapIssuer(env, body.organizationId);
+    const setup = await bootstrapIssuer(env, body.organizationId, env.DB);
     await env.DB.prepare(`
       INSERT INTO credential_issuers
         (organization_id, credential_name, credential_address, schema_name,
@@ -47,10 +47,11 @@ export async function POST(request: Request) {
         ...setup,
         credentialExplorer: explorerAddress(setup.credentialAddress),
         schemaExplorer: explorerAddress(setup.schemaAddress),
-        transactions: [explorerTransaction(setup.credentialTx), explorerTransaction(setup.schemaTx)],
+        transactions: [...[setup.credentialTx,setup.schemaTx].filter((s):s is string=>Boolean(s)).map(explorerTransaction)],
       },
     }, { status: 201 });
   } catch (error) {
+    if(error instanceof Response && error.status===202)return Response.json({pending:true,message:await error.text()},{status:202});
     return jsonError(error);
   }
 }

@@ -120,3 +120,17 @@
     max-width: 100%;
   }
 }
+
+/* Keep transaction controls and feedback on separate lines at every viewport. */
+.product-app .wallet-payment-control {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.product-app .wallet-payment-control > small,
+.product-app .wallet-payment-control > p {
+  display: block;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.product-app .escrow-entry .escrow-action { margin-top: 12px; }

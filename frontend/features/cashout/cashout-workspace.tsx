@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "../../lib/api-fetch";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BANK_DIRECTORY, type BankDirectoryEntry } from "@/shared/data/bank-directory";
@@ -240,10 +241,10 @@ export function CashoutWorkspace() {
       assetsResponse,
       referenceResponse,
     ] = await Promise.all([
-      fetch("/api/cashout", { cache: "no-store" }),
-      fetch("/api/cashout/beneficiaries", { cache: "no-store" }),
-      fetch("/api/wallet/assets", { cache: "no-store" }),
-      fetch("/api/fx/reference", { cache: "no-store" }),
+      apiFetch("/api/cashout", { cache: "no-store" }).catch(()=>new Response(null,{status:503})),
+      apiFetch("/api/cashout/beneficiaries", { cache: "no-store" }).catch(()=>new Response(null,{status:503})),
+      apiFetch("/api/wallet/assets", { cache: "no-store" }).catch(()=>new Response(null,{status:503})),
+      apiFetch("/api/fx/reference", { cache: "no-store" }).catch(()=>new Response(null,{status:503})),
     ]);
     if (ordersResponse.ok) {
       const data = (await ordersResponse.json()) as {
@@ -274,14 +275,17 @@ export function CashoutWorkspace() {
     }
     if (referenceResponse.ok)
       setReference((await referenceResponse.json()) as FxReference);
+    const failed=[!ordersResponse.ok?(vi?"lịch sử":"history"):null,!beneficiariesResponse.ok?(vi?"nơi nhận":"recipients"):null,!assetsResponse.ok?(vi?"số dư":"balance"):null,!referenceResponse.ok?(vi?"tỷ giá":"rate"):null].filter(Boolean);
+    setError(failed.length?(vi?"Không tải được: ":"Could not refresh: ")+failed.join(", ")+(vi?". Dữ liệu trước đó có thể đã cũ.":". Previous data may be stale."):null);
     setClock(Date.now());
-  }, []);
+  }, [vi]);
   useEffect(() => {
     const initial = window.setTimeout(() => {
-      void load(false).finally(() => setLoading(false));
+      void load(false).catch(e=>setError(String(e.message))).finally(() => setLoading(false));
     }, 0);
     const refresh = window.setInterval(() => {
-      void load(true);
+      if(document.visibilityState!=="visible")return;
+      void load(true).catch(e=>setError(String(e.message)));
     }, 30_000);
     return () => {
       window.clearTimeout(initial);
@@ -344,7 +348,7 @@ export function CashoutWorkspace() {
     setDestinationError(null);
     setError(null);
     try {
-      const response = await fetch("/api/cashout/beneficiaries/parse-vietqr", {
+      const response = await apiFetch("/api/cashout/beneficiaries/parse-vietqr", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ payload: vietQrPayload }),
@@ -383,7 +387,7 @@ export function CashoutWorkspace() {
     setDestinationError(null);
     setNotice(null);
     try {
-      const response = await fetch("/api/cashout/beneficiaries/verify", {
+      const response = await apiFetch("/api/cashout/beneficiaries/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -425,7 +429,7 @@ export function CashoutWorkspace() {
     setError(null);
     setNotice(null);
     try {
-      const response = await fetch("/api/cashout/beneficiaries", {
+      const response = await apiFetch("/api/cashout/beneficiaries", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -473,7 +477,7 @@ export function CashoutWorkspace() {
     setError(null);
     setNotice(null);
     try {
-      const response = await fetch("/api/cashout", {
+      const response = await apiFetch("/api/cashout", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -515,7 +519,7 @@ export function CashoutWorkspace() {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(`/api/cashout/${active.id}`, {
+      const response = await apiFetch(`/api/cashout/${active.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "accept_quote", acceptedTerms }),
@@ -549,7 +553,7 @@ export function CashoutWorkspace() {
     setError(null);
     setNotice(null);
     try {
-      const response = await fetch(`/api/cashout/${active.id}/verify`, {
+      const response = await apiFetch(`/api/cashout/${active.id}/verify`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ signature, mode }),
@@ -585,7 +589,7 @@ export function CashoutWorkspace() {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(`/api/cashout/${active.id}`, {
+      const response = await apiFetch(`/api/cashout/${active.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "refresh" }),

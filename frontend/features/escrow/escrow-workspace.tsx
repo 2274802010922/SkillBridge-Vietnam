@@ -1,6 +1,7 @@
 "use client";
+import { apiFetch } from "../../lib/api-fetch";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "../../i18n/i18n";
 import { ContentSkeleton } from "../../components/feedback/loading-ui";
 import {
@@ -13,8 +14,11 @@ import type {
   SubmissionState,
   EscrowAction,
 } from "@/solana/client/challenge-escrow";
+import type { RewardProgress } from "@/shared/validation/reward-progress";
 type Fund = { id: string; title: string; legacy: number; status: string };
 type Detail = {
+  serverTime?: number;
+  checkedAt?: string;
   canConfigure?: boolean;
   reviewerOptions?: Array<{ address: string; name: string | null }>;
   challenge: { id: string; title: string; reward_type: string };
@@ -28,6 +32,7 @@ type Detail = {
     name: string;
     wallet: string;
     assessment_status: string;
+    progress?: RewardProgress;
   }>;
 };
 const actions: Record<EscrowAction, [string, string]> = {
@@ -63,7 +68,6 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
     [id, setId] = useState(initialId),
     [data, setData] = useState<Detail | null>(null),
     [error, setError] = useState(""),
-    [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(true),
     [clock, setClock] = useState(0);
@@ -74,20 +78,23 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
     [consent, setConsent] = useState(false),
     [signature, setSignature] = useState(""),
     [syncing, setSyncing] = useState(false),
-    [syncMessage, setSyncMessage] = useState("");
+    [syncMessage, setSyncMessage] = useState(""),
+    [feedbackTarget,setFeedbackTarget]=useState<"fund"|"signature">("fund");
+  const currentId=useRef(id);
+  useEffect(()=>{currentId.current=id;},[id]);
+  const inflight=useRef<Promise<void>|null>(null);
   const load = useCallback(async () => {
     if (!id) return;
-    const r = await fetch("/api/challenges/" + id + "/escrow", {
-      cache: "no-store",
-    });
-    const d = (await r.json()) as Detail & { error?: string };
-    if (!r.ok) throw new Error(d.error || "Không thể đọc quỹ");
-    setData(d);
-    setClock(Date.now());
-  }, [id]);
+    const requestedId=id;
+    const r=await apiFetch("/api/challenges/"+id+"/escrow",{cache:"no-store"});
+    const d=await r.json() as Detail & {error?:string};
+    if(!r.ok)throw new Error(d.error || "Không thể đọc quỹ / Unable to read fund");
+    if(currentId.current!==requestedId)return;
+    setData(d); setClock((d.serverTime ?? Date.now()/1000)*1000);
+  },[id]);
   useEffect(() => {
     let live = true;
-    fetch("/api/escrows", { cache: "no-store" })
+    apiFetch("/api/escrows", { cache: "no-store" })
       .then(async (r) => {
         const d = (await r.json()) as { escrows?: Fund[]; error?: string };
         if (!r.ok) throw new Error(d.error);
@@ -101,27 +108,24 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
     };
   }, []);
   useEffect(() => {
-    let live = true;
-    const refresh = () =>
-      load().catch((e) => {
-        if (live) setError(String(e.message));
-      });
-    const first = setTimeout(() => void refresh(), 0);
-    const timer = setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 12000);
-    return () => {
-      live = false;
-      clearTimeout(first);
-      clearInterval(timer);
+    let live=true, failures=0, timer:ReturnType<typeof setTimeout>;
+    const refresh=async()=>{
+      if(document.visibilityState==="visible" && !inflight.current) {
+        const work=load(); inflight.current=work;
+        try {await work;failures=0;}catch(e){failures++;if(live)setError(e instanceof Error?e.message:String(e));}
+        finally{if(inflight.current===work)inflight.current=null;}
+      }
+      if(live)timer=setTimeout(()=>void refresh(),Math.min(60000,15000*2**Math.min(failures,2)));
     };
-  }, [load]);
+    timer=setTimeout(()=>void refresh(),0);
+    return()=>{live=false;clearTimeout(timer);};
+  },[load]);
   async function configure(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      const r = await fetch("/api/challenges/" + id + "/escrow", {
+      const r = await apiFetch("/api/challenges/" + id + "/escrow", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -145,23 +149,32 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
     sig?: string,
     operationId?: string,
   ): Promise<WalletPaymentResult> {
-    setError("");
-    setSyncMessage("");
-    const r = await fetch("/api/challenges/" + id + "/escrow", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "sync", signature: sig, operationId }),
+    setError(""); setSyncMessage("");
+    const requestedId=id;
+    const r=await apiFetch("/api/challenges/"+id+"/escrow",{
+      method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({action:"sync",signature:sig,operationId})
     });
-    const d = (await r.json()) as { error?: string; message?: string; finalized?: boolean; code?: string };
-    if (!r.ok) throw new Error(d.error || "Không thể kiểm tra giao dịch.");
-    await load();
-    const message = d.finalized
-      ? vi ? "Đã xác nhận quỹ. Bạn có thể tiếp tục công bố hoặc giải ngân." : "Funding confirmed. You can continue to publish or release rewards."
-      : d.message || (vi ? "Chưa xác nhận được quỹ; không cần nạp lại." : "Funding is not confirmed yet; do not deposit again.");
+    const d=await r.json() as {error?:string;message?:string;code?:string;funded?:boolean;operationComplete?:boolean;detail?:Detail};
+    if(!r.ok)throw new Error(d.error || "Không thể kiểm tra / Unable to verify");
+    if(currentId.current!==requestedId)return {status:"pending"};
+    if(d.detail){setData(d.detail);setClock((d.detail.serverTime??Date.now()/1000)*1000);}
+    const message=d.detail
+      ? (vi ? "Đã cập nhật quỹ lúc " : "Fund refreshed at ")+new Date().toLocaleTimeString(vi?"vi-VN":"en")+
+        (d.funded ? (vi?". Ngân sách đã nạp đủ; xem bước tiếp theo tại từng bài nộp.":". Budget funded; see each submission for its next step.") : (vi?". Chưa xác nhận đủ ngân sách.":". Full budget not confirmed."))
+      : d.code==="TX_NOT_FOUND" ? (vi?"Chưa tìm thấy giao dịch trên Devnet. Kiểm tra lại cùng mã; không gửi thêm.":"Transaction not yet found on Devnet. Recheck the same signature; do not send again.")
+      : (vi?"Giao dịch đang chờ xác nhận. Kiểm tra lại cùng mã.":"Transaction pending confirmation. Recheck the same signature.");
     setSyncMessage(message);
-    setNotice(message);
-    return { status: d.finalized ? "funded" : "pending" };
+    return {status:operationId && d.operationComplete ? "funded":"pending"};
   }
+  async function refreshFund(sig?:string) {
+    if(syncing)return;
+    setFeedbackTarget(sig?"signature":"fund");
+    setSyncing(true);
+    try{await sync(sig);}catch(e){setError(e instanceof Error?e.message:String(e));}
+    finally{setSyncing(false);}
+  }
+
   function button(action: EscrowAction, submissionId?: string) {
     return (
       <WalletPaymentButton
@@ -212,11 +225,12 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
         <select
           value={id}
           onChange={(e) => {
+            currentId.current=e.target.value;
             setId(e.target.value);
             setData(null);
             setConsent(false);
             setError("");
-            setNotice("");
+            setSignature(""); setSyncMessage("");
           }}
         >
           <option value="">
@@ -230,14 +244,9 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
           ))}
         </select>
       </label>
-      {error && (
+      {error && !c && (
         <p className="demo-error" role="alert">
           {error}
-        </p>
-      )}
-      {notice && (
-        <p className="app-notice" role="status">
-          {notice}
         </p>
       )}
       {legacy ? (
@@ -458,7 +467,7 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
                 </p>
                 {clock / 1000 > c.submitDeadline &&
                 s.submissions === s.resolved ? (
-                  button("finalize_results")
+                  <div><p>{vi?"Chốt sẽ kết thúc việc chọn người nhận mới. Hãy phân bổ xong các suất muốn trao trước.":"Finalizing ends new award allocation. Allocate intended awards first."}</p>{button("finalize_results")}</div>
                 ) : (
                   <p>
                     {vi
@@ -519,12 +528,13 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
             <button
               type="button"
               className="button button-secondary"
-              onClick={() =>
-                void load().catch((e) => setError(String(e.message)))
-              }
+              disabled={syncing} aria-busy={syncing}
+              onClick={() => void refreshFund()}
             >
-              {vi ? "Kiểm tra lại quỹ" : "Refresh fund"}
+              {syncing ? (vi?"Đang kiểm tra…":"Checking…") : vi ? "Kiểm tra lại quỹ" : "Refresh fund"}
             </button>
+            {feedbackTarget==="fund" && syncMessage && <p className="app-notice" role="status">{syncMessage}</p>}
+            {feedbackTarget==="fund" && error && <p className="demo-error" role="alert">{error}</p>}
           </section>
           <section className="app-panel">
             <h2>{vi ? "Bài nộp và phần thưởng" : "Submissions and rewards"}</h2>
@@ -542,7 +552,7 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
                 (s) => s.student === sub.wallet,
               );
               return (
-                <article className="escrow-entry" key={sub.id}>
+                <article className="escrow-entry" id={"submission-"+sub.id} key={sub.id}>
                   <h3>{sub.name || sub.wallet.slice(0, 8)}</h3>
                   <p>
                     {chain
@@ -574,22 +584,14 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
                     s?.state === 1 &&
                     clock / 1000 <= c.submitDeadline &&
                     button("register_submission", sub.id)}
-                  {chain &&
-                    mayReview &&
-                    s?.state === 1 &&
-                    clock / 1000 > c.submitDeadline &&
-                    chain.decision === 0 &&
-                    ["approved", "rejected"].includes(sub.assessment_status) &&
-                    button("record_result", sub.id)}
-                  {chain?.decision === 1 &&
-                    mayReview &&
-                    s?.state === 1 &&
-                    BigInt(s.allocated) < BigInt(c.amount) * BigInt(c.slots) &&
-                    button("allocate_award", sub.id)}
-                  {chain?.decision === 3 &&
-                    !chain.paid &&
-                    sub.wallet === data.wallet &&
-                    button("claim_award", sub.id)}
+                  {sub.progress && <div className="escrow-action">
+                    <p>{sub.progress.reason[vi?"vi":"en"]}</p>
+                    {sub.progress.actor && !sub.progress.available && sub.progress.action &&
+                      <p>{vi?"Ví cần tiếp tục: ":"Wallet required: "}<code style={{overflowWrap:"anywhere"}}>{sub.progress.actor}</code></p>}
+                    {clock/1000>c.reviewDeadline && <p>{vi?"Đã hết hạn đánh giá chính; quyền xử lý thuộc reviewer dự phòng.":"The review deadline passed; the backup reviewer is now responsible."}</p>}
+                    {sub.progress.available && sub.progress.action && button(sub.progress.action,sub.id)}
+                  </div>}
+
                 </article>
               );
             })}
@@ -617,16 +619,13 @@ export function EscrowWorkspace({ initialId }: { initialId: string }) {
               className="button button-secondary"
               disabled={!signature || syncing}
               onClick={() => {
-                setSyncing(true);
-                void sync(signature)
-                  .catch((e) => setError(String(e.message)))
-                  .finally(() => setSyncing(false));
+                void refreshFund(signature);
               }}
             >
               {syncing ? (vi ? "Đang kiểm tra…" : "Checking…") : vi ? "Kiểm tra giao dịch" : "Check transaction"}
             </button>
-            {syncMessage && <p className="app-notice" role="status">{syncMessage}</p>}
-            {error && <p className="demo-error" role="alert">{error}</p>}
+            {feedbackTarget==="signature" && syncMessage && <p className="app-notice" role="status">{syncMessage}</p>}
+            {feedbackTarget==="signature" && error && <p className="demo-error" role="alert">{error}</p>}
           </section>
         </>
       )}

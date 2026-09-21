@@ -1,3 +1,5 @@
+import { assertEscrowDevnet } from "../../../../solana/client/challenge-escrow";
+import type { MilestoneIntent } from "../../../services/payments/milestone-payment";
 import { address, createSolanaClient, createTransaction, insertReferenceKeyToTransactionMessage, transactionToBase64 } from "gill";
 import { getAssociatedTokenAccountAddress, getTransferTokensInstructions } from "gill/programs/token";
 import { env } from "@/backend/config/runtime-env";
@@ -13,8 +15,8 @@ import { buildRewardFundingTransaction, type RewardAsset } from "../../../../sol
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const body = await request.json() as { invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; senderWallet?: string };
-    if ((!body.invoiceId && !body.payoutSubmissionId && !body.fundingChallengeId && !body.cashoutId) || !body.senderWallet?.trim()) return Response.json({ error: "Thiếu thông tin giao dịch." }, { status: 400 });
+    const body = await request.json() as { milestoneId?: string; invoiceId?: string; payoutSubmissionId?: string; fundingChallengeId?: string; cashoutId?: string; senderWallet?: string };
+    if ((!body.invoiceId && !body.payoutSubmissionId && !body.fundingChallengeId && !body.cashoutId && !body.milestoneId) || !body.senderWallet?.trim()) return Response.json({ error: "Thiếu thông tin giao dịch." }, { status: 400 });
     if (body.fundingChallengeId) {
       const user = await requireSessionUser(request);
       if (user.walletAddress !== body.senderWallet.trim()) return Response.json({ error: "Ví nạp quỹ phải là ví đang đăng nhập." }, { status: 403 });
@@ -63,8 +65,18 @@ export async function POST(request: Request) {
         reference: order.reference_key, purpose: "cashout_devnet_deposit",
       });
     }
-    let payment: { id: string; recipient_wallet: string; amount_usdc: string; amount_atomic: string; payment_reference: string; status: string };
-    if (body.invoiceId) {
+    let payment: { mint?:string; id: string; recipient_wallet: string; amount_usdc: string; amount_atomic: string; payment_reference: string; status: string };
+    if(body.milestoneId){
+      const user=await requireSessionUser(request);
+      const m=await env.DB.prepare("SELECT m.*,c.organization_id,c.status AS contract_status,i.snapshot_json FROM contract_milestones m JOIN freelance_contracts c ON c.id=m.contract_id JOIN milestone_payment_intents i ON i.milestone_id=m.id WHERE m.id=?").bind(body.milestoneId).first<{id:string;organization_id:string;status:string;contract_status:string;amount_usdc:string;amount_atomic:string;snapshot_json:string}>();
+      if(!m)throw new Response("Milestone cũ chưa có yêu cầu thanh toán; dùng xác minh giao dịch cũ.",{status:409});
+      await requireOrganizationRole(user.id,m.organization_id,["business_admin","challenge_manager"],"business");
+      const intent=JSON.parse(m.snapshot_json) as MilestoneIntent;
+      if(m.status!=="approved"||m.contract_status!=="active")throw new Response("Milestone chưa sẵn sàng thanh toán.",{status:409});
+      if(user.walletAddress!==intent.sender||body.senderWallet!==intent.sender)throw new Response("Dùng đúng ví trả tiền trong hợp đồng.",{status:403});
+      await assertEscrowDevnet(env.SOLANA_RPC_URL||"https://api.devnet.solana.com");
+      payment={mint:intent.mint,id:m.id,recipient_wallet:intent.recipient,amount_usdc:m.amount_usdc,amount_atomic:intent.amountAtomic,payment_reference:intent.reference!,status:"sent"};
+    }else if (body.invoiceId) {
       const invoice = await env.DB.prepare("SELECT id, recipient_wallet, amount_usdc, amount_atomic, payment_reference, status FROM invoices WHERE id = ?").bind(body.invoiceId).first<typeof payment>();
       if (!invoice) return Response.json({ error: "Invoice không tồn tại." }, { status: 404 });
       if (invoice.status === "paid" || invoice.status === "cancelled") return Response.json({ error: "Invoice đã kết thúc." }, { status: 409 });
@@ -81,7 +93,7 @@ export async function POST(request: Request) {
     }
     const sender = address(body.senderWallet.trim());
     const recipient = address(payment.recipient_wallet);
-    const mint = address(env.SOLANA_USDC_MINT);
+    const mint = address(payment.mint || env.SOLANA_USDC_MINT);
     const tokenProgram = undefined;
     const sourceAta = await getAssociatedTokenAccountAddress(mint, sender, tokenProgram);
     const destinationAta = await getAssociatedTokenAccountAddress(mint, recipient, tokenProgram);
@@ -89,7 +101,7 @@ export async function POST(request: Request) {
     const { value: latestBlockhash } = await solana.rpc.getLatestBlockhash({ commitment: "confirmed" }).send();
     const instructions = getTransferTokensInstructions({ feePayer: sender, mint, authority: sender, sourceAta, destination: recipient, destinationAta, amount: BigInt(payment.amount_atomic), tokenProgram });
     const transaction = createTransaction({ version: "legacy", feePayer: sender, instructions, latestBlockhash });
-    const withReference = body.invoiceId ? insertReferenceKeyToTransactionMessage(address(payment.payment_reference), transaction) : transaction;
+    const withReference = (body.invoiceId || body.milestoneId) ? insertReferenceKeyToTransactionMessage(address(payment.payment_reference), transaction) : transaction;
     return Response.json({ transaction: transactionToBase64(withReference), amountUsdc: payment.amount_usdc, recipientWallet: payment.recipient_wallet, reference: payment.payment_reference });
   } catch (error) { return jsonError(error); }
 }

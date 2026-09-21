@@ -3,6 +3,9 @@ import { env } from "@/backend/config/runtime-env";
 import { assertSameOrigin, jsonError, requireSessionUser } from "../../../../../auth/auth";
 import { auditStatement } from "../../../../../services/audit/audit";
 
+import { getEvidence, deleteEvidence } from "../../../../../storage/evidence-store";
+import { validTextEvidence } from "../../../../../../shared/validation/evidence-file";
+
 const MAX_BYTES = 10 * 1024 * 1024;
 const allowedTypes = new Set([
   "application/pdf", "text/plain", "text/markdown", "application/json",
@@ -69,20 +72,38 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const token = parsePayload(tokenPayload ?? null, true);
         if (token.submissionId !== id) throw new Error("Upload callback không thuộc bài nộp hiện tại.");
         if (!blob.pathname.startsWith(`submissions/${token.submissionId}/`)) throw new Error("Uploaded blob path is invalid.");
+        const existing=await env.DB.prepare("SELECT r2_key,sha256 FROM submission_files WHERE id=?").bind(token.fileId).first<{r2_key:string;sha256:string}>();
+        if(existing) {
+          if(existing.r2_key!==blob.pathname || existing.sha256!==token.sha256)throw new Error("Upload identity conflict.");
+          return;
+        }
         const owned = await env.DB.prepare(`
           SELECT s.state FROM submissions s
           JOIN participations p ON p.id = s.participation_id
           WHERE s.id = ? AND p.student_user_id = ?
         `).bind(token.submissionId, token.userId).first<{ state: string }>();
         if (!owned || !["draft", "changes_requested"].includes(owned.state)) throw new Error("Bài nộp đã khóa.");
-        await env.DB.batch([
+        const object=await getEvidence(blob.pathname);
+        if(!object)throw new Error("Uploaded file is not available yet.");
+        const bytes=await object.arrayBuffer();
+        const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),b=>b.toString(16).padStart(2,"0")).join("");
+        if(bytes.byteLength!==token.sizeBytes || hash!==token.sha256 || !validTextEvidence(new Uint8Array(bytes),token.contentType))
+          throw new Error("Uploaded bytes do not match the declared file.");
+        try {
+        const writes=await env.DB.batch([
           env.DB.prepare(`
             INSERT OR IGNORE INTO submission_files
               (id, submission_id, r2_key, original_name, content_type, size_bytes, sha256, uploaded_by_user_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(token.fileId, token.submissionId, blob.pathname, token.originalName, token.contentType, String(token.sizeBytes), token.sha256, token.userId),
+            SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS(SELECT 1 FROM submissions WHERE id=? AND state IN ('draft','changes_requested'))
+          `).bind(token.fileId, token.submissionId, blob.pathname, token.originalName, token.contentType, String(token.sizeBytes), token.sha256, token.userId, token.submissionId),
           auditStatement(env.DB, { actorUserId: token.userId, action: "evidence.uploaded", targetType: "submission_file", targetId: token.fileId, metadata: { submissionId: token.submissionId, contentType: token.contentType, sizeBytes: token.sizeBytes, sha256: token.sha256, uploadMode: "client_blob" } }),
         ]);
+        if(!writes[0].meta.changes)throw new Error("Bài nộp đã khóa.");
+        } catch(error) {
+          const referenced=await env.DB.prepare("SELECT id FROM submission_files WHERE r2_key=?").bind(blob.pathname).first();
+          if(!referenced)await deleteEvidence(blob.pathname).catch(()=>{});
+          throw error;
+        }
       },
     });
     return Response.json(result);

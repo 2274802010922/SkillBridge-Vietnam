@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   try {
     const user = await requireSessionUser(request);
     const rows = await env.DB.prepare(`
-      SELECT s.id AS submission_id, s.state AS submission_state, s.reflection,
+      SELECT CASE WHEN EXISTS(SELECT 1 FROM memberships im WHERE im.user_id=m.user_id AND im.organization_id=c.reviewer_organization_id AND im.status='active' AND im.role IN ('business_admin','university_admin','credential_issuer')) THEN 1 ELSE 0 END AS can_issue, s.id AS submission_id, s.state AS submission_state, s.reflection,
         s.evidence_json, s.submitted_at, p.student_user_id,
         u.display_name AS student_name, w.address AS student_wallet,
         c.id AS challenge_id, c.title AS challenge_title, c.brief AS challenge_brief, c.content_json,

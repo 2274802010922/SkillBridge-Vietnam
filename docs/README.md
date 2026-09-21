@@ -19,6 +19,7 @@ Load only the relevant plan/module/code, not this entire documentation tree.
 | Off-ramp sandbox | [Adapter and recovery architecture](architecture/offramp.md), [setup and tests](testing/offramp.md) |
 | Deployment | [Vercel setup](deployment/vercel.md) |
 | Tests | [Commands and scope](testing/README.md) |
+| Demo reliability | [Technical audit — 20 September 2026](testing/demo-audit-2026-09-20.md) |
 | Manual QA | [Role-by-role checklist](testing/manual-test-guide.md) |
 | Competition upgrades | [Applications, progress, citations and sponsored claims](testing/competition-upgrades.md) |
 | Evidence portfolios | [Sharing, employer comparison, career AI and issuance recovery](testing/evidence-portfolios.md) |

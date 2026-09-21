@@ -82,6 +82,7 @@ async function loadOrCreateChunks(files: FileRow[], submissionId: string) {
 }
 
 export async function POST(request: Request) {
+  const requestDeadline=Date.now()+55_000;
   let generationId = "", generationLease = "";
   try {
     assertSameOrigin(request);
@@ -130,6 +131,9 @@ export async function POST(request: Request) {
       LIMIT 1
     `).bind(context.submission_id, cacheKey).first<{ id: string; status: string; assessment_json: string; input_token_estimate: number | null; output_token_estimate: number | null }>();
     if (cached) {
+      const envelope=JSON.parse(cached.assessment_json) as {provenance?:{validationPassed?:boolean;validationErrors?:string[]}};
+      if(cached.status==="contract_failed" || envelope.provenance?.validationPassed!==true)
+        return Response.json({error:"Kết quả AI đã lưu không đạt kiểm tra bằng chứng. Hãy dùng chấm thủ công.",validationErrors:envelope.provenance?.validationErrors??[]},{status:422});
       return Response.json({
         assessment: { id: cached.id, status: cached.status, envelope: JSON.parse(cached.assessment_json) },
         cached: true,
@@ -156,14 +160,15 @@ export async function POST(request: Request) {
     if (!retrieved.evidence.length) return Response.json({ error: "Không tìm thấy evidence đủ điều kiện trong bài nộp." }, { status: 422 });
     const inputTokenEstimate = estimateTokenCount(JSON.stringify({ title: context.title, brief: structuredBrief, rubric, evidence: retrieved.evidence }));
     if (inputTokenEstimate > numeric(env.AI_MAX_INPUT_TOKENS, 6_000, 1_500, 12_000)) return Response.json({error:"Đề bài và bằng chứng vượt ngân sách token. Hãy rút gọn đề bài hoặc chấm thủ công."},{status:413});
-    const envelope = await generateLiveAssessment(env, context.submission_id, { title: context.title, brief: structuredBrief, rubric }, retrieved.evidence);
+    const envelope = await generateLiveAssessment({...env,AI_REQUEST_DEADLINE_MS:requestDeadline}, context.submission_id, { title: context.title, brief: structuredBrief, rubric }, retrieved.evidence);
     const storedEnvelope = {
       ...envelope,
       evidence: retrieved.evidence,
       extraction: { model: "local-document-parser", warnings },
       retrieval: { selectedChunkCount: retrieved.selectedChunkCount, tokenBudget: numeric(env.AI_MAX_INPUT_TOKENS, 6_000, 1_500, 12_000), inputTokenEstimate },
     };
-    const assessmentId = crypto.randomUUID();
+    const priorId=await env.DB.prepare("SELECT id FROM assessments WHERE submission_id=?").bind(context.submission_id).first<{id:string}>();
+    const assessmentId = priorId?.id ?? crypto.randomUUID();
     const resultHash = await sha256(JSON.stringify(envelope.draft));
     const status = envelope.provenance.validationPassed ? "in_review" : "contract_failed";
     const outputTokenEstimate = envelope.usage?.outputTokens ?? estimateTokenCount(JSON.stringify(envelope.draft));

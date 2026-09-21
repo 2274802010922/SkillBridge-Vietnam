@@ -266,7 +266,7 @@ test("includes an on-chain reward-vault gate and recoverable Devnet cash-out", a
   assert.match(beneficiaryVerification, /sandbox_confirmed/);
   assert.match(escrowRoute, /ESCROW_STATE_PENDING/);
   assert.match(escrowRoute, /getSignatureStatuses/);
-  assert.ok(escrowRoute.indexOf("const synced = await readAndSyncEscrow(row);") < escrowRoute.lastIndexOf("const data = await readAndSyncEscrow(row);"));
+  // Full sync postconditions are exercised by demo-reliability-flow.test.ts.
 });
 
 test("removes temporary starter metadata and dependencies", async () => {

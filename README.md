@@ -8,10 +8,12 @@
 
 [Tiếng Việt](README.vi.md) · **English**
 
-[Open the demo](https://404-eight-rho.vercel.app/) · [Independent wallet verifier](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Judge walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md)
+[Open the demo](https://404-eight-rho.vercel.app/) · [Independent wallet verifier](https://404-eight-rho.vercel.app/claim-verifier/index.html) · [Judge walkthrough](docs/judging/README.md) · [Architecture](docs/architecture/README.md) · [Demo reliability / Nghiệm thu](docs/testing/demo-reliability-acceptance.md)
 
 [![CI](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/2274802010922/SkillBridge-Vietnam/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-16-091426?logo=nextdotjs)
+> Reliability release (21 September): explicit reviewer/deadline guidance, verified reward progress, recoverable issuer setup and milestone replay protection. Local build + 184 regression tests pass; live wallet/provider acceptance is tracked in the [runbook](docs/testing/demo-reliability-acceptance.md).
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-6941C6?logo=solana&logoColor=white)
 

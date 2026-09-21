@@ -1,9 +1,12 @@
 import bs58 from "bs58";
+import { recoverBootstrapStep } from "../../backend/services/credentials/bootstrap-recovery.ts";
+import { assertEscrowDevnet, escrowRpc } from "../client/challenge-escrow.ts";
 import {
   address,
   createKeyPairSignerFromBytes,
   createSolanaClient,
   createTransaction,
+  transactionToBase64WithSigners,
   type Instruction,
   type Signature,
   type TransactionSigner,
@@ -17,6 +20,8 @@ import {
   deserializeAttestationData,
   fetchAttestation,
   fetchSchema,
+  getCredentialDecoder,
+  getSchemaDecoder,
   getCloseAttestationInstruction,
   getCreateAttestationInstruction,
   getCreateCredentialInstruction,
@@ -62,15 +67,51 @@ export async function sendSolanaInstructions(environment: SolanaEnvironment, pay
 export function explorerTransaction(signature: string) { return `https://explorer.solana.com/tx/${signature}?cluster=devnet`; }
 export function explorerAddress(value: string) { return `https://explorer.solana.com/address/${value}?cluster=devnet`; }
 
-export async function bootstrapIssuer(environment: SolanaEnvironment, organizationId: string) {
-  const { payer, issuer, authorizedSigner } = await solanaSigners(environment);
-  const credentialName = `SKILLBRIDGE-${organizationId.slice(0, 8).toUpperCase()}`;
-  const schemaName = "PROOF-OF-SKILL";
-  const [credential] = await deriveCredentialPda({ authority: issuer.address, name: credentialName });
-  const credentialTx = await sendSolanaInstructions(environment, payer, [getCreateCredentialInstruction({ payer, authority: issuer, credential, name: credentialName, signers: [authorizedSigner.address] })]);
-  const [schema] = await deriveSchemaPda({ credential, name: schemaName, version: 1 });
-  const schemaTx = await sendSolanaInstructions(environment, payer, [getCreateSchemaInstruction({ payer, authority: issuer, credential, schema, name: schemaName, description: "Human-approved, evidence-linked SkillBridge assessment", fieldNames: ["studentWallet","challengeId","overallScore","evidenceHash","reviewerRole","humanApproved"], layout: new Uint8Array([12,12,0,12,12,10]) })]);
-  return { credentialName, credentialAddress: credential, schemaName, schemaAddress: schema, authorizedSignerAddress: authorizedSigner.address, credentialTx, schemaTx };
+export async function bootstrapIssuer(environment: SolanaEnvironment, organizationId: string, db?:D1Database) {
+  const rpc=environment.SOLANA_RPC_URL||"https://api.devnet.solana.com";
+  await assertEscrowDevnet(rpc);
+  const {payer,issuer,authorizedSigner}=await solanaSigners(environment);
+  const credentialName=`SKILLBRIDGE-${organizationId.slice(0,8).toUpperCase()}`,schemaName="PROOF-OF-SKILL";
+  const [credential]=await deriveCredentialPda({authority:issuer.address,name:credentialName});
+  const [schema]=await deriveSchemaPda({credential,name:schemaName,version:1});
+  const fields=["studentWallet","challengeId","overallScore","evidenceHash","reviewerRole","humanApproved"];
+  const layout=new Uint8Array([12,12,0,12,12,10]);
+  const expectedFields=Buffer.concat(fields.map(f=>{const b=Buffer.from(f),n=Buffer.alloc(4);n.writeUInt32LE(b.length);return Buffer.concat([n,b]);}));
+  async function exists(key:string,kind:"credential"|"schema"){
+    const {value}=await escrowRpc<{value:{owner:string;data:[string,string]}|null}>(rpc,"getAccountInfo",[key,{encoding:"base64",commitment:"finalized"}]);
+    if(!value)return false;
+    if(value.owner!==String(SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS))throw new Error("Issuer account owner mismatch");
+    const bytes=Buffer.from(value.data[0],"base64");
+    if(kind==="credential"){
+      const d=getCredentialDecoder().decode(bytes);
+      if(d.discriminator!==1 || d.authority!==issuer.address || Buffer.from(d.name).toString()!==credentialName || !d.authorizedSigners.includes(authorizedSigner.address))throw new Error("Issuer configuration mismatch");
+    }else{
+      const d=getSchemaDecoder().decode(bytes);
+      if(d.discriminator!==2 || d.credential!==credential || d.isPaused || d.version!==1 || !Buffer.from(d.layout).equals(layout) || !Buffer.from(d.fieldNames).equals(expectedFields))throw new Error("Issuer schema mismatch");
+    }
+    return true;
+  }
+  async function step(kind:"credential"|"schema",key:string,ix:Instruction){
+    if(!db){if(await exists(key,kind))return null;return String(await sendSolanaInstructions(environment,payer,[ix]));}
+    return recoverBootstrapStep(db,organizationId+":"+kind,JSON.stringify({key,issuer:issuer.address,signer:authorizedSigner.address}),{
+      exists:()=>exists(key,kind),
+      async prepare(){
+        const {value:latest}=await solanaClient(environment).rpc.getLatestBlockhash({commitment:"confirmed"}).send();
+        const wire=await transactionToBase64WithSigners(createTransaction({version:"legacy",feePayer:payer,instructions:[ix],latestBlockhash:latest,computeUnitLimit:1400000,computeUnitPrice:1}));
+        return {wire,signature:bs58.encode(Buffer.from(wire,"base64").subarray(1,65)),lastValidBlockHeight:Number(latest.lastValidBlockHeight)};
+      },
+      async inspect(tx){
+        const {value}=await escrowRpc<{value:Array<{confirmationStatus:string;err:unknown}|null>}>(rpc,"getSignatureStatuses",[[tx.signature],{searchTransactionHistory:true}]);
+        if(value[0])return value[0].err?"failed":"pending";
+        const height=await escrowRpc<number>(rpc,"getBlockHeight",[{commitment:"finalized"}]);
+        return height>tx.lastValidBlockHeight?"expired":"absent";
+      },
+      async broadcast(tx){const signature=await escrowRpc<string>(rpc,"sendTransaction",[tx.wire,{encoding:"base64",preflightCommitment:"confirmed",maxRetries:2}]);if(signature!==tx.signature)throw new Error("Issuer signature mismatch");}
+    });
+  }
+  const credentialTx=await step("credential",String(credential),getCreateCredentialInstruction({payer,authority:issuer,credential,name:credentialName,signers:[authorizedSigner.address]}));
+  const schemaTx=await step("schema",String(schema),getCreateSchemaInstruction({payer,authority:issuer,credential,schema,name:schemaName,description:"Human-approved, evidence-linked SkillBridge assessment",fieldNames:fields,layout}));
+  return {credentialName,credentialAddress:credential,schemaName,schemaAddress:schema,authorizedSignerAddress:authorizedSigner.address,credentialTx,schemaTx};
 }
 
 export async function issueAttestation(environment: SolanaEnvironment, input: { credentialAddress:string;schemaAddress:string;studentWallet:string;challengeId:string;score:number;evidenceHash:string;reviewerRole:string;nonceSeed:string;expiryUnix:number }) {

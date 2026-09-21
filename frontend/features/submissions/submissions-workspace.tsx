@@ -1,7 +1,9 @@
 "use client";
+import { apiFetch } from "../../lib/api-fetch";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { evidenceMime } from "../../../shared/validation/evidence-file";
 import { upload as uploadToBlob } from "@vercel/blob/client";
 import { translateStatus, useLanguage } from "../../i18n/i18n";
 import { ContentSkeleton, InlineLoading } from "../../components/feedback/loading-ui";
@@ -39,7 +41,7 @@ export function SubmissionsWorkspace() {
     setSelected(id);
     setDetailLoading(true);
     try {
-      const response = await fetch(`/api/submissions/${id}`, { cache: "no-store" });
+      const response = await apiFetch(`/api/submissions/${id}`, { cache: "no-store" });
       if (!response.ok) throw new Error(locale === "vi" ? "Không thể tải bài nộp." : "Unable to load the submission.");
       const data = await response.json() as { submission: { reflection: string }; files: FileItem[] };
       if (requestId !== openRequest.current) return;
@@ -54,7 +56,7 @@ export function SubmissionsWorkspace() {
   }
 
   async function loadList() {
-    const response = await fetch("/api/submissions", { cache: "no-store" });
+    const response = await apiFetch("/api/submissions", { cache: "no-store" });
     if (!response.ok) return;
     const data = await response.json() as { submissions: SubmissionListItem[] };
     setItems(data.submissions);
@@ -63,7 +65,7 @@ export function SubmissionsWorkspace() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/submissions", { cache: "no-store" }).then((response) => {
+    apiFetch("/api/submissions", { cache: "no-store" }).then((response) => {
       if (!response.ok) throw new Error("load");
       return response.json() as Promise<{ submissions: SubmissionListItem[] }>;
     }).then(async (data) => {
@@ -71,7 +73,7 @@ export function SubmissionsWorkspace() {
       setItems(data.submissions);
       const first = data.submissions[0];
       if (!first) return;
-      const detail = await fetch(`/api/submissions/${first.id}`, { cache: "no-store" });
+      const detail = await apiFetch(`/api/submissions/${first.id}`, { cache: "no-store" });
       if (!active || !detail.ok) return;
       const payload = await detail.json() as { submission: { reflection: string }; files: FileItem[] };
       setSelected(first.id);
@@ -89,16 +91,18 @@ export function SubmissionsWorkspace() {
       return;
     }
     setBusy(true); setBusyAction(action); setNotice(null);
-    const response = await fetch(`/api/submissions/${selected}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ note, action }) });
+    try {
+    const response = await apiFetch(`/api/submissions/${selected}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ note, action }) });
     const data = await response.json() as { error?: string; requiresEscrowSignature?: boolean; escrowUrl?: string };
     if(response.ok && data.requiresEscrowSignature && data.escrowUrl){window.location.assign(data.escrowUrl);return;}
     setNotice(response.ok ? (action === "submit" ? t("submission.submitted") : t("submission.saved")) : data.error ?? t("submission.uploadError"));
     if (response.ok) await loadList();
-    setBusy(false); setBusyAction(null);
+    }catch(e){setNotice(e instanceof Error?e.message:String(e));}finally{setBusy(false);setBusyAction(null);}
   }
 
-  async function upload(file: File) {
+  async function upload(raw: File) {
     if (!selected) return;
+    const file = new File([raw],raw.name,{type:evidenceMime(raw.name,raw.type)});
     setBusy(true); setBusyAction("upload"); setNotice(null);
     try {
       if (file.size > CLIENT_UPLOAD_THRESHOLD) {
@@ -110,10 +114,20 @@ export function SubmissionsWorkspace() {
           contentType: file.type,
           clientPayload: JSON.stringify({ submissionId: selected, fileId, originalName: file.name, contentType: file.type, sizeBytes: file.size, sha256 }),
         });
+        let persisted=false;
+        for(let attempt=0;attempt<8;attempt++){
+          const check=await apiFetch(`/api/submissions/${selected}`,{cache:"no-store"});
+          if(!check.ok)throw new Error(t("submission.uploadError"));
+          const result=await check.json() as {files:FileItem[]};
+          if(result.files.some(f=>f.id===fileId)){persisted=true;break;}
+          setNotice(locale==="vi"?"Tệp đã gửi; đang hoàn tất lưu. Không tải lại tệp.":"File sent; finalizing storage. Do not upload it again.");
+          await new Promise(r=>setTimeout(r,1000));
+        }
+        if(!persisted)throw new Error(locale==="vi"?"Đang chờ xác nhận lưu tệp. Mở lại bài nộp sau ít giây trước khi tải lại.":"Awaiting storage confirmation. Reopen the submission shortly before uploading again.");
         setNotice(t("submission.uploaded"));
       } else {
         const form = new FormData(); form.set("file", file);
-        const response = await fetch(`/api/submissions/${selected}/files`, { method: "POST", body: form });
+        const response = await apiFetch(`/api/submissions/${selected}/files`, { method: "POST", body: form });
         const data = await response.json() as { error?: string; requiresEscrowSignature?: boolean; escrowUrl?: string };
         setNotice(response.ok ? t("submission.uploaded") : data.error ?? t("submission.uploadError"));
       }
@@ -133,9 +147,11 @@ export function SubmissionsWorkspace() {
   async function removeFile(fileId: string) {
     if (!selected) return;
     setBusy(true); setBusyAction("remove");
-    await fetch(`/api/submissions/${selected}/files?fileId=${encodeURIComponent(fileId)}`, { method: "DELETE" });
+    try {
+    const r=await apiFetch(`/api/submissions/${selected}/files?fileId=${encodeURIComponent(fileId)}`, { method: "DELETE" });
+    if(!r.ok)throw new Error(((await r.json()) as {error?:string}).error||t("submission.uploadError"));
     await open(selected);
-    setBusy(false); setBusyAction(null);
+    }catch(e){setNotice(e instanceof Error?e.message:String(e));}finally{setBusy(false);setBusyAction(null);}
   }
 
   const active = items.find((item) => item.id === selected);
@@ -159,6 +175,7 @@ export function SubmissionsWorkspace() {
         <div className="file-uploader"><div><strong>{t("submission.files")}</strong><small>{t("submission.fileHelp")}</small></div>{editable && <label className="button button-dark">{t("submission.chooseFiles")}<input type="file" multiple hidden onChange={(event) => { void uploadMany(event.target.files); event.currentTarget.value = ""; }} /></label>}</div>
         <div className="file-list">{files.map((file) => <article key={file.id}><div><strong>{file.original_name}</strong><small>{Math.ceil(Number(file.size_bytes) / 1024)} KB · SHA {file.sha256.slice(0, 10)}…</small></div><div className="file-actions"><button onClick={() => setPreview(file)}>{t("submission.view")}</button><a href={fileUrl(file, true)}>{t("submission.download")}</a>{editable && <button onClick={() => removeFile(file.id)}>{t("submission.remove")}</button>}</div></article>)}</div>
         {preview && <div className="file-preview"><div className="editor-heading"><strong>{t("submission.preview")}: {preview.original_name}</strong><button onClick={() => setPreview(null)}>{t("submission.closePreview")}</button></div><iframe title={preview.original_name} src={fileUrl(preview)} /></div>}
+        {notice && <p className="app-notice" role="status">{notice}</p>}
         {busyAction === "upload" && <InlineLoading label={locale === "vi" ? "Đang tải tệp lên…" : "Uploading file…"} />}
         {editable && <div className="submission-actions"><button aria-busy={busyAction === "save"} className="button button-dark" disabled={busy} onClick={() => save("save")}>{busyAction === "save" ? (locale === "vi" ? "Đang lưu…" : "Saving…") : t("submission.saveDraft")}</button><button aria-busy={busyAction === "submit"} className="button button-primary" disabled={busy || files.length === 0} onClick={() => save("submit")}>{busyAction === "submit" ? (locale === "vi" ? "Đang gửi bài…" : "Submitting…") : t("submission.submit")}</button></div>}
         </>}

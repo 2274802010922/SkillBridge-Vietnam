@@ -1067,3 +1067,18 @@ export const workspaceAssessments = sqliteTable("workspace_assessments", {
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const milestonePaymentIntents = sqliteTable("milestone_payment_intents", {
+  milestoneId:text("milestone_id").primaryKey(),snapshotJson:text("snapshot_json").notNull(),createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+export const milestoneSignatureClaims = sqliteTable("milestone_signature_claims", {
+  signature:text("signature").primaryKey(),milestoneId:text("milestone_id").notNull().unique(),verified:integer("verified").notNull().default(0),
+});
+export const issuerBootstrapSteps = sqliteTable("issuer_bootstrap_steps", {
+  operationKey:text("operation_key").primaryKey(),fingerprint:text("fingerprint").notNull(),preparedJson:text("prepared_json"),lease:text("lease"),
+  leaseUntil:integer("lease_until").notNull().default(0),status:text("status").notNull().default("pending"),updatedAt:text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const escrowOperationExpectations = sqliteTable("escrow_operation_expectations", {
+  operationId:text("operation_id").primaryKey(),instructionsJson:text("instructions_json").notNull(),
+});

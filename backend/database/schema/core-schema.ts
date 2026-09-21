@@ -1,3 +1,4 @@
+import { RELIABILITY_SCHEMA } from './reliability-schema.ts';
 import { PROFILE_SCHEMA } from '../../services/profiles/wallet-profile.ts';
 import { ESCROW_SCHEMA, ESCROW_TRIGGERS } from './escrow-schema.ts';
 import { COMPETITION_SCHEMA } from './competition-schema.ts';
@@ -886,5 +887,6 @@ export async function ensureCoreSchema(db: D1Database) {
   for(const statement of COMPETITION_SCHEMA) await db.prepare(statement).run();
   for(const statement of EVIDENCE_OPPORTUNITY_SCHEMA) await db.prepare(statement).run();
   for(const statement of OFFRAMP_SCHEMA) await db.prepare(statement).run();
+  for(const statement of RELIABILITY_SCHEMA) await db.prepare(statement).run();
   initialized.add(db);
 }

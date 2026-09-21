@@ -25,6 +25,7 @@ export type AiEnvironment = {
   OPENAI_API_KEY?: string;
   OPENAI_ASSESSMENT_MODEL?: string;
   AI_MAX_OUTPUT_TOKENS?: string;
+  AI_REQUEST_DEADLINE_MS?: number;
 };
 
 export type AiUsage = {
@@ -43,7 +44,8 @@ type ResponsesPayload = {
 
 type ChatPayload = {
   model?: string;
-  choices?: Array<{ message?: { content?: string } }>;
+  choices?: Array<{ finish_reason?: string; message?: { content?: string | null; refusal?: string } }>;
+  error?: { code?: number; message?: string };
   usage?: { prompt_tokens?: number; completion_tokens?: number };
 };
 
@@ -221,7 +223,12 @@ export async function requestJson<T>(
     const base = new URL(environment.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1");
     if (base.origin !== "https://openrouter.ai" || base.pathname.replace(/\/$/, "") !== "/api/v1" || base.username || base.password || base.search || base.hash)
       throw new Error("OPENROUTER_BASE_URL phải là https://openrouter.ai/api/v1.");
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const remaining=environment.AI_REQUEST_DEADLINE_MS ? environment.AI_REQUEST_DEADLINE_MS-Date.now()-5000 : 45000;
+    if(remaining<1000)throw new AiProviderError("Không còn đủ thời gian gọi AI sau khi đọc tài liệu. Bạn có thể chấm thủ công.",503);
+    const startedAt=Date.now();
+    let response:Response;
+    try {
+    response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       redirect: "error",
       headers: { authorization: `Bearer ${environment.OPENROUTER_API_KEY}`, "content-type": "application/json", "X-OpenRouter-Title": "SkillBridge Vietnam" },
@@ -233,8 +240,9 @@ export async function requestJson<T>(
         max_tokens: boundedInteger(environment.AI_MAX_OUTPUT_TOKENS,2200,600,4096),
         temperature:0.1, stream:false,
       }),
-      signal: AbortSignal.timeout(45000),
+      signal: AbortSignal.timeout(Math.min(45000,remaining)),
     });
+    }catch{throw new AiProviderError("AI chưa phản hồi trong thời gian cho phép. Hãy thử lại sau hoặc chấm thủ công.",504);}
     if (!response.ok) {
       await response.body?.cancel();
       const status = response.status;
@@ -244,8 +252,14 @@ export async function requestJson<T>(
         : "OpenRouter chưa xử lý được yêu cầu. Hãy thử lại sau.", status >= 500 ? 503 : status);
     }
     const payload = await response.json() as ChatPayload;
-    const content = payload.choices?.[0]?.message?.content;
-    if (!content) throw new AiProviderError("OpenRouter trả về kết quả rỗng.",502);
+    const choice=payload.choices?.[0];
+    console.info("ai.request.completed",{provider:"openrouter",model:selectedModel.slice(0,160),durationMs:Date.now()-startedAt,finishReason:choice?.finish_reason??null,inputTokens:payload.usage?.prompt_tokens??null,outputTokens:payload.usage?.completion_tokens??null});
+    if(payload.error)throw new AiProviderError("Nhà cung cấp AI chưa xử lý được yêu cầu. Có thể chấm thủ công và thử lại sau.",503);
+    if(choice?.message?.refusal)throw new AiProviderError("Model từ chối đánh giá tài liệu này. Hãy chấm thủ công.",422);
+    if(choice?.finish_reason==="length")throw new AiProviderError("AI hết giới hạn đầu ra trước khi hoàn tất JSON. Rút gọn bằng chứng hoặc chọn model phù hợp.",422);
+    const content = choice?.message?.content;
+    if (typeof content!=="string" || !content.trim()) throw new AiProviderError("Model không trả nội dung đánh giá. Kiểm tra model hoặc chấm thủ công.",502);
+    try {parseJsonObject<T>(content);}catch{throw new AiProviderError("AI trả JSON không hợp lệ. Kết quả chưa được dùng để đánh giá.",422);}
     return {value:parseJsonObject<T>(content),provider,model:payload.model || selectedModel,
       usage:payload.usage ? {inputTokens:payload.usage.prompt_tokens || 0,outputTokens:payload.usage.completion_tokens || 0} : undefined};
   }
